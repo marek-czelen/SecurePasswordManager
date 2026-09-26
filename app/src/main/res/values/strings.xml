@@ -36,6 +36,7 @@
     <string name="menu_generator">Generator hasła</string>
     <string name="menu_settings">Ustawienia</string>
     <string name="menu_lock">Zablokuj</string>
+    <string name="menu_tutorial">Instrukcja</string>
     <string name="menu_ocr">Skanuj (OCR)</string>
 
     <!-- OCR -->
@@ -189,4 +190,35 @@
     <string name="cd_biometric">Odblokuj biometrią</string>
     <string name="cd_copy">Kopiuj</string>
     <string name="cd_qr">Kod odzyskiwania QR</string>
+    <string name="settings_tutorial">Instrukcja aplikacji</string>
+    <string name="tutorial_skip">Pomiń</string>
+    <string name="tutorial_next">Dalej</string>
+    <string name="tutorial_done">Gotowe</string>
+    <string name="tutorial_list_title">Twoja lista</string>
+    <string name="tutorial_list_text">Tutaj znajdziesz wszystkie wpisy tekstowe i obrazy. Użyj wyszukiwarki, ulubionych i tagów, aby szybko znaleźć dane.</string>
+    <string name="tutorial_add_title">Dodawanie wpisów</string>
+    <string name="tutorial_add_text">Przycisk Dodaj pozwala utworzyć hasło ręcznie albo dodać obraz. Obraz jest przycinany i zapisywany jako szyfrowany JPG.</string>
+    <string name="tutorial_generator_title">Generator haseł</string>
+    <string name="tutorial_generator_text">Twórz silne hasła, ustawiając długość oraz dozwolone znaki. Generator używa bezpiecznego źródła losowości.</string>
+    <string name="tutorial_settings_title">Ustawienia bezpieczeństwa</string>
+    <string name="tutorial_settings_text">Tutaj znajdziesz auto-blokadę, blokowanie po opuszczeniu aplikacji, kopie zapasowe, recovery QR i politykę prywatności.</string>
+    <string name="tutorial_health_title">Kondycja haseł</string>
+    <string name="tutorial_health_text">Raport lokalnie wykrywa słabe i powtórzone hasła. Żadne hasła nie są wysyłane do sieci.</string>
+    <string name="tutorial_end_title">Gotowe</string>
+    <string name="tutorial_end_text">Dane pozostają zaszyfrowane. Recovery wymaga passphrase oraz niezależnego kodu QR.</string>
+    <string name="help_intro">To jest instrukcja działania aplikacji. Przyciski poniżej otwierają rzeczywiste funkcje, więc możesz od razu je przetestować.</string>
+    <string name="help_list_title">1. Jedna lista wpisów</string>
+    <string name="help_list_text">Na jednej liście znajdują się wpisy tekstowe oraz obrazy. Każdy obraz ma własną nazwę i ikonę obrazu. Wyszukiwanie obejmuje nazwy, loginy, URL, foldery i tagi.</string>
+    <string name="help_add_action">Otwórz Dodaj</string>
+    <string name="help_images_title">2. Dodawanie obrazu</string>
+    <string name="help_images_text">Wybierz aparat lub galerię, zaznacz fragment zdjęcia z zoomem, nadaj mu nazwę i zapisz. Tylko przycięty fragment JPG trafia do zaszyfrowanego vaultu.</string>
+    <string name="help_images_action">Otwórz dodawanie obrazu</string>
+    <string name="help_security_title">3. Bezpieczeństwo</string>
+    <string name="help_security_text">Na znanym urządzeniu domyślnie używasz biometrii. Auto-lock można ustawić w Ustawieniach. TOTP jest opcjonalny i pokazuje się dopiero po naciśnięciu „Pokaż kod”.</string>
+    <string name="help_generator_action">Otwórz generator haseł</string>
+    <string name="help_settings_action">Otwórz Ustawienia</string>
+    <string name="help_backup_title">4. Kopie i odzyskiwanie</string>
+    <string name="help_backup_text">Kopia zawiera wyłącznie zaszyfrowany vault.vlt i może być bezpiecznie przechowywana poza telefonem. Na nowym urządzeniu potrzebujesz pliku vault.vlt, passphrase QR oraz RQR2 recovery QR. Kody można skanować zamiast przepisywać.</string>
+    <string name="help_recovery_qr_action">Pokaż RQR2</string>
+    <string name="help_recovery_action">Otwórz odzyskiwanie</string>
 </resources>

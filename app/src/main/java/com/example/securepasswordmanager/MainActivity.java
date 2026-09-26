@@ -589,6 +589,10 @@ public final class MainActivity extends AppCompatActivity {
             showSettings();
             return true;
         }
+        if (id == R.id.action_tutorial) {
+            showTutorial();
+            return true;
+        }
         if (id == R.id.action_lock) {
             lock();
             return true;
@@ -877,6 +881,10 @@ public final class MainActivity extends AppCompatActivity {
             requestPassphraseForQr();
         });
         view.findViewById(R.id.rowPrivacy).setOnClickListener(v -> showPrivacyDialog());
+        view.findViewById(R.id.rowTutorial).setOnClickListener(v -> {
+            dialog.dismiss();
+            showTutorial();
+        });
         View changePin = view.findViewById(R.id.rowChangePin);
         changePin.setOnClickListener(v -> {
             dialog.dismiss();
@@ -949,6 +957,28 @@ public final class MainActivity extends AppCompatActivity {
                         + "\n\n" + getString(R.string.privacy_policy_url))
                 .setPositiveButton(R.string.action_close, null)
                 .show();
+    }
+
+    private void showTutorial() {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_help, null);
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.settings_tutorial)
+                .setView(view)
+                .setPositiveButton(R.string.action_close, null)
+                .create();
+        view.findViewById(R.id.helpAdd).setOnClickListener(v -> showAddChooser());
+        view.findViewById(R.id.helpImages).setOnClickListener(v -> showImageSourceChooser());
+        view.findViewById(R.id.helpGenerator).setOnClickListener(v -> showGenerator(null));
+        view.findViewById(R.id.helpSettings).setOnClickListener(v -> {
+            dialog.dismiss();
+            showSettings();
+        });
+        view.findViewById(R.id.helpRecoveryQr).setOnClickListener(v -> showRecoveryQrDialog());
+        view.findViewById(R.id.helpRecovery).setOnClickListener(v -> {
+            dialog.dismiss();
+            showRecoveryImport();
+        });
+        dialog.show();
     }
 
     private void confirmDeleteLocalVault() {
