@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Shield -->
+    <group
+        android:scaleX="2.7"
+        android:scaleY="2.7"
+        android:translateX="21.6"
+        android:translateY="21.6">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,1.5L4,4.9v6.1c0,5.05 3.46,9.79 8,10.9 4.54,-1.11 8,-5.85 8,-10.9V4.9L12,1.5z" />
+        <!-- Keyhole -->
+        <path
+            android:fillColor="#4E5BD9"
+            android:pathData="M12,6.6c-1.66,0 -3,1.34 -3,3 0,1.1 0.6,2.05 1.5,2.57L9.4,16h5.2l-1.1,-3.83c0.9,-0.52 1.5,-1.47 1.5,-2.57 0,-1.66 -1.34,-3 -3,-3z" />
+    </group>
+</vector>

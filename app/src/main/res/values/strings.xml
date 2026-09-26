@@ -1,0 +1,160 @@
+<resources>
+    <string name="app_name">SecurePasswordManager</string>
+    <string name="app_tagline">Bezpieczny menedżer haseł</string>
+
+    <!-- First run -->
+    <string name="first_run_title">Utwórz magazyn</string>
+    <string name="first_run_subtitle">Ustaw 6–12-cyfrowy PIN. Nie zapisujemy go ani nie wysyłamy do chmury — chroni Twój zaszyfrowany magazyn.</string>
+    <string name="hint_true_pin">PIN</string>
+    <string name="hint_confirm_pin">Potwierdź PIN</string>
+    <string name="action_create_vault">Utwórz magazyn</string>
+    <string name="first_run_note">Zapisz kod odzyskiwania. Bez niego i bez PIN-u nie odzyskasz magazynu na nowym urządzeniu.</string>
+
+    <!-- Unlock -->
+    <string name="unlock_subtitle">Odblokuj magazyn</string>
+    <string name="hint_pin">PIN</string>
+    <string name="action_unlock">Odblokuj</string>
+    <string name="action_biometric">Odblokuj biometrią</string>
+    <string name="action_recovery">Odzyskiwanie na nowym urządzeniu</string>
+
+    <!-- List -->
+    <string name="list_title">Hasła</string>
+    <string name="hint_search">Szukaj</string>
+    <string name="action_add">Dodaj</string>
+    <string name="empty_title">Brak wpisów</string>
+    <string name="empty_subtitle">Dodaj pierwszy wpis przyciskiem poniżej.</string>
+    <string name="menu_generator">Generator hasła</string>
+    <string name="menu_settings">Ustawienia</string>
+    <string name="menu_lock">Zablokuj</string>
+    <string name="menu_ocr">Skanuj (OCR)</string>
+
+    <!-- OCR -->
+    <string name="add_choose_title">Dodaj wpis</string>
+    <string name="add_manual">Wpisz ręcznie</string>
+    <string name="add_from_camera">Zrób zdjęcie (OCR)</string>
+    <string name="add_from_gallery">Wybierz zdjęcie (OCR)</string>
+    <string name="ocr_title">Dodaj ze zdjęcia</string>
+    <string name="ocr_message">Zeskanuj dane logowania z aparatu lub wybierz zdjęcie. Najlepiej działa tekst drukowany/maszynowy — pismo odręczne bywa nierozpoznawalne. Rozpoznawanie odbywa się w całości na urządzeniu.</string>
+    <string name="ocr_camera">Aparat</string>
+    <string name="ocr_gallery">Z galerii</string>
+    <string name="ocr_processing">Rozpoznawanie tekstu…</string>
+    <string name="ocr_review_title">Zaznacz pola</string>
+    <string name="ocr_review_hint">Uszczypnij, aby powiększyć, dwoma palcami przesuwaj zdjęcie. Zaznacz prostokątem login i hasło (nazwa opcjonalnie) — zaznaczenia można przesuwać, skalować, usuwać i rysować od nowa. Nic nie jest zatwierdzane automatycznie.</string>
+    <string name="ocr_mark_login">Login</string>
+    <string name="ocr_mark_password">Hasło</string>
+    <string name="ocr_mark_name">Nazwa</string>
+    <string name="ocr_confirm">Zatwierdź</string>
+    <string name="ocr_need_selection">Zaznacz co najmniej login lub hasło.</string>
+    <string name="err_ocr">Nie udało się rozpoznać tekstu.</string>
+    <string name="err_camera_permission">Brak dostępu do aparatu.</string>
+
+    <!-- Cloud / external storage -->
+    <string name="settings_sync">Kopia zapasowa</string>
+    <string name="settings_link_remote">Ustaw automatyczną kopię</string>
+    <string name="settings_link_remote_desc">Dysk Google, Dropbox, OneDrive, plik lokalny…</string>
+    <string name="settings_sync_now">Zrób kopię teraz</string>
+    <string name="settings_backup">Kopia jednorazowo w inne miejsce</string>
+    <string name="settings_unlink">Wyłącz automatyczną kopię</string>
+    <string name="remote_status_linked">Automatyczna kopia: %1$s</string>
+    <string name="remote_status_none">Automatyczna kopia wyłączona</string>
+    <string name="msg_remote_linked">Ustawiono automatyczną kopię</string>
+    <string name="msg_backup_done">Utworzono kopię</string>
+    <string name="msg_synced">Kopia zaktualizowana</string>
+    <string name="msg_saved_local_sync_failed">Zapisano lokalnie, kopia nie powiodła się</string>
+    <string name="err_remote_link">Nie udało się ustawić automatycznej kopii</string>
+    <string name="err_backup">Nie udało się utworzyć kopii</string>
+    <string name="err_sync">Aktualizacja kopii nie powiodła się</string>
+    <string name="vault_default_filename">vault.vlt</string>
+
+    <!-- Entry -->
+    <string name="entry_new">Nowy wpis</string>
+    <string name="entry_edit">Edytuj wpis</string>
+    <string name="hint_name">Nazwa</string>
+    <string name="hint_username">Login</string>
+    <string name="hint_password">Hasło</string>
+    <string name="hint_url">Adres URL</string>
+    <string name="hint_notes">Notatki</string>
+    <string name="action_save">Zapisz</string>
+    <string name="action_cancel">Anuluj</string>
+    <string name="action_close">Zamknij</string>
+    <string name="action_copy">Kopiuj</string>
+    <string name="action_show">Pokaż hasło</string>
+    <string name="action_edit">Edytuj</string>
+    <string name="action_delete">Usuń</string>
+    <string name="delete_confirm_title">Usunąć wpis?</string>
+    <string name="delete_confirm_message">Czy na pewno usunąć „%1$s”? Tej operacji nie można cofnąć.</string>
+
+    <!-- Generator -->
+    <string name="generator_title">Generator hasła</string>
+    <string name="generator_length">Długość</string>
+    <string name="generator_upper">Wielkie litery</string>
+    <string name="generator_lower">Małe litery</string>
+    <string name="generator_digits">Cyfry</string>
+    <string name="generator_symbols">Symbole</string>
+    <string name="action_regenerate">Generuj ponownie</string>
+    <string name="action_use">Użyj</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_security">Bezpieczeństwo</string>
+    <string name="settings_show_recovery">Pokaż kod odzyskiwania</string>
+    <string name="settings_change_pin">Zmień PIN</string>
+    <string name="settings_autolock">Auto-blokada</string>
+    <string name="autolock_1">1 minuta</string>
+    <string name="autolock_5">5 minut</string>
+    <string name="autolock_15">15 minut</string>
+    <string name="autolock_30">30 minut</string>
+    <string name="autolock_never">Nigdy</string>
+    <string name="action_generate">Generuj hasło</string>
+    <string name="action_favorite">Ulubione</string>
+    <string name="hint_folder">Folder</string>
+    <string name="hint_tags">Tagi (oddziel przecinkami)</string>
+    <string name="hint_totp">Sekret TOTP (Base32, opcjonalnie)</string>
+    <string name="menu_health">Kondycja haseł</string>
+    <string name="menu_favorites">Tylko ulubione</string>
+    <string name="health_title">Kondycja haseł</string>
+    <string name="health_summary">Wpisy z hasłami: %1$d\nSłabe hasła: %2$d\nPowtórzone hasła: %3$d</string>
+    <string name="health_private_note">Analiza wykonuje się lokalnie po odblokowaniu. Hasła nie są wysyłane do sieci.</string>
+    <string name="totp_label">Kod jednorazowy</string>
+    <string name="totp_invalid">Nieprawidłowy sekret TOTP</string>
+    <string name="totp_missing">Brak sekretu TOTP</string>
+    <string name="action_copy_totp">Kopiuj kod</string>
+    <string name="settings_lock">Zablokuj magazyn</string>
+
+    <!-- Recovery -->
+    <string name="recovery_qr_title">Kod odzyskiwania</string>
+    <string name="recovery_qr_note">Zapisz ten kod i przechowuj go oddzielnie od pliku magazynu. Do odzyskania potrzebny jest także PIN.</string>
+    <string name="recovery_title">Odzyskiwanie</string>
+    <string name="recovery_subtitle">Wybierz plik vault.vlt z zaufanego źródła, zeskanuj kod odzyskiwania i wpisz PIN.</string>
+    <string name="hint_recovery_payload">Kod odzyskiwania</string>
+    <string name="action_scan">Skanuj kod</string>
+    <string name="action_pick_file">Wybierz vault.vlt</string>
+    <string name="action_recover">Odzyskaj</string>
+
+    <!-- Change PIN -->
+    <string name="change_pin_title">Zmień PIN</string>
+    <string name="hint_old_pin">Obecny PIN</string>
+    <string name="hint_new_pin">Nowy PIN</string>
+    <string name="action_change">Zmień</string>
+
+    <!-- Errors / status -->
+    <string name="err_init">Nie można zainicjalizować bezpiecznego magazynu.</string>
+    <string name="err_pin_mismatch">PIN musi mieć 6–12 cyfr i być powtórzony poprawnie.</string>
+    <string name="err_create">Nie udało się utworzyć magazynu.</string>
+    <string name="err_unlock">Nieprawidłowy PIN lub próba chwilowo zablokowana.</string>
+    <string name="err_open">Nie udało się otworzyć magazynu.</string>
+    <string name="err_biometric">Biometria nie jest dostępna na tym urządzeniu.</string>
+    <string name="err_save">Nie udało się zapisać zmian.</string>
+    <string name="err_recovery_create">Nie udało się utworzyć kodu odzyskiwania.</string>
+    <string name="err_recovery">Nie udało się odzyskać magazynu.</string>
+    <string name="err_pick_file">Najpierw wybierz plik vault.vlt.</string>
+    <string name="err_read_file">Nie udało się odczytać pliku vault.vlt.</string>
+    <string name="err_change_pin">Nie udało się zmienić PIN-u.</string>
+    <string name="err_change_pin_true">Zmień PIN po odblokowaniu prawidłowym PIN-em.</string>
+    <string name="msg_copied">Skopiowano do schowka</string>
+
+    <string name="cd_logo">Logo aplikacji</string>
+    <string name="cd_biometric">Odblokuj biometrią</string>
+    <string name="cd_copy">Kopiuj</string>
+    <string name="cd_qr">Kod odzyskiwania QR</string>
+</resources>

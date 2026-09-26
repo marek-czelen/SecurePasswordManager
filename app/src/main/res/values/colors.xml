@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand seed used for the launcher icon and splash. -->
+    <color name="brand_primary">#4E5BD9</color>
+    <color name="brand_primary_dark">#3742B0</color>
+
+    <!-- Material 3 light scheme. -->
+    <color name="md_primary">#4E5BD9</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#E1E0FF</color>
+    <color name="md_on_primary_container">#03006E</color>
+    <color name="md_secondary">#5B5D72</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#E0E1F9</color>
+    <color name="md_on_secondary_container">#181A2C</color>
+    <color name="md_tertiary">#006A6A</color>
+    <color name="md_on_tertiary">#FFFFFF</color>
+    <color name="md_tertiary_container">#9CF1F0</color>
+    <color name="md_on_tertiary_container">#002020</color>
+    <color name="md_error">#BA1A1A</color>
+    <color name="md_on_error">#FFFFFF</color>
+    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_on_error_container">#410002</color>
+    <color name="md_background">#FBF8FF</color>
+    <color name="md_on_background">#1B1B21</color>
+    <color name="md_surface">#FBF8FF</color>
+    <color name="md_on_surface">#1B1B21</color>
+    <color name="md_surface_variant">#E3E1EC</color>
+    <color name="md_on_surface_variant">#46464F</color>
+    <color name="md_surface_container">#F0EDF7</color>
+    <color name="md_surface_container_high">#EAE7F1</color>
+    <color name="md_outline">#767680</color>
+    <color name="md_outline_variant">#C7C5D0</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
