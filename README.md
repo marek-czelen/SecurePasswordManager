@@ -32,6 +32,7 @@ step-by-step in-app tutorial.
 - Clipboard timeout and `FLAG_SECURE`.
 - Polish, English, German and French UI resources.
 - In-app step-by-step feature tutorial.
+- Debug-only Free/Pro entitlement switch for testing future premium UI.
 
 ## Threat model
 
@@ -53,6 +54,7 @@ Read the detailed documents:
 - [`SECURITY_DESIGN.md`](SECURITY_DESIGN.md)
 - [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md)
 - [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md)
+- [`docs/FEATURE_MATRIX.md`](docs/FEATURE_MATRIX.md)
 
 ## VLT2 key model
 

@@ -168,6 +168,10 @@
     <string name="cd_copy">Copy</string>
     <string name="cd_qr">Recovery QR code</string>
     <string name="settings_tutorial">App tutorial</string>
+    <string name="settings_premium_debug">Free / Pro test mode</string>
+    <string name="premium_debug_status">Active plan: %1$s</string>
+    <string name="premium_free">Free</string>
+    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_next">Next</string>
     <string name="tutorial_done">Done</string>

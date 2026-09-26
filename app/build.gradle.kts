@@ -4,6 +4,9 @@ plugins {
 
 android {
     namespace = "com.example.securepasswordmanager"
+    buildFeatures {
+        buildConfig = true
+    }
     compileSdk {
         version = release(37)
     }

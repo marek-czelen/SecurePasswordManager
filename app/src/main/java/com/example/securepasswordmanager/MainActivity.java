@@ -97,6 +97,7 @@ public final class MainActivity extends AppCompatActivity {
     private static long sBackgroundedElapsed;
 
     private VaultRepository repository;
+    private PremiumManager premiumManager;
     private char[] sessionTruePin;
     private boolean biometricSession;
     private boolean unlocked;
@@ -258,6 +259,7 @@ public final class MainActivity extends AppCompatActivity {
         }
         try {
             repository = new VaultRepository(this);
+            premiumManager = new PremiumManager(this);
             if (Session.isActive()) {
                 restoreSession();
             } else if (repository.exists() && repository.isLegacyVault()) {
@@ -872,6 +874,24 @@ public final class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setNegativeButton(R.string.action_close, null)
                 .create();
+        View premiumRow = view.findViewById(R.id.rowPremiumDebug);
+        premiumRow.setVisibility(premiumManager.isDebugOverrideAvailable()
+                ? View.VISIBLE : View.GONE);
+        if (premiumManager.isDebugOverrideAvailable()) {
+            com.google.android.material.materialswitch.MaterialSwitch premiumSwitch =
+                    view.findViewById(R.id.switchPremiumDebug);
+            TextView premiumStatus = view.findViewById(R.id.premiumDebugStatus);
+            premiumSwitch.setChecked(premiumManager.isPro());
+            premiumStatus.setText(getString(R.string.premium_debug_status,
+                    premiumManager.isPro() ? getString(R.string.premium_pro)
+                            : getString(R.string.premium_free)));
+            premiumSwitch.setOnCheckedChangeListener((button, checked) -> {
+                premiumManager.setDebugPro(checked);
+                premiumStatus.setText(getString(R.string.premium_debug_status,
+                        checked ? getString(R.string.premium_pro)
+                                : getString(R.string.premium_free)));
+            });
+        }
         view.findViewById(R.id.rowRecovery).setOnClickListener(v -> {
             dialog.dismiss();
             showRecoveryQrDialog();

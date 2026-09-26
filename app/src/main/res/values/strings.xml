@@ -191,6 +191,10 @@
     <string name="cd_copy">Kopiuj</string>
     <string name="cd_qr">Kod odzyskiwania QR</string>
     <string name="settings_tutorial">Instrukcja aplikacji</string>
+    <string name="settings_premium_debug">Tryb testowy Free / Pro</string>
+    <string name="premium_debug_status">Aktywny plan: %1$s</string>
+    <string name="premium_free">Free</string>
+    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Pomiń</string>
     <string name="tutorial_next">Dalej</string>
     <string name="tutorial_done">Gotowe</string>

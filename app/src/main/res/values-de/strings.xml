@@ -168,6 +168,10 @@
     <string name="cd_copy">Kopieren</string>
     <string name="cd_qr">Wiederherstellungs-QR-Code</string>
     <string name="settings_tutorial">App-Anleitung</string>
+    <string name="settings_premium_debug">Free-/Pro-Testmodus</string>
+    <string name="premium_debug_status">Aktiver Tarif: %1$s</string>
+    <string name="premium_free">Free</string>
+    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Überspringen</string>
     <string name="tutorial_next">Weiter</string>
     <string name="tutorial_done">Fertig</string>
