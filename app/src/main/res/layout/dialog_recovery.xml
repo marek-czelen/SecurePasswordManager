@@ -20,8 +20,19 @@
         android:layout_width="match_parent"
         android:layout_height="52dp"
         android:layout_marginTop="16dp"
-        android:text="@string/action_scan"
+        android:text="@string/action_scan_recovery"
         app:icon="@drawable/ic_qr_code"
+        app:iconGravity="textStart"
+        app:cornerRadius="14dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnScanPassphrase"
+        style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/action_scan_passphrase"
+        app:icon="@drawable/ic_lock"
         app:iconGravity="textStart"
         app:cornerRadius="14dp" />
 
@@ -76,7 +87,7 @@
             android:id="@+id/editPin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberPassword"
-            android:maxLength="12" />
+            android:inputType="textPassword"
+            android:maxLength="24" />
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

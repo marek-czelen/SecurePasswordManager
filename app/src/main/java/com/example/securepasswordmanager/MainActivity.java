@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.biometrics.BiometricPrompt;
 import android.net.Uri;
 import android.os.Build;
@@ -17,6 +18,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -24,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +44,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.securepasswordmanager.crypto.RecoveryQrPayload;
+import com.example.securepasswordmanager.crypto.PassphraseQrPayload;
 import com.example.securepasswordmanager.crypto.PasswordHealth;
 import com.example.securepasswordmanager.crypto.Totp;
 import com.example.securepasswordmanager.crypto.VaultData;
@@ -55,17 +59,22 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -73,13 +82,17 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 
 public final class MainActivity extends AppCompatActivity {
+    private static final String IMAGE_LOG = "SPM_IMAGE_FLOW";
     private static final int REQUEST_VAULT_FILE = 4101;
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
     private static final String KEY_PENDING_PHOTO = "pending_photo";
     private static final String KEY_AWAITING = "awaiting_result";
     private static final String APP_PREFS = "app_settings";
     private static final String PREF_AUTOLOCK_MIN = "autolock_min";
+    private static final String PREF_AUTOLOCK_ENABLED = "autolock_enabled";
+    private static final String PREF_LOCK_BACKGROUND = "lock_background";
     private static final int DEFAULT_AUTOLOCK_MIN = 5;
+    private static boolean sImageFlowActive;
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
     private static long sBackgroundedElapsed;
 
@@ -97,6 +110,7 @@ public final class MainActivity extends AppCompatActivity {
     private TextInputEditText recoveryPinField;
     private TextView recoveryFileStatus;
     private byte[] selectedRecoveryVault;
+    private boolean scanningPassphraseQr;
 
     private final Handler clipboardHandler = new Handler(Looper.getMainLooper());
     private final Handler inactivityHandler = new Handler(Looper.getMainLooper());
@@ -108,6 +122,7 @@ public final class MainActivity extends AppCompatActivity {
     private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     private Uri pendingPhotoUri;
+    private Uri pendingContainerPhotoUri;
     // True while an intentional in-app flow (camera, gallery, SAF picker, OCR review,
     // biometric prompt) is foreground, so onStop does not auto-lock during those flows.
     private boolean awaitingResult;
@@ -131,10 +146,58 @@ public final class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                 if (Boolean.TRUE.equals(granted)) {
-                    launchCamera();
+                    launchContainerCamera();
                 } else {
                     awaitingResult = false;
+                    sImageFlowActive = false;
                     toast(R.string.err_camera_permission);
+                }
+            });
+
+    private final ActivityResultLauncher<String> containerCameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (Boolean.TRUE.equals(granted)) {
+                    launchContainerCamera();
+                } else {
+                    awaitingResult = false;
+                    sImageFlowActive = false;
+                    toast(R.string.err_camera_permission);
+                }
+            });
+
+    private final ActivityResultLauncher<String> containerPickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    launchImageCrop(uri);
+                } else {
+                    awaitingResult = false;
+                    sImageFlowActive = false;
+                }
+            });
+
+    private final ActivityResultLauncher<Uri> containerTakePhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                if (Boolean.TRUE.equals(success) && pendingContainerPhotoUri != null) {
+                    launchImageCrop(pendingContainerPhotoUri);
+                } else {
+                    awaitingResult = false;
+                    sImageFlowActive = false;
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> imageCropLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                Log.d(IMAGE_LOG, "crop result received: code=" + result.getResultCode()
+                        + ", data=" + (result.getData() != null));
+                awaitingResult = false;
+                sImageFlowActive = false;
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getParcelableExtra(
+                            ImageCropActivity.EXTRA_CROPPED_URI);
+                    Log.d(IMAGE_LOG, "crop URI present=" + (uri != null));
+                    if (uri != null) {
+                        addCroppedImage(uri);
+                    }
                 }
             });
 
@@ -171,6 +234,14 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
 
+    private final ActivityResultLauncher<String[]> importBackupLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                awaitingResult = false;
+                if (uri != null) {
+                    importBackup(uri);
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -189,6 +260,8 @@ public final class MainActivity extends AppCompatActivity {
             repository = new VaultRepository(this);
             if (Session.isActive()) {
                 restoreSession();
+            } else if (repository.exists() && repository.isLegacyVault()) {
+                showFatalError(getString(R.string.err_legacy_vault));
             } else if (repository.exists()) {
                 showUnlock();
             } else {
@@ -218,14 +291,24 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        // No immediate lock: staying unlocked while actively using the app is intentional.
-        // We only remember when we went to background so the inactivity timeout can apply.
+        Log.d(IMAGE_LOG, "MainActivity.onStop unlocked=" + unlocked
+                + ", awaitingResult=" + awaitingResult
+                + ", imageFlowActive=" + sImageFlowActive
+                + ", lockOnBackground=" + lockOnBackground());
+        if (unlocked && lockOnBackground() && !awaitingResult && !sImageFlowActive) {
+            Log.d(IMAGE_LOG, "locking because activity stopped outside an intentional flow");
+            lock();
+            return;
+        }
+        // Remember when we went to background so the inactivity timeout can apply.
         sBackgroundedElapsed = SystemClock.elapsedRealtime();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(IMAGE_LOG, "MainActivity.onStart sessionActive=" + Session.isActive()
+                + ", unlocked=" + unlocked);
         if (unlocked) {
             long backgrounded = sBackgroundedElapsed;
             int minutes = autoLockMinutes();
@@ -257,18 +340,45 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private int autoLockMinutes() {
+        if (!isAutoLockEnabled()) {
+            return 0;
+        }
         return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
                 .getInt(PREF_AUTOLOCK_MIN, DEFAULT_AUTOLOCK_MIN);
     }
 
     private void setAutoLockMinutes(int minutes) {
         getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
-                .putInt(PREF_AUTOLOCK_MIN, minutes).apply();
+                .putInt(PREF_AUTOLOCK_MIN, minutes)
+                .putBoolean(PREF_AUTOLOCK_ENABLED, true)
+                .apply();
         scheduleAutoLock();
+    }
+
+    private boolean isAutoLockEnabled() {
+        return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
+                .getBoolean(PREF_AUTOLOCK_ENABLED, true);
+    }
+
+    private void setAutoLockEnabled(boolean enabled) {
+        getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
+                .putBoolean(PREF_AUTOLOCK_ENABLED, enabled).apply();
+        scheduleAutoLock();
+    }
+
+    private boolean lockOnBackground() {
+        return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
+                .getBoolean(PREF_LOCK_BACKGROUND, true);
+    }
+
+    private void setLockOnBackground(boolean enabled) {
+        getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
+                .putBoolean(PREF_LOCK_BACKGROUND, enabled).apply();
     }
 
     @Override
     protected void onDestroy() {
+        Log.d(IMAGE_LOG, "MainActivity.onDestroy finishing=" + isFinishing());
         super.onDestroy();
         ioExecutor.shutdownNow();
     }
@@ -280,8 +390,20 @@ public final class MainActivity extends AppCompatActivity {
         IntentResult scan = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (scan != null) {
             if (scan.getContents() != null && recoveryPayloadField != null) {
-                recoveryPayloadField.setText(scan.getContents());
+                if (scanningPassphraseQr) {
+                    try {
+                        PassphraseQrPayload payload =
+                                PassphraseQrPayload.fromQrString(scan.getContents());
+                        recoveryPinField.setText(new String(payload.passphrase));
+                        Arrays.fill(payload.passphrase, '\0');
+                    } catch (IOException | IllegalArgumentException exception) {
+                        toast(R.string.err_recovery);
+                    }
+                } else {
+                    recoveryPayloadField.setText(scan.getContents());
+                }
             }
+            scanningPassphraseQr = false;
             return;
         }
         if (requestCode == REQUEST_VAULT_FILE && resultCode == RESULT_OK
@@ -336,6 +458,10 @@ public final class MainActivity extends AppCompatActivity {
         unlocked = false;
         setScreen(R.layout.screen_unlock);
         TextInputEditText pin = findViewById(R.id.editPin);
+        // VLT2 never permits a PIN-only operation. PIN + RQR2 is exposed by the
+        // explicit recovery flow below; daily unlock is intentionally biometric-first.
+        findViewById(R.id.tilPin).setVisibility(View.GONE);
+        findViewById(R.id.btnUnlock).setVisibility(View.GONE);
         findViewById(R.id.btnUnlock).setOnClickListener(view -> openWithPin(text(pin)));
         findViewById(R.id.btnBiometric).setOnClickListener(view -> authenticateBiometric());
         findViewById(R.id.btnRecovery).setOnClickListener(view -> showRecoveryImport());
@@ -393,7 +519,7 @@ public final class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onAuthenticationError(int errorCode, CharSequence errString) {
-                            // The PIN path stays available; no fake-mode hint is shown.
+                            // Daily unlock remains biometric-first; recovery is explicit.
                         }
                     });
         } catch (GeneralSecurityException | java.io.IOException exception) {
@@ -523,6 +649,10 @@ public final class MainActivity extends AppCompatActivity {
     // region Entry / details
 
     private void showDetails(VaultItem item) {
+        if (item.isImage()) {
+            showImageDetails(item);
+            return;
+        }
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_details, null);
         TextView username = view.findViewById(R.id.valueUsername);
         TextView password = view.findViewById(R.id.valuePassword);
@@ -532,15 +662,7 @@ public final class MainActivity extends AppCompatActivity {
         username.setText(item.username.isEmpty() ? "—" : item.username);
         url.setText(item.url.isEmpty() ? "—" : item.url);
         notes.setText(item.notes.isEmpty() ? "—" : item.notes);
-        String totpCode = "";
-        if (!item.totpSecret.isEmpty()) {
-            try {
-                totpCode = Totp.code(item.totpSecret, System.currentTimeMillis());
-            } catch (GeneralSecurityException | IllegalArgumentException exception) {
-                totpCode = "—";
-            }
-        }
-        totp.setText(totpCode);
+        totp.setText("••••••");
         view.findViewById(R.id.rowUrl).setVisibility(item.url.isEmpty() ? View.GONE : View.VISIBLE);
         view.findViewById(R.id.rowNotes).setVisibility(item.notes.isEmpty() ? View.GONE : View.VISIBLE);
         view.findViewById(R.id.rowTotp).setVisibility(item.totpSecret.isEmpty() ? View.GONE : View.VISIBLE);
@@ -557,15 +679,46 @@ public final class MainActivity extends AppCompatActivity {
                 copyToClipboard(getString(R.string.hint_username), item.username));
         view.findViewById(R.id.copyPassword).setOnClickListener(v ->
                 copyToClipboard(item.title, item.password));
-        String finalTotpCode = totpCode;
-        view.findViewById(R.id.copyTotp).setOnClickListener(v ->
-                copyToClipboard(getString(R.string.totp_label), finalTotpCode));
+        final String[] visibleTotp = {null};
+        view.findViewById(R.id.showTotp).setOnClickListener(v -> {
+            try {
+                visibleTotp[0] = Totp.code(item.totpSecret, System.currentTimeMillis());
+                totp.setText(visibleTotp[0]);
+            } catch (GeneralSecurityException | IllegalArgumentException exception) {
+                totp.setText("—");
+                toast(R.string.totp_invalid);
+            }
+        });
+        view.findViewById(R.id.copyTotp).setOnClickListener(v -> {
+            if (visibleTotp[0] == null) {
+                toast(R.string.action_show_totp);
+            } else {
+                copyToClipboard(getString(R.string.totp_label), visibleTotp[0]);
+            }
+        });
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle(item.title.isEmpty() ? "—" : item.title)
                 .setView(view)
                 .setNeutralButton(R.string.action_edit, (d, w) -> showEntryDialog(item, item))
                 .setNegativeButton(R.string.action_delete, (d, w) -> confirmDelete(item))
+                .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void showImageDetails(VaultItem item) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_image_details, null);
+        ImageView image = view.findViewById(R.id.imagePreview);
+        image.setImageBitmap(BitmapFactory.decodeByteArray(
+                item.imageJpeg, 0, item.imageJpeg.length));
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(item.title)
+                .setView(view)
+                .setNegativeButton(R.string.action_delete, (dialog, which) -> {
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.remove(item);
+                    saveData(new VaultData(items));
+                })
                 .setPositiveButton(R.string.action_close, null)
                 .show();
     }
@@ -719,6 +872,11 @@ public final class MainActivity extends AppCompatActivity {
             dialog.dismiss();
             showRecoveryQrDialog();
         });
+        view.findViewById(R.id.rowPassphraseQr).setOnClickListener(v -> {
+            dialog.dismiss();
+            requestPassphraseForQr();
+        });
+        view.findViewById(R.id.rowPrivacy).setOnClickListener(v -> showPrivacyDialog());
         View changePin = view.findViewById(R.id.rowChangePin);
         changePin.setOnClickListener(v -> {
             dialog.dismiss();
@@ -728,6 +886,18 @@ public final class MainActivity extends AppCompatActivity {
         autoLockValue.setText(autoLockStatus(autoLockMinutes()));
         view.findViewById(R.id.rowAutoLock).setOnClickListener(v ->
                 showAutoLockChooser(autoLockValue));
+        com.google.android.material.materialswitch.MaterialSwitch autoLockSwitch =
+                view.findViewById(R.id.switchAutoLock);
+        autoLockSwitch.setChecked(isAutoLockEnabled());
+        autoLockSwitch.setOnCheckedChangeListener((button, checked) -> {
+            setAutoLockEnabled(checked);
+            autoLockValue.setText(autoLockStatus(autoLockMinutes()));
+        });
+        com.google.android.material.materialswitch.MaterialSwitch backgroundSwitch =
+                view.findViewById(R.id.switchLockBackground);
+        backgroundSwitch.setChecked(lockOnBackground());
+        backgroundSwitch.setOnCheckedChangeListener((button, checked) ->
+                setLockOnBackground(checked));
         view.findViewById(R.id.rowLock).setOnClickListener(v -> {
             dialog.dismiss();
             lock();
@@ -748,6 +918,11 @@ public final class MainActivity extends AppCompatActivity {
             awaitingResult = true;
             backupLauncher.launch(getString(R.string.vault_default_filename));
         });
+        view.findViewById(R.id.rowImportBackup).setOnClickListener(v -> {
+            dialog.dismiss();
+            awaitingResult = true;
+            importBackupLauncher.launch(new String[]{"application/octet-stream", "*/*"});
+        });
         View syncNow = view.findViewById(R.id.rowSyncNow);
         View unlink = view.findViewById(R.id.rowUnlinkRemote);
         syncNow.setVisibility(linked ? View.VISIBLE : View.GONE);
@@ -760,11 +935,63 @@ public final class MainActivity extends AppCompatActivity {
             dialog.dismiss();
             repository.unlinkRemote();
         });
+        view.findViewById(R.id.rowDeleteVault).setOnClickListener(v -> {
+            dialog.dismiss();
+            confirmDeleteLocalVault();
+        });
         dialog.show();
     }
 
+    private void showPrivacyDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.settings_privacy)
+                .setMessage(getString(R.string.privacy_policy_text)
+                        + "\n\n" + getString(R.string.privacy_policy_url))
+                .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void confirmDeleteLocalVault() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.delete_vault_title)
+                .setMessage(R.string.delete_vault_message)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_delete, (dialog, which) -> {
+                    try {
+                        repository.deleteLocalVault();
+                        clearSession();
+                        deleteCacheContents();
+                        showFirstRun();
+                    } catch (IOException exception) {
+                        toast(R.string.err_save);
+                    }
+                })
+                .show();
+    }
+
+    private void deleteCacheContents() {
+        File[] files = getCacheDir().listFiles();
+        if (files != null) {
+            for (File file : files) {
+                deleteRecursively(file);
+            }
+        }
+    }
+
+    private static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        file.delete();
+    }
+
     private void showAutoLockChooser(TextView valueLabel) {
-        int[] minutes = {1, 5, 15, 30, 0};
+        int[] minutes = {1, 5, 15, 30};
         String[] labels = new String[minutes.length];
         int current = 0;
         int currentMinutes = autoLockMinutes();
@@ -833,22 +1060,155 @@ public final class MainActivity extends AppCompatActivity {
     private void showRecoveryQrDialog() {
         try {
             RecoveryQrPayload payload = repository.createRecoveryPayload();
+            displayRecoveryQr(payload);
+        } catch (GeneralSecurityException | java.io.IOException
+                 | com.google.zxing.WriterException exception) {
+            authenticateForRecoveryQr();
+        }
+    }
+
+    private void displayRecoveryQr(RecoveryQrPayload payload)
+            throws IOException, com.google.zxing.WriterException {
+        String encoded = payload.toQrString();
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_recovery_qr, null);
+        ImageView qr = view.findViewById(R.id.qrImage);
+        Bitmap bitmap = encodeQrBitmap(encoded, 640);
+        qr.setImageBitmap(bitmap);
+        view.findViewById(R.id.btnCopyPayload).setOnClickListener(v ->
+                copyToClipboard(getString(R.string.recovery_qr_title), encoded));
+        view.findViewById(R.id.btnShareQr).setOnClickListener(v ->
+                shareQrAsJpg(encoded, "recovery-qr"));
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.recovery_qr_title)
+                .setView(view)
+                .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void authenticateForRecoveryQr() {
+        try {
+            Cipher cipher = repository.prepareRecoveryQrCipher();
+            Executor executor = this::runOnUiThread;
+            awaitingResult = true;
+            new BiometricPrompt.Builder(this)
+                    .setTitle(getString(R.string.recovery_qr_title))
+                    .setSubtitle(getString(R.string.app_tagline))
+                    .setNegativeButton(getString(R.string.action_cancel), executor,
+                            (dialog, which) -> awaitingResult = false)
+                    .build()
+                    .authenticate(new BiometricPrompt.CryptoObject(cipher),
+                            new CancellationSignal(), executor,
+                            new BiometricPrompt.AuthenticationCallback() {
+                                @Override
+                                public void onAuthenticationSucceeded(
+                                        BiometricPrompt.AuthenticationResult result) {
+                                    awaitingResult = false;
+                                    try {
+                                        displayRecoveryQr(repository.openRecoveryQr(
+                                                result.getCryptoObject().getCipher()));
+                                    } catch (GeneralSecurityException | IOException
+                                             | com.google.zxing.WriterException exception) {
+                                        toast(R.string.err_recovery_create);
+                                    }
+                                }
+
+                                @Override
+                                public void onAuthenticationError(int errorCode,
+                                                                  CharSequence errString) {
+                                    awaitingResult = false;
+                                }
+                            });
+        } catch (GeneralSecurityException | IOException exception) {
+            toast(R.string.err_recovery_create);
+        }
+    }
+
+    private void requestPassphraseForQr() {
+        if (sessionTruePin != null) {
+            showPassphraseQrDialog(sessionTruePin);
+            return;
+        }
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_passphrase, null);
+        TextInputEditText field = view.findViewById(R.id.editPassphrase);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.passphrase_qr_title)
+                .setView(view)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_show, (dialog, which) -> {
+                    char[] passphrase = text(field);
+                    try {
+                        if (!PinPolicy.isValid(passphrase)) {
+                            toast(R.string.err_unlock);
+                        } else {
+                            showPassphraseQrDialog(passphrase);
+                        }
+                    } finally {
+                        clear(passphrase);
+                    }
+                })
+                .show();
+    }
+
+    private void showPassphraseQrDialog(char[] passphrase) {
+        try {
+            PassphraseQrPayload payload = repository.createPassphraseQrPayload(passphrase);
             String encoded = payload.toQrString();
-            View view = LayoutInflater.from(this).inflate(R.layout.dialog_recovery_qr, null);
-            ImageView qr = view.findViewById(R.id.qrImage);
-            Bitmap bitmap = new BarcodeEncoder().encodeBitmap(encoded, BarcodeFormat.QR_CODE, 640, 640);
-            qr.setImageBitmap(bitmap);
-            view.findViewById(R.id.btnCopyPayload).setOnClickListener(v ->
-                    copyToClipboard(getString(R.string.recovery_qr_title), encoded));
+            View view = LayoutInflater.from(this).inflate(R.layout.dialog_passphrase_qr, null);
+            ImageView qr = view.findViewById(R.id.passphraseQrImage);
+            qr.setImageBitmap(encodeQrBitmap(encoded, 640));
+            view.findViewById(R.id.btnSharePassphraseQr).setOnClickListener(v ->
+                    shareQrAsJpg(encoded, "passphrase-qr"));
             new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.recovery_qr_title)
+                    .setTitle(R.string.passphrase_qr_title)
                     .setView(view)
                     .setPositiveButton(R.string.action_close, null)
                     .show();
-        } catch (GeneralSecurityException | java.io.IOException
-                 | com.google.zxing.WriterException exception) {
+        } catch (GeneralSecurityException | IOException | com.google.zxing.WriterException exception) {
             toast(R.string.err_recovery_create);
         }
+    }
+
+    private void shareQrAsJpg(String encoded, String name)
+            throws RuntimeException {
+        try {
+            File directory = new File(getCacheDir(), "shared");
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw new IOException("Cannot create QR share directory");
+            }
+            File file = new File(directory, name + "-" + System.currentTimeMillis() + ".jpg");
+            Bitmap bitmap = encodeQrBitmap(encoded, 1200);
+            try (java.io.FileOutputStream output = new java.io.FileOutputStream(file)) {
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 96, output)) {
+                    throw new IOException("Cannot encode QR JPG");
+                }
+            } finally {
+                bitmap.recycle();
+            }
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("image/jpeg");
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(share, getString(R.string.action_share_jpg)));
+            new Handler(Looper.getMainLooper()).postDelayed(
+                    () -> { if (file.exists()) file.delete(); }, 10 * 60 * 1000L);
+        } catch (IOException | com.google.zxing.WriterException exception) {
+            toast(R.string.err_recovery_create);
+        }
+    }
+
+    /**
+     * Encodes QR with a four-module quiet zone and medium error correction. The quiet zone
+     * is critical when scanning a QR displayed on another screen: without it, camera
+     * autofocus and the QR detector can merge the code into the surrounding UI.
+     */
+    private static Bitmap encodeQrBitmap(String value, int size)
+            throws com.google.zxing.WriterException {
+        Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+        hints.put(EncodeHintType.MARGIN, 4);
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+        return new BarcodeEncoder().encodeBitmap(value, BarcodeFormat.QR_CODE,
+                size, size, hints);
     }
 
     private void showRecoveryImport() {
@@ -857,10 +1217,24 @@ public final class MainActivity extends AppCompatActivity {
         recoveryPinField = view.findViewById(R.id.editPin);
         recoveryFileStatus = view.findViewById(R.id.fileStatus);
         view.findViewById(R.id.btnScan).setOnClickListener(v -> {
+            scanningPassphraseQr = false;
             awaitingResult = true;
             new IntentIntegrator(this)
                     .setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                    .setCaptureActivity(PortraitCaptureActivity.class)
+                    .setOrientationLocked(true)
                     .setPrompt(getString(R.string.action_scan))
+                    .setBeepEnabled(false)
+                    .initiateScan();
+        });
+        view.findViewById(R.id.btnScanPassphrase).setOnClickListener(v -> {
+            scanningPassphraseQr = true;
+            awaitingResult = true;
+            new IntentIntegrator(this)
+                    .setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                    .setCaptureActivity(PortraitCaptureActivity.class)
+                    .setOrientationLocked(true)
+                    .setPrompt(getString(R.string.action_scan_passphrase))
                     .setBeepEnabled(false)
                     .initiateScan();
         });
@@ -900,6 +1274,10 @@ public final class MainActivity extends AppCompatActivity {
     // region Persistence helpers
 
     private void saveData(VaultData data) {
+        boolean imageAdded = countImages(data) > countImages(currentData);
+        Log.d(IMAGE_LOG, "saveData imageEntries=" + countImages(data)
+                + ", biometric=" + biometricSession
+                + ", sessionActive=" + Session.isActive());
         try {
             if (biometricSession) {
                 authenticateBiometricForSave(data);
@@ -910,19 +1288,27 @@ public final class MainActivity extends AppCompatActivity {
                 lock();
             } else {
                 repository.updateWithTruePin(sessionTruePin, data);
+                Log.d(IMAGE_LOG, "vault update with passphrase completed");
                 currentData = data;
                 Session.updateData(currentData);
                 renderList();
                 autoBackupAfterSave();
+                if (imageAdded) {
+                    toast(R.string.msg_image_saved);
+                }
             }
         } catch (GeneralSecurityException | java.io.IOException
                  | IllegalArgumentException exception) {
+            Log.e(IMAGE_LOG, "vault update failed: "
+                    + exception.getClass().getSimpleName());
             toast(R.string.err_save);
         }
     }
 
     private void authenticateBiometricForSave(VaultData data) {
+        boolean imageAdded = countImages(data) > countImages(currentData);
         try {
+            Log.d(IMAGE_LOG, "preparing biometric authorization for image save");
             Cipher cipher = repository.prepareBiometricCipher();
             Executor executor = this::runOnUiThread;
             BiometricPrompt prompt = new BiometricPrompt.Builder(this)
@@ -932,31 +1318,42 @@ public final class MainActivity extends AppCompatActivity {
                             (d, w) -> awaitingResult = false)
                     .build();
             awaitingResult = true;
+            Log.d(IMAGE_LOG, "biometric save prompt shown");
             prompt.authenticate(new BiometricPrompt.CryptoObject(cipher),
                     new CancellationSignal(), executor,
                     new BiometricPrompt.AuthenticationCallback() {
                         @Override
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
+                            Log.d(IMAGE_LOG, "biometric save authorization succeeded");
                             awaitingResult = false;
                             try {
                                 repository.updateWithBiometric(
                                         result.getCryptoObject().getCipher(), data);
+                                Log.d(IMAGE_LOG, "vault update with biometric completed");
                                 currentData = data;
                                 Session.updateData(currentData);
                                 renderList();
                                 autoBackupAfterSave();
+                                if (imageAdded) {
+                                    toast(R.string.msg_image_saved);
+                                }
                             } catch (GeneralSecurityException | java.io.IOException exception) {
+                                Log.e(IMAGE_LOG, "biometric vault update failed: "
+                                        + exception.getClass().getSimpleName());
                                 toast(R.string.err_save);
                             }
                         }
 
                         @Override
                         public void onAuthenticationError(int errorCode, CharSequence errString) {
+                            Log.w(IMAGE_LOG, "biometric save authorization error code=" + errorCode);
                             awaitingResult = false;
                         }
                     });
         } catch (GeneralSecurityException | java.io.IOException exception) {
+            Log.e(IMAGE_LOG, "biometric save setup failed: "
+                    + exception.getClass().getSimpleName());
             toast(R.string.err_biometric);
         }
     }
@@ -984,55 +1381,137 @@ public final class MainActivity extends AppCompatActivity {
 
     // endregion
 
-    // region OCR import
+    // region Image container
 
     private void showAddChooser() {
         String[] options = {
                 getString(R.string.add_manual),
-                getString(R.string.add_from_camera),
-                getString(R.string.add_from_gallery)
+                getString(R.string.add_image_container)
         };
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_choose_title)
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
                         showEntryDialog(null, null);
-                    } else if (which == 1) {
-                        requestCameraAndCapture();
                     } else {
-                        awaitingResult = true;
-                        pickImageLauncher.launch("image/*");
+                        showImageSourceChooser();
                     }
                 })
                 .show();
     }
 
-    private void requestCameraAndCapture() {
-        // Cover the permission dialog too: on some devices it stops the activity, which
-        // would otherwise trigger auto-lock and drop the user back to the unlock screen.
+    private void showImageSourceChooser() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.add_image_container)
+                .setItems(new String[]{getString(R.string.ocr_camera),
+                        getString(R.string.ocr_gallery)}, (dialog, which) -> {
+                    if (which == 0) {
+                        requestContainerCamera();
+                    } else {
+                        awaitingResult = true;
+                        sImageFlowActive = true;
+                        containerPickImageLauncher.launch("image/*");
+                    }
+                })
+                .show();
+    }
+
+    private void requestContainerCamera() {
         awaitingResult = true;
+        sImageFlowActive = true;
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            launchCamera();
+            launchContainerCamera();
         } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            containerCameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
 
-    private void launchCamera() {
+    private void launchContainerCamera() {
         try {
-            File directory = new File(getCacheDir(), "ocr");
+            File directory = new File(getCacheDir(), "images");
             if (!directory.exists() && !directory.mkdirs()) {
                 throw new java.io.IOException("Cannot create capture directory");
             }
-            File photo = new File(directory, "capture_" + System.currentTimeMillis() + ".jpg");
-            pendingPhotoUri = FileProvider.getUriForFile(this,
+            File photo = new File(directory, "capture-" + System.currentTimeMillis() + ".jpg");
+            pendingContainerPhotoUri = FileProvider.getUriForFile(this,
                     getPackageName() + ".fileprovider", photo);
             awaitingResult = true;
-            takePhotoLauncher.launch(pendingPhotoUri);
+            containerTakePhotoLauncher.launch(pendingContainerPhotoUri);
         } catch (java.io.IOException | IllegalArgumentException exception) {
-            toast(R.string.err_ocr);
+            sImageFlowActive = false;
+            awaitingResult = false;
+            toast(R.string.err_image);
         }
+    }
+
+    private void launchImageCrop(Uri source) {
+        Log.d(IMAGE_LOG, "launchImageCrop scheme=" + (source == null ? "null" : source.getScheme()));
+        Intent intent = new Intent(this, ImageCropActivity.class);
+        intent.putExtra(ImageCropActivity.EXTRA_IMAGE_URI, source);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        awaitingResult = true;
+        sImageFlowActive = true;
+        imageCropLauncher.launch(intent);
+    }
+
+    private void addCroppedImage(Uri uri) {
+        Log.d(IMAGE_LOG, "addCroppedImage started, uriPresent=" + (uri != null));
+        ioExecutor.execute(() -> {
+            try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
+                if (input == null) {
+                    throw new IOException("Image is unavailable");
+                }
+                byte[] bytes = readLimited(input, 8 * 1024 * 1024);
+                Log.d(IMAGE_LOG, "cropped JPG read bytes=" + bytes.length);
+                runOnUiThread(() -> requestImageName(bytes));
+            } catch (IOException | IllegalArgumentException exception) {
+                Log.e(IMAGE_LOG, "cropped image read failed: "
+                        + exception.getClass().getSimpleName());
+                runOnUiThread(() -> toast(R.string.err_image));
+            } finally {
+                try {
+                    if (uri != null && getPackageName().concat(".fileprovider")
+                            .equals(uri.getAuthority())) {
+                        getContentResolver().delete(uri, null, null);
+                    }
+                } catch (RuntimeException ignored) {
+                    // The FileProvider owns the temporary file; cleanup is best effort.
+                }
+            }
+        });
+    }
+
+    private void requestImageName(byte[] jpeg) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_image_name, null);
+        TextInputEditText name = view.findViewById(R.id.editImageName);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.add_image_container)
+                .setView(view)
+                .setNegativeButton(R.string.action_cancel, (dialog, which) -> {
+                    Arrays.fill(jpeg, (byte) 0);
+                })
+                .setPositiveButton(R.string.action_save, (dialog, which) -> {
+                    String title = str(name).trim();
+                    if (title.isEmpty()) {
+                        title = "Obraz";
+                    }
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.add(VaultItem.image(title, jpeg));
+                    Arrays.fill(jpeg, (byte) 0);
+                    saveData(new VaultData(items));
+                })
+                .show();
+    }
+
+    private static int countImages(VaultData data) {
+        int count = 0;
+        for (VaultItem item : data.items) {
+            if (item.isImage()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /** Opens the interactive OCR review screen where the user marks the fields to import. */
@@ -1083,6 +1562,23 @@ public final class MainActivity extends AppCompatActivity {
             } catch (java.io.IOException exception) {
                 String reason = exception.getMessage();
                 runOnUiThread(() -> showBackupError(getString(R.string.err_backup), reason));
+            }
+        });
+    }
+
+    /** Imports a validated encrypted copy and returns to the unlock screen. */
+    private void importBackup(Uri uri) {
+        ioExecutor.execute(() -> {
+            try {
+                repository.importCopy(uri);
+                runOnUiThread(() -> {
+                    clearSession();
+                    toast(R.string.msg_imported_backup);
+                    showUnlock();
+                });
+            } catch (java.io.IOException exception) {
+                String reason = exception.getMessage();
+                runOnUiThread(() -> showBackupError(getString(R.string.err_import_backup), reason));
             }
         });
     }

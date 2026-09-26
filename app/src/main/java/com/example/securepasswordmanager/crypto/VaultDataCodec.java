@@ -11,6 +11,13 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Length-bounded binary serialization for encrypted entry data.
+ *
+ * <p>VDB2 adds favorite/folder/TOTP fields while decoding VDB1 with safe defaults.
+ * Padding is applied before encryption so small changes do not expose exact plaintext
+ * database length.</p>
+ */
 public final class VaultDataCodec {
     private static final int BLOCK_SIZE = 4096;
     private static final int MAX_ITEMS = 10_000;
@@ -23,9 +30,10 @@ public final class VaultDataCodec {
     public static byte[] encode(VaultData data, int targetLength) throws IOException {
         ByteArrayOutputStream rawBytes = new ByteArrayOutputStream();
         DataOutputStream raw = new DataOutputStream(rawBytes);
-        raw.writeInt(0x56444232);
+        raw.writeInt(0x56444234);
         raw.writeInt(data.items.size());
         for (VaultItem item : data.items) {
+            writeString(raw, item.type);
             writeString(raw, item.title);
             writeString(raw, item.username);
             writeString(raw, item.password);
@@ -35,6 +43,13 @@ public final class VaultDataCodec {
             writeString(raw, item.folder);
             writeString(raw, item.totpSecret);
             raw.writeBoolean(item.favorite);
+            if (item.isImage()) {
+                if (item.imageJpeg == null || item.imageJpeg.length > 8 * 1024 * 1024) {
+                    throw new IOException("Invalid image entry");
+                }
+                raw.writeInt(item.imageJpeg.length);
+                raw.write(item.imageJpeg);
+            }
         }
         raw.flush();
         byte[] encoded = rawBytes.toByteArray();
@@ -62,7 +77,8 @@ public final class VaultDataCodec {
         input.readFully(encoded);
         DataInputStream raw = new DataInputStream(new ByteArrayInputStream(encoded));
         int dataVersion = raw.readInt();
-        if (dataVersion != 0x56444231 && dataVersion != 0x56444232) {
+        if (dataVersion != 0x56444231 && dataVersion != 0x56444232
+                && dataVersion != 0x56444233 && dataVersion != 0x56444234) {
             throw new IOException("Invalid vault payload");
         }
         int count = raw.readInt();
@@ -71,6 +87,7 @@ public final class VaultDataCodec {
         }
         List<VaultItem> items = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
+            String type = dataVersion == 0x56444234 ? readString(raw) : VaultItem.TYPE_LOGIN;
             String title = readString(raw);
             String username = readString(raw);
             String password = readString(raw);
@@ -80,12 +97,49 @@ public final class VaultDataCodec {
             if (dataVersion == 0x56444231) {
                 items.add(new VaultItem(title, username, password, url, notes, tags));
             } else {
-                items.add(new VaultItem(title, username, password, url, notes, tags,
-                        readString(raw), readString(raw), raw.readBoolean()));
+                String folder = readString(raw);
+                String totp = readString(raw);
+                boolean favorite = raw.readBoolean();
+                if (dataVersion == 0x56444234 && VaultItem.TYPE_IMAGE.equals(type)) {
+                    int length = raw.readInt();
+                    if (length < 1 || length > 8 * 1024 * 1024) {
+                        throw new IOException("Invalid image entry length");
+                    }
+                    byte[] jpeg = new byte[length];
+                    raw.readFully(jpeg);
+                    items.add(VaultItem.image(title, jpeg));
+                } else {
+                    items.add(new VaultItem(title, username, password, url, notes, tags,
+                            folder, totp, favorite));
+                }
+            }
+        }
+        List<VaultImage> images = new ArrayList<>();
+        if (dataVersion == 0x56444233) {
+            int imageCount = raw.readInt();
+            if (imageCount < 0 || imageCount > 256) {
+                throw new IOException("Invalid image count");
+            }
+            for (int i = 0; i < imageCount; i++) {
+                String id = readString(raw);
+                long createdAt = raw.readLong();
+                int length = raw.readInt();
+                if (length < 1 || length > 8 * 1024 * 1024) {
+                    throw new IOException("Invalid image length");
+                }
+                byte[] jpeg = new byte[length];
+                raw.readFully(jpeg);
+                images.add(new VaultImage(id, jpeg, createdAt));
             }
         }
         if (raw.available() != 0) {
             throw new IOException("Trailing vault data");
+        }
+        if (!images.isEmpty()) {
+            for (int i = 0; i < images.size(); i++) {
+                VaultImage image = images.get(i);
+                items.add(VaultItem.image("Obraz " + (i + 1), image.jpeg));
+            }
         }
         return new VaultData(items);
     }
@@ -93,9 +147,10 @@ public final class VaultDataCodec {
     public static int paddedLength(VaultData data) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream output = new DataOutputStream(bytes);
-        output.writeInt(0x56444232);
+        output.writeInt(0x56444234);
         output.writeInt(data.items.size());
         for (VaultItem item : data.items) {
+            writeString(output, item.type);
             writeString(output, item.title);
             writeString(output, item.username);
             writeString(output, item.password);
@@ -105,6 +160,13 @@ public final class VaultDataCodec {
             writeString(output, item.folder);
             writeString(output, item.totpSecret);
             output.writeBoolean(item.favorite);
+            if (item.isImage()) {
+                if (item.imageJpeg == null || item.imageJpeg.length > 8 * 1024 * 1024) {
+                    throw new IOException("Invalid image entry");
+                }
+                output.writeInt(item.imageJpeg.length);
+                output.write(item.imageJpeg);
+            }
         }
         output.flush();
         return roundUp(bytes.size() + Integer.BYTES, BLOCK_SIZE);

@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:maxHeight="560dp"
+    android:scrollbars="vertical"
+    android:overScrollMode="ifContentScrolls">
+
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -17,8 +25,8 @@
 
         <ImageView
             android:id="@+id/qrImage"
-            android:layout_width="260dp"
-            android:layout_height="260dp"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
             android:layout_margin="16dp"
             android:contentDescription="@string/cd_qr" />
     </com.google.android.material.card.MaterialCardView>
@@ -32,13 +40,33 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnCopyPayload"
-        style="@style/Widget.Material3.Button.TonalButton.Icon"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/action_copy"
-        app:icon="@drawable/ic_copy"
-        app:iconGravity="textStart" />
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopyPayload"
+            style="@style/Widget.Material3.Button.TonalButton.Icon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/action_copy"
+            app:icon="@drawable/ic_copy"
+            app:iconGravity="textStart" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareQr"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/action_share_jpg"
+            app:icon="@drawable/ic_image"
+            app:iconGravity="textStart" />
+    </LinearLayout>
 </LinearLayout>
+</ScrollView>

@@ -155,6 +155,13 @@
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/showTotp"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_show_totp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/copyTotp"
                 style="@style/Widget.Material3.Button.IconButton"
                 android:layout_width="wrap_content"

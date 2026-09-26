@@ -10,6 +10,7 @@ zxingEmbedded = "4.3.0"
 constraintlayout = "2.2.1"
 recyclerview = "1.4.0"
 mlkitText = "16.0.1"
+bouncycastle = "1.79"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -22,6 +23,7 @@ zxing-embedded = { group = "com.journeyapps", name = "zxing-android-embedded", v
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 mlkit-text = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitText" }
+bouncycastle = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -19,8 +19,8 @@
             android:id="@+id/editOldPin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberPassword"
-            android:maxLength="12" />
+            android:inputType="textPassword"
+            android:maxLength="24" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -36,7 +36,7 @@
             android:id="@+id/editNewPin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberPassword"
-            android:maxLength="12" />
+            android:inputType="textPassword"
+            android:maxLength="24" />
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

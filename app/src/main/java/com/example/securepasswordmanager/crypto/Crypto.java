@@ -14,6 +14,14 @@ import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * Small, standard cryptographic primitives used by the vault.
+ *
+ * <p>This class deliberately does not invent an encryption scheme. AES-GCM provides
+ * confidentiality and integrity, HKDF provides domain-separated key derivation, and
+ * the platform CSPRNG supplies unpredictable nonces and secrets. Callers own lifecycle
+ * decisions and must wipe mutable key material when they are done.</p>
+ */
 public final class Crypto {
     public static final int KEY_SIZE = 32;
     public static final int NONCE_SIZE = 12;
@@ -56,6 +64,10 @@ public final class Crypto {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(key, "HmacSHA256"));
         return mac.doFinal(data);
+    }
+
+    public static byte[] sha256(byte[] data) throws GeneralSecurityException {
+        return MessageDigest.getInstance("SHA-256").digest(data);
     }
 
     public static byte[] hkdf(byte[] inputKeyMaterial, byte[] salt, byte[] info, int length)

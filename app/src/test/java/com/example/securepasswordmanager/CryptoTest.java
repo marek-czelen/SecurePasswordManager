@@ -39,6 +39,18 @@ public final class CryptoTest {
     }
 
     @Test
+    public void argon2AndHkdfAreDeterministicAndDomainSeparated() throws Exception {
+        KdfParameters parameters = new KdfParameters(new byte[16], 8 * 1024, 1, 1);
+        byte[] first = PinKdf.derive("correct horse".toCharArray(), parameters);
+        byte[] second = PinKdf.derive("correct horse".toCharArray(), parameters);
+        assertArrayEquals(first, second);
+        assertNotEquals(new String(first), new String(
+                PinKdf.derive("correct pony".toCharArray(), parameters)));
+        assertArrayEquals(Crypto.hkdf(first, new byte[16], Crypto.utf8("test"), 32),
+                Crypto.hkdf(first, new byte[16], Crypto.utf8("test"), 32));
+    }
+
+    @Test
     public void payloadAndEnvelopeRoundTrip() throws Exception {
         byte[] vaultId = Crypto.randomBytes(16);
         byte[] slotId = Crypto.randomBytes(16);
@@ -54,6 +66,46 @@ public final class CryptoTest {
         assertEquals(1, decoded.slots.size());
         RecoveryQrPayload payload = new RecoveryQrPayload(vaultId, slotId, parameters, box);
         assertArrayEquals(vaultId, RecoveryQrPayload.fromQrString(payload.toQrString()).vaultId);
+    }
+
+    @Test
+    public void vlt2HasNoPinVerifierAndRqr2HasOnlyRandomSecret() throws Exception {
+        byte[] vaultId = Crypto.randomBytes(16);
+        byte[] qrSecret = Crypto.randomBytes(32);
+        KdfParameters parameters = new KdfParameters(new byte[16], 8 * 1024, 1, 1);
+        byte[] wrapSalt = Crypto.randomBytes(16);
+        VaultSlot slot = new VaultSlot(Crypto.randomBytes(16),
+                Crypto.seal(Crypto.randomBytes(32), Crypto.randomBytes(32), "wrap".getBytes()),
+                new byte[]{2, 1, 2}, Crypto.seal(Crypto.randomBytes(32),
+                Crypto.randomBytes(32), "data".getBytes()));
+        VaultEnvelope envelope = new VaultEnvelope(vaultId, parameters, wrapSalt,
+                Crypto.sha256(qrSecret), slot);
+        VaultEnvelope decoded = VaultEnvelope.decode(envelope.encode());
+        assertEquals(2, decoded.version);
+        assertEquals(0, decoded.slots.get(0).pinVerifier.length);
+        RecoveryQrPayload qr = new RecoveryQrPayload(vaultId, qrSecret, parameters, wrapSalt);
+        assertArrayEquals(qrSecret, RecoveryQrPayload.fromQrString(qr.toQrString()).qrSecret);
+        String qrText = qr.toQrString();
+        int tamperIndex = qrText.length() / 2;
+        char replacement = qrText.charAt(tamperIndex) == 'A' ? 'B' : 'A';
+        String tampered = qrText.substring(0, tamperIndex) + replacement
+                + qrText.substring(tamperIndex + 1);
+        assertThrows(Exception.class, () -> RecoveryQrPayload.fromQrString(tampered));
+    }
+
+    @Test
+    public void legacyTwoSlotEnvelopeCanBeReadForMigration() throws Exception {
+        byte[] vaultId = Crypto.randomBytes(16);
+        byte[] key = Crypto.randomBytes(32);
+        KdfParameters parameters = new KdfParameters(Crypto.randomBytes(16), 100_000);
+        Crypto.SealedBox box = Crypto.seal(key, Crypto.randomBytes(32), "pin".getBytes());
+        VaultSlot first = new VaultSlot(Crypto.randomBytes(16), Crypto.hmacSha256(key, new byte[16]),
+                box, new byte[]{2, 1, 2}, box);
+        VaultSlot second = new VaultSlot(Crypto.randomBytes(16), Crypto.hmacSha256(key, new byte[16]),
+                box, new byte[]{2, 3, 4}, box);
+        VaultEnvelope legacy = new VaultEnvelope(vaultId, parameters,
+                java.util.Arrays.asList(first, second));
+        assertEquals(2, VaultEnvelope.decode(legacy.encode()).slots.size());
     }
 
     @Test

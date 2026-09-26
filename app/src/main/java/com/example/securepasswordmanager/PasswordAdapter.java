@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,6 +17,12 @@ import java.util.List;
 import java.util.Locale;
 
 /** Renders vault entries as Material cards without exposing plaintext passwords in the list. */
+/**
+ * RecyclerView adapter for the encrypted entry list.
+ *
+ * <p>It never renders password plaintext. Copying or opening a record is an explicit
+ * user action handled by the Activity.</p>
+ */
 public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.EntryHolder> {
 
     public interface Listener {
@@ -52,7 +59,11 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         VaultItem item = items.get(position);
         String title = item.title.isEmpty() ? "—" : item.title;
         holder.title.setText(title);
-        holder.subtitle.setText(item.username.isEmpty() ? item.url : item.username);
+        holder.subtitle.setText(item.isImage() ? "JPG" :
+                (item.username.isEmpty() ? item.url : item.username));
+        holder.copy.setVisibility(item.isImage() ? View.GONE : View.VISIBLE);
+        holder.avatar.setVisibility(item.isImage() ? View.GONE : View.VISIBLE);
+        holder.typeIcon.setVisibility(item.isImage() ? View.VISIBLE : View.GONE);
         holder.avatar.setText(initial(title));
         holder.favorite.setAlpha(item.favorite ? 1f : 0.25f);
         holder.itemView.setOnClickListener(view -> listener.onOpen(item));
@@ -81,6 +92,7 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         final TextView subtitle;
         final MaterialButton copy;
         final MaterialButton favorite;
+        final ImageView typeIcon;
 
         EntryHolder(@NonNull View itemView) {
             super(itemView);
@@ -89,6 +101,7 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
             subtitle = itemView.findViewById(R.id.subtitle);
             copy = itemView.findViewById(R.id.btnCopy);
             favorite = itemView.findViewById(R.id.btnFavorite);
+            typeIcon = itemView.findViewById(R.id.typeIcon);
         }
     }
 }

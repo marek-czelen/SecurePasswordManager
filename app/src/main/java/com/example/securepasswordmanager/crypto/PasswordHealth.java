@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 /** Local-only health analysis; plaintext passwords are never persisted or sent anywhere. */
+/** Local-only weak/reused password analysis. It never stores or transmits findings. */
 public final class PasswordHealth {
     public final int weak;
     public final int reused;

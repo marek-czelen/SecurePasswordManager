@@ -1,18 +1,22 @@
 package com.example.securepasswordmanager.security;
 
+/** User-secret policy for VLT2; numeric-only short PINs are intentionally rejected. */
 public final class PinPolicy {
     private PinPolicy() {
     }
 
     public static boolean isValid(char[] pin) {
-        if (pin == null || pin.length < 6 || pin.length > 12) {
+        if (pin == null || pin.length < 12 || pin.length > 24) {
             return false;
         }
+        boolean numericOnly = true;
         for (char character : pin) {
-            if (character < '0' || character > '9') {
+            if (Character.isISOControl(character) || Character.isSurrogate(character)
+                    || character > 0x7e || character < 0x20) {
                 return false;
             }
+            numericOnly &= character >= '0' && character <= '9';
         }
-        return true;
+        return !numericOnly;
     }
 }

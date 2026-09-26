@@ -8,6 +8,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /** RFC 6238 TOTP generated locally; the shared secret never leaves the vault. */
+/** RFC 6238 six-digit TOTP generation; the seed remains inside the encrypted vault. */
 public final class Totp {
     private Totp() {
     }
