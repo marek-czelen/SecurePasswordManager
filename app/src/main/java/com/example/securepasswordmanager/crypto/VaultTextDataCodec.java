@@ -23,6 +23,8 @@ public final class VaultTextDataCodec {
     public static final int MAX_FIELD_LENGTH = 256 * 1024;
     public static final int MAX_BLOCK_SIZE = 32 * 1024 * 1024;
     private static final int MAGIC = 0x56544433;
+    private static final int LEGACY_TEXT_DATA_SCHEMA_VERSION = 1;
+    private static final int PASSWORD_HISTORY_SCHEMA_VERSION = 2;
     private static final int PADDING_BLOCK_SIZE = 4096;
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -66,6 +68,10 @@ public final class VaultTextDataCodec {
                         writeFixedHex(raw, item.thumbnailId, 32);
                     }
                 }
+            }
+            raw.writeInt(item.passwordHistory.size());
+            for (String previousPassword : item.passwordHistory) {
+                writeString(raw, previousPassword);
             }
         }
         raw.flush();
@@ -111,7 +117,8 @@ public final class VaultTextDataCodec {
             throw new IOException("Invalid VLT3 text data magic");
         }
         int schemaVersion = raw.readInt();
-        if (schemaVersion != VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
+        if (schemaVersion != LEGACY_TEXT_DATA_SCHEMA_VERSION
+                && schemaVersion != VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
             throw new IOException("Unsupported VLT3 text data schema");
         }
         int count = raw.readInt();
@@ -145,11 +152,22 @@ public final class VaultTextDataCodec {
                     thumbnailId = readHex(raw, 32);
                 }
             }
+            List<String> passwordHistory = new ArrayList<>();
+            if (schemaVersion >= PASSWORD_HISTORY_SCHEMA_VERSION) {
+                int historyCount = raw.readInt();
+                if (historyCount < 0
+                        || historyCount > VaultItem.MAX_PASSWORD_HISTORY_ENTRIES) {
+                    throw new IOException("Invalid VLT3 password history count");
+                }
+                for (int historyIndex = 0; historyIndex < historyCount; historyIndex++) {
+                    passwordHistory.add(readString(raw));
+                }
+            }
             VaultItem item;
             try {
                 item = new VaultItem(entryId, title, username, password, url, notes, tags,
                         folder, totp, favorite, type, attachmentId, thumbnailId,
-                        contentType, attachmentSize);
+                        contentType, attachmentSize, passwordHistory);
                 validateItem(item, entryIds, resourceIds);
             } catch (IllegalArgumentException exception) {
                 throw new IOException("Invalid VLT3 entry", exception);
@@ -210,6 +228,15 @@ public final class VaultTextDataCodec {
         writeStringLengthCheck(item.folder);
         writeStringLengthCheck(item.totpSecret);
         writeStringLengthCheck(item.contentType);
+        Set<String> historyPasswords = new HashSet<>();
+        for (String previousPassword : item.passwordHistory) {
+            if (!VaultItem.TYPE_LOGIN.equals(item.type) || previousPassword.isEmpty()
+                    || previousPassword.equals(item.password)
+                    || !historyPasswords.add(previousPassword)) {
+                throw new IOException("Invalid VLT3 password history");
+            }
+            writeStringLengthCheck(previousPassword);
+        }
     }
 
     private static void addResourceId(Set<String> ids, String id) throws IOException {

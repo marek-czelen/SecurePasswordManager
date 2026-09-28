@@ -13,8 +13,9 @@ notes or vault plaintext.
 
 ### Local processing
 
-The app processes authentication information, user-created password-manager content,
-separately encrypted file attachments and user-selected images locally. These values are
+The app processes authentication information, user-created password-manager content
+(including encrypted password history), separately encrypted file attachments,
+user-selected images and user-selected password export files locally. These values are
 not sent to the publisher.
 
 ### User-initiated external transfer
@@ -23,7 +24,10 @@ The user can explicitly export or automatically copy one complete encrypted `vau
 container to a document provider. This is user-initiated transfer to the provider
 selected by the user; the application writes the encrypted header, manifest and object
 ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
-that file's plaintext to the user-selected destination.
+that file's plaintext to the user-selected destination. Pro CSV export writes login
+fields, including passwords and TOTP secrets, as unencrypted UTF-8 CSV to a destination
+explicitly selected by the user. CSV export excludes images and file attachments. The app
+warns that spreadsheet programs may interpret formula-like cell values when opening CSV.
 
 ### Camera
 

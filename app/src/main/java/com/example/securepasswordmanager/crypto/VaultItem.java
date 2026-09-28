@@ -1,10 +1,17 @@
 package com.example.securepasswordmanager.crypto;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /** One decrypted text entry or a reference to an independently encrypted attachment. */
 public final class VaultItem {
     public static final String TYPE_LOGIN = "login";
     public static final String TYPE_IMAGE = "image";
     public static final String TYPE_FILE = "file";
+    public static final int MAX_PASSWORD_HISTORY_ENTRIES = 5;
 
     public final String entryId;
     public final String title;
@@ -21,6 +28,7 @@ public final class VaultItem {
     public final String thumbnailId;
     public final String contentType;
     public final long attachmentSize;
+    public final List<String> passwordHistory;
 
     public VaultItem(String title, String username, String password, String url,
                      String notes, String tags) {
@@ -39,10 +47,22 @@ public final class VaultItem {
                      String notes, String tags, String folder, String totpSecret,
                      boolean favorite, String type, String attachmentId,
                      String thumbnailId, String contentType, long attachmentSize) {
+        this(entryId, title, username, password, url, notes, tags, folder, totpSecret,
+                favorite, type, attachmentId, thumbnailId, contentType, attachmentSize,
+                Collections.emptyList());
+    }
+
+    public VaultItem(String entryId, String title, String username, String password, String url,
+                     String notes, String tags, String folder, String totpSecret,
+                     boolean favorite, String type, String attachmentId,
+                     String thumbnailId, String contentType, long attachmentSize,
+                     List<String> passwordHistory) {
         if (!isHexId(entryId, 16)
                 || (!TYPE_LOGIN.equals(type) && !TYPE_IMAGE.equals(type)
                 && !TYPE_FILE.equals(type))
-                || attachmentSize < 0) {
+                || attachmentSize < 0 || passwordHistory == null
+                || passwordHistory.size() > MAX_PASSWORD_HISTORY_ENTRIES
+                || (!TYPE_LOGIN.equals(type) && !passwordHistory.isEmpty())) {
             throw new IllegalArgumentException("Invalid vault entry");
         }
         this.entryId = entryId.toLowerCase(java.util.Locale.ROOT);
@@ -60,6 +80,16 @@ public final class VaultItem {
         this.thumbnailId = normalizeId(thumbnailId);
         this.contentType = value(contentType);
         this.attachmentSize = attachmentSize;
+        List<String> history = new ArrayList<>(passwordHistory);
+        Set<String> uniquePasswords = new HashSet<>();
+        for (String previousPassword : history) {
+            if (previousPassword == null || previousPassword.isEmpty()
+                    || previousPassword.equals(this.password)
+                    || !uniquePasswords.add(previousPassword)) {
+                throw new IllegalArgumentException("Invalid password history");
+            }
+        }
+        this.passwordHistory = Collections.unmodifiableList(history);
     }
 
     public static VaultItem imageReference(String title, String imageId,
@@ -84,7 +114,41 @@ public final class VaultItem {
 
     public VaultItem withFavorite(boolean value) {
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
-                totpSecret, value, type, attachmentId, thumbnailId, contentType, attachmentSize);
+                totpSecret, value, type, attachmentId, thumbnailId, contentType, attachmentSize,
+                passwordHistory);
+    }
+
+    /** Returns a copy with the immediately previous password at the front of its history. */
+    public VaultItem withPreviousPassword(String previousPassword) {
+        if (!TYPE_LOGIN.equals(type) || previousPassword == null || previousPassword.isEmpty()
+                || previousPassword.equals(password)) {
+            return this;
+        }
+        List<String> history = new ArrayList<>(passwordHistory);
+        history.remove(password);
+        history.remove(previousPassword);
+        history.add(0, previousPassword);
+        if (history.size() > MAX_PASSWORD_HISTORY_ENTRIES) {
+            history.remove(history.size() - 1);
+        }
+        return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
+                totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
+                attachmentSize, history);
+    }
+
+    /** Computes the retained history for an edit, optionally recording this item's password. */
+    public List<String> passwordHistoryAfterChange(String newPassword, boolean recordPrevious) {
+        String nextPassword = value(newPassword);
+        List<String> history = new ArrayList<>(passwordHistory);
+        history.remove(nextPassword);
+        if (recordPrevious && !password.isEmpty() && !password.equals(nextPassword)) {
+            history.remove(password);
+            history.add(0, password);
+        }
+        if (history.size() > MAX_PASSWORD_HISTORY_ENTRIES) {
+            history.remove(history.size() - 1);
+        }
+        return Collections.unmodifiableList(history);
     }
 
     private static String randomEntryId() {

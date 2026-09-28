@@ -54,6 +54,12 @@ stages and validates a complete encrypted backup locally before copying it to th
 provider. A provider failure during the final copy may leave an incomplete external
 document; the VLT3 importer rejects incomplete containers.
 
+Advanced import accepts bounded plaintext files and parses them locally before showing
+a preview; it adds entries without overwriting existing records. The optional Pro CSV
+export is unencrypted and exposes login fields at the user-selected destination. The
+export warns the user before opening the destination picker, omits media attachments,
+and warns that spreadsheet applications can interpret formula-like values as formulas.
+
 ## QR handling
 
 RQR2 contains the independent recovery secret and authenticated metadata, never a DEK.

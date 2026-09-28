@@ -12,6 +12,10 @@
         android:title="@string/menu_health"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_advanced_import_export"
+        android:title="@string/menu_advanced_import_export"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_favorites"
         android:icon="@drawable/ic_star"
         android:title="@string/menu_favorites"

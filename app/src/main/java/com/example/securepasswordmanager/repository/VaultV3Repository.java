@@ -47,6 +47,12 @@ import javax.crypto.Cipher;
 
 /** Persistence and key lifecycle for the copy-on-write VLT3 vault. */
 public final class VaultV3Repository {
+    public static final class PassphraseQrMismatchException extends GeneralSecurityException {
+        PassphraseQrMismatchException(Throwable cause) {
+            super("Passphrase does not match the current vault", cause);
+        }
+    }
+
     private static final String PREFS = "local_vault_state_v3";
     private static final String PREF_FAILED = "failed_attempts";
     private static final String PREF_LOCKED_UNTIL = "locked_until";
@@ -230,7 +236,7 @@ public final class VaultV3Repository {
         replaceLastQrSecret(secret);
     }
 
-    public byte[] copyRecoverySecret() {
+    public synchronized byte[] copyRecoverySecret() {
         return lastQrSecret == null ? null : lastQrSecret.clone();
     }
 
@@ -271,10 +277,26 @@ public final class VaultV3Repository {
         }
     }
 
-    public PassphraseQrPayload createPassphraseQrPayload(char[] passphrase)
+    public synchronized PassphraseQrPayload createPassphraseQrPayload(char[] passphrase)
             throws IOException, GeneralSecurityException {
         requirePassphrase(passphrase);
-        return new PassphraseQrPayload(headerStore.read().vaultId, passphrase);
+        VaultHeaderV3 header = headerStore.read();
+        byte[] qrSecret = copyRecoverySecret();
+        if (qrSecret == null) {
+            throw new GeneralSecurityException("Recovery QR secret is unavailable");
+        }
+        byte[] dek = null;
+        try {
+            try {
+                dek = VaultV3KeyDerivation.unwrapDek(header, passphrase, qrSecret);
+            } catch (javax.crypto.BadPaddingException exception) {
+                throw new PassphraseQrMismatchException(exception);
+            }
+            return new PassphraseQrPayload(header.vaultId, passphrase);
+        } finally {
+            Crypto.wipe(dek);
+            Crypto.wipe(qrSecret);
+        }
     }
 
     public void updateWithTruePin(char[] passphrase, VaultData updated,
@@ -489,24 +511,27 @@ public final class VaultV3Repository {
 
     public synchronized void importCopy(Uri uri, RecoveryQrPayload recovery, char[] passphrase)
             throws IOException, GeneralSecurityException {
-        try (InputStream input = context.getContentResolver().openInputStream(uri)) {
-            if (input == null) {
-                throw new IOException("Backup is unavailable");
-            }
-            restoreBackup(input, recovery, passphrase);
+        android.util.Log.i("SPM_RECOVERY", "Opening selected VLT3 backup");
+        final InputStream input;
+        try {
+            input = context.getContentResolver().openInputStream(uri);
+        } catch (IOException | SecurityException | IllegalArgumentException exception) {
+            android.util.Log.e("SPM_RECOVERY", "Could not open selected backup ("
+                    + exception.getClass().getSimpleName() + ")");
+            throw exception;
+        }
+        if (input == null) {
+            android.util.Log.e("SPM_RECOVERY", "Selected backup stream is unavailable");
+            throw new IOException("Backup is unavailable");
+        }
+        try (InputStream source = input) {
+            restoreBackup(source, recovery, passphrase);
         }
     }
 
     public synchronized void restoreBackup(InputStream input, RecoveryQrPayload recovery,
                                            char[] passphrase)
             throws IOException, GeneralSecurityException {
-        requirePassphrase(passphrase);
-        if (importRoot.exists()) {
-            deleteManagedDirectory(importRoot);
-        }
-        if (!importRoot.mkdirs()) {
-            throw new IOException("Could not create VLT3 import staging directory");
-        }
         boolean installed = false;
         String newAlias = null;
         byte[] encodedHeader = null;
@@ -515,30 +540,64 @@ public final class VaultV3Repository {
         byte[] textData = null;
         byte[] newHardwareKeyId = null;
         byte[] newWrapperGeneration = null;
+        String restoreStage = "validating recovery passphrase";
         try {
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
+            requirePassphrase(passphrase);
+            restoreStage = "preparing staging directory";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
+            if (importRoot.exists()) {
+                deleteManagedDirectory(importRoot);
+            }
+            if (!importRoot.mkdirs()) {
+                throw new IOException("Could not create VLT3 import staging directory");
+            }
+
+            restoreStage = "opening backup container";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             VaultBackupV3.BackupReader reader = VaultBackupV3.open(input);
             encodedHeader = reader.encodedHeader();
             encodedManifest = reader.encodedManifest();
+            restoreStage = "validating recovery QR metadata";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             VaultHeaderV3 importedHeader = VaultHeaderV3.decode(encodedHeader);
             verifyRecoveryMetadata(importedHeader, recovery);
+            restoreStage = "decrypting vault key with passphrase and recovery QR";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             dek = VaultV3KeyDerivation.unwrapDek(importedHeader, passphrase,
                     recovery.qrSecret);
+            restoreStage = "validating encrypted manifest";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             VaultManifest manifest = VaultManifestCodec.open(encodedManifest, dek,
                     importedHeader.vaultId);
             VaultObjectStore stagingObjects = new VaultObjectStore(
                     new File(importRoot, "objects"), importedHeader.vaultId);
+            restoreStage = "copying and validating vault objects";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             reader.importObjects(manifest, stagingObjects);
+            restoreStage = "decrypting vault text block";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             textData = stagingObjects.read(manifest.textBlock, dek);
+            restoreStage = "decoding vault entries";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             VaultData decoded = VaultTextDataCodec.decode(textData);
+            restoreStage = "validating resource references";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             validateResourceLinks(decoded, manifest.resources);
 
+            restoreStage = "generating device-bound key identifiers";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             newHardwareKeyId = Crypto.randomBytes(VaultHeaderV3.HARDWARE_KEY_ID_SIZE);
             newWrapperGeneration = VaultObjectIds.randomId();
             newAlias = deviceAlias(importedHeader.vaultId, newHardwareKeyId);
+            restoreStage = "creating device-bound vault key";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             keyManager.ensureKey(newAlias, true);
             if (!keyManager.isHardwareBacked(newAlias)) {
                 throw new GeneralSecurityException("Hardware-backed key unavailable");
             }
+            restoreStage = "wrapping vault keys for this device";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             Crypto.SealedBox newPinWrapper = VaultV3KeyDerivation.wrapDek(dek, passphrase,
                     recovery.qrSecret, importedHeader.vaultId,
                     importedHeader.kdfParameters, importedHeader.wrapSalt,
@@ -550,20 +609,34 @@ public final class VaultV3Repository {
             String wrappedQr = java.util.Base64.getEncoder().encodeToString(
                     keyManager.wrap(newAlias, recovery.qrSecret));
 
+            restoreStage = "installing restored vault";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             VaultManifestStore stagingManifests = new VaultManifestStore(importRoot);
             stagingManifests.writeInitial(encodedManifest);
             stagingManifests.writePrevious(encodedManifest);
             new VaultHeaderStore(new File(importRoot, "header.bin")).write(localHeader);
             VaultDirectorySync.sync(importRoot);
+            restoreStage = "persisting local recovery key wrapper";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             if (!state.edit().putString(qrPreferenceKey(localHeader), wrappedQr).commit()) {
                 throw new IOException("Could not persist local recovery QR wrapper");
             }
+            restoreStage = "committing staged vault";
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore stage: " + restoreStage);
             installStagedVault();
             installed = true;
 
+            android.util.Log.i("SPM_RECOVERY", "VLT3 restore completed");
             state.edit().putInt(PREF_FAILED, 0).putLong(PREF_LOCKED_UNTIL, 0).apply();
             replaceLastQrSecret(recovery.qrSecret);
         } catch (IOException | GeneralSecurityException | RuntimeException exception) {
+            Throwable cause = exception.getCause();
+            String failure = exception.getClass().getSimpleName();
+            if (cause != null) {
+                failure += " caused by " + cause.getClass().getSimpleName();
+            }
+            android.util.Log.e("SPM_RECOVERY", "VLT3 restore failed during " + restoreStage
+                    + " (" + failure + ")");
             if (!installed && !importRoot.exists() && new File(root, "header.bin").isFile()) {
                 installed = true;
             }

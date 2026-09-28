@@ -12,6 +12,8 @@
     <string name="action_unlock">PIN + QR (Wiederherstellung)</string>
     <string name="action_biometric">Mit starker Biometrie entsperren</string>
     <string name="action_recovery">Auf neuem Gerät wiederherstellen</string>
+    <string name="err_recovery_passphrase_policy">Die Wiederherstellungs-Passphrase muss 12–24 Zeichen lang sein und darf nicht nur aus Ziffern bestehen.</string>
+    <string name="err_recovery_decryption">Die Sicherung konnte nicht entschlüsselt werden. Prüfe, ob Passphrase, Recovery-QR und Sicherungsdatei zum selben Tresor gehören.</string>
     <string name="list_title">Passwörter</string>
     <string name="hint_search">Suchen</string>
     <string name="action_add">Hinzufügen</string>
@@ -20,6 +22,50 @@
     <string name="add_file">Datei hinzufügen (Pro)</string>
     <string name="item_image_kind">JPG-Bild</string>
     <string name="item_file_kind">Datei</string>
+    <string name="action_password_history">Passwortverlauf (Pro)</string>
+    <string name="password_history_title">Passwortverlauf</string>
+    <string name="password_history_entry">Vorheriges Passwort %1$d</string>
+    <string name="password_history_empty">Es wurden keine früheren Passwörter gespeichert.</string>
+    <string name="msg_password_history_pro_required">Der Passwortverlauf ist in Pro verfügbar.</string>
+    <string name="err_passphrase_qr_mismatch">Diese Passphrase gehört nicht zum aktuellen Tresor. Es wurde kein QR-Code erstellt.</string>
+    <string name="menu_advanced_import_export">Erweiterter Import/Export (Pro)</string>
+    <string name="msg_advanced_pro_required">Erweiterter Import und Export sind in Pro verfügbar.</string>
+    <string name="advanced_import_export_title">Erweiterter Import/Export</string>
+    <string name="advanced_import">Passwörter importieren</string>
+    <string name="advanced_export_csv">Als CSV exportieren</string>
+    <string name="csv_plaintext_title">CSV-Export ist nicht verschlüsselt</string>
+    <string name="csv_plaintext_warning">Die CSV-Datei enthält Passwörter und TOTP-Geheimnisse im Klartext und kann von anderen Apps gelesen werden. Tabellenkalkulationen können Werte, die mit =, +, - oder @ beginnen, als Formeln ausführen. Es werden nur Passworteinträge exportiert; Bilder und Anhänge entfallen. Fortfahren?</string>
+    <string name="msg_csv_nothing_to_export">Keine Passworteinträge zum Exportieren vorhanden.</string>
+    <string name="msg_csv_exported">CSV-Datei exportiert.</string>
+    <string name="err_csv_export">CSV-Datei konnte nicht exportiert werden.</string>
+    <string name="err_advanced_import">Datei konnte nicht gelesen werden. Prüfe das Format; verschlüsselte Exporte werden nicht unterstützt.</string>
+    <string name="err_import_size">Die Importdatei ist zu groß. Die maximale Größe beträgt 20 MiB.</string>
+    <string name="import_select_sheet">Tabellenblatt auswählen</string>
+    <string name="import_map_columns">Spalten zuordnen: %1$s</string>
+    <string name="action_continue">Weiter</string>
+    <string name="import_preview_title">Importvorschau</string>
+    <string name="import_no_supported_entries">Keine Einträge in einem unterstützten Format gefunden.</string>
+    <string name="import_empty">Keine Einträge zum Importieren. Übersprungene Zeilen: %1$d.</string>
+    <string name="import_capacity">%1$d Einträge können nicht hinzugefügt werden; der Tresor hat noch Platz für %2$d.</string>
+    <string name="import_preview_count">Neue Einträge zum Hinzufügen: %1$d</string>
+    <string name="import_preview_login">%1$s — %2$s</string>
+    <string name="import_ignored_rows">Leere oder nicht zugeordnete Zeilen übersprungen: %1$d</string>
+    <string name="import_more_titles">… und %1$d weitere Einträge</string>
+    <string name="import_append_confirm">Einträge werden neu hinzugefügt. Bestehende Einträge werden nicht überschrieben.</string>
+    <string name="import_append">Neu hinzufügen</string>
+    <string name="msg_import_saved">Einträge in den Tresor importiert.</string>
+    <string name="import_1password_attachments_ignored">Anhänge aus dem 1Password-Export werden nicht importiert.</string>
+    <string name="import_bitwarden_unsupported">%1$d Bitwarden-Einträge mit nicht unterstützten Typen wurden übersprungen.</string>
+    <string-array name="import_mapping_fields">
+        <item>Name</item>
+        <item>Benutzername</item>
+        <item>Passwort</item>
+        <item>URL</item>
+        <item>Notizen</item>
+        <item>Ordner</item>
+        <item>Tags</item>
+        <item>TOTP</item>
+    </string-array>
     <string name="file_details_message">Typ: %1$s\nGröße: %2$s</string>
     <string name="msg_file_pro_required">Dateianhänge sind in Pro verfügbar.</string>
     <string name="msg_file_saved">Datei im verschlüsselten Tresor gespeichert.</string>

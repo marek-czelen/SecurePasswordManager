@@ -42,7 +42,10 @@ Dropbox, OneDrive or local storage through Android’s Storage Access Framework.
 writes encrypted VLT3 containers for backup. If the user explicitly exports an
 individual attachment, the selected destination receives that file's plaintext. The
 selected provider processes stored files under its own terms and privacy policy. The
-publisher does not receive the vault key.
+publisher does not receive the vault key. Pro CSV export is a separate user-initiated
+action that writes login fields, including passwords and TOTP secrets, as plaintext to a
+user-selected destination. CSV imports and supported Bitwarden, KeePass and 1Password
+plaintext exports are parsed locally and are not transmitted by the app.
 
 ## Biometrics and Keystore
 

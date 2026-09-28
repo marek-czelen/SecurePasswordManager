@@ -30,6 +30,8 @@ import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +51,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.securepasswordmanager.crypto.RecoveryQrPayload;
 import com.example.securepasswordmanager.crypto.PassphraseQrPayload;
 import com.example.securepasswordmanager.crypto.Crypto;
+import com.example.securepasswordmanager.crypto.AdvancedImportExport;
 import com.example.securepasswordmanager.crypto.PendingVaultAsset;
 import com.example.securepasswordmanager.crypto.PasswordHealth;
 import com.example.securepasswordmanager.crypto.Totp;
@@ -58,6 +61,7 @@ import com.example.securepasswordmanager.crypto.VaultItem;
 import com.example.securepasswordmanager.crypto.VaultObjectIds;
 import com.example.securepasswordmanager.crypto.VaultObjectRef;
 import com.example.securepasswordmanager.crypto.VaultSizeLimitException;
+import com.example.securepasswordmanager.crypto.VaultTextDataCodec;
 import com.example.securepasswordmanager.repository.VaultV3Repository;
 import com.example.securepasswordmanager.security.PinPolicy;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -76,6 +80,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -93,6 +98,7 @@ import javax.crypto.Cipher;
 
 public final class MainActivity extends AppCompatActivity {
     private static final String IMAGE_LOG = "SPM_IMAGE_FLOW";
+    private static final String RECOVERY_LOG = "SPM_RECOVERY";
     private static final int REQUEST_VAULT_FILE = 4101;
     private static final int MAX_FILE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
@@ -114,6 +120,7 @@ public final class MainActivity extends AppCompatActivity {
     private boolean biometricSession;
     private boolean sessionRecoveredPrevious;
     private boolean saveInProgress;
+    private boolean importSavePending;
     private boolean unlocked;
     private VaultData currentData = VaultData.empty();
 
@@ -200,6 +207,23 @@ public final class MainActivity extends AppCompatActivity {
                     addSelectedFile(uri);
                 }
             });
+
+    private final ActivityResultLauncher<String[]> advancedImportLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                awaitingResult = false;
+                if (uri != null) {
+                    importAdvancedFile(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<String> csvExportLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"),
+                    uri -> {
+                        awaitingResult = false;
+                        if (uri != null) {
+                            exportCsv(uri);
+                        }
+                    });
 
     private final ActivityResultLauncher<String> exportFileLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument(
@@ -655,6 +679,14 @@ public final class MainActivity extends AppCompatActivity {
             showHealth();
             return true;
         }
+        if (id == R.id.action_advanced_import_export) {
+            if (!premiumManager.isPro()) {
+                toast(R.string.msg_advanced_pro_required);
+            } else {
+                showAdvancedImportExport();
+            }
+            return true;
+        }
         if (id == R.id.action_favorites) {
             favoritesOnly = !favoritesOnly;
             item.setChecked(favoritesOnly);
@@ -674,6 +706,288 @@ public final class MainActivity extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    private void showAdvancedImportExport() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.advanced_import_export_title)
+                .setItems(new CharSequence[]{getString(R.string.advanced_import),
+                                getString(R.string.advanced_export_csv)},
+                        (dialog, which) -> {
+                            if (which == 0) {
+                                awaitingResult = true;
+                                advancedImportLauncher.launch(new String[]{"text/*",
+                                        "application/json", "application/xml",
+                                        "application/zip", "*/*"});
+                            } else {
+                                warnBeforeCsvExport();
+                            }
+                        })
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    private void warnBeforeCsvExport() {
+        int logins = 0;
+        for (VaultItem item : currentData.items) {
+            if (VaultItem.TYPE_LOGIN.equals(item.type)) {
+                logins++;
+            }
+        }
+        if (logins == 0) {
+            toast(R.string.msg_csv_nothing_to_export);
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.csv_plaintext_title)
+                .setMessage(R.string.csv_plaintext_warning)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_export, (dialog, which) -> {
+                    awaitingResult = true;
+                    csvExportLauncher.launch("vault-export.csv");
+                })
+                .show();
+    }
+
+    private void importAdvancedFile(Uri uri) {
+        if (sessionRecoveredPrevious) {
+            toast(R.string.err_recovered_read_only);
+            return;
+        }
+        awaitingResult = true;
+        try {
+            ioExecutor.execute(() -> {
+                byte[] bytes = null;
+                try {
+                    long declaredSize = declaredFileSize(uri);
+                    if (declaredSize > AdvancedImportExport.MAX_IMPORT_BYTES) {
+                        throw new AdvancedImportExport.ImportSizeException(
+                                "Import file exceeds the configured size limit");
+                    }
+                    String filename = getDisplayName(uri);
+                    bytes = AdvancedImportExport.readBounded(
+                            getContentResolver().openInputStream(uri));
+                    AdvancedImportExport.ParsedImport parsed =
+                            AdvancedImportExport.parse(filename, bytes);
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        handleAdvancedImport(parsed);
+                    });
+                } catch (AdvancedImportExport.ImportSizeException exception) {
+                    Log.w(IMAGE_LOG, "advanced import exceeded its size limit");
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_import_size);
+                    });
+                } catch (IOException | SecurityException | IllegalArgumentException exception) {
+                    Log.w(IMAGE_LOG, "advanced import failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_advanced_import);
+                    });
+                } finally {
+                    Crypto.wipe(bytes);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            awaitingResult = false;
+            Log.w(IMAGE_LOG, "advanced import executor is unavailable");
+            toast(R.string.err_advanced_import);
+        }
+    }
+
+    private String getDisplayName(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()
+                    && !cursor.isNull(0)) {
+                return cursor.getString(0);
+            }
+        } catch (IllegalArgumentException | UnsupportedOperationException
+                 | SecurityException exception) {
+            Log.d(IMAGE_LOG, "import provider has no display-name metadata");
+        }
+        return "";
+    }
+
+    private void handleAdvancedImport(AdvancedImportExport.ParsedImport parsed) {
+        if (!parsed.items.isEmpty()) {
+            showImportPreview(parsed.items, 0, localizedImportWarning(parsed.warning));
+        } else if (parsed.tables.size() == 1) {
+            showImportMapping(parsed.tables.get(0), localizedImportWarning(parsed.warning));
+        } else if (parsed.tables.isEmpty()) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.import_preview_title)
+                    .setMessage(R.string.import_no_supported_entries)
+                    .setPositiveButton(R.string.action_close, null)
+                    .show();
+        } else {
+            String[] names = new String[parsed.tables.size()];
+            for (int i = 0; i < names.length; i++) {
+                names[i] = parsed.tables.get(i).name;
+            }
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.import_select_sheet)
+                    .setItems(names, (dialog, which) ->
+                            showImportMapping(parsed.tables.get(which),
+                                    localizedImportWarning(parsed.warning)))
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .show();
+        }
+    }
+
+    private void showImportMapping(AdvancedImportExport.Table table, String warning) {
+        String[] choices = AdvancedImportExport.mappingChoices(table);
+        int[] suggested = AdvancedImportExport.suggestMapping(table);
+        LinearLayout fields = new LinearLayout(this);
+        fields.setOrientation(LinearLayout.VERTICAL);
+        float density = getResources().getDisplayMetrics().density;
+        fields.setPadding((int) (20 * density), (int) (8 * density),
+                (int) (20 * density), (int) (8 * density));
+        Spinner[] spinners = new Spinner[suggested.length];
+        String[] labels = getResources().getStringArray(R.array.import_mapping_fields);
+        for (int i = 0; i < spinners.length; i++) {
+            TextView label = new TextView(this);
+            label.setText(labels[i]);
+            fields.addView(label);
+            Spinner spinner = new Spinner(this);
+            spinner.setAdapter(new android.widget.ArrayAdapter<>(this,
+                    android.R.layout.simple_spinner_dropdown_item, choices));
+            spinner.setSelection(suggested[i] + 1);
+            fields.addView(spinner);
+            spinners[i] = spinner;
+        }
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(fields);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.import_map_columns, table.name))
+                .setView(scroll)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_continue, (dialog, which) -> {
+                    int[] mapping = new int[spinners.length];
+                    for (int i = 0; i < spinners.length; i++) {
+                        mapping[i] = spinners[i].getSelectedItemPosition() - 1;
+                    }
+                    awaitingResult = true;
+                    try {
+                        ioExecutor.execute(() -> {
+                            try {
+                                AdvancedImportExport.MappingResult mapped =
+                                        AdvancedImportExport.map(table, mapping);
+                                runOnUiThread(() -> {
+                                    awaitingResult = false;
+                                    showImportPreview(mapped.items, mapped.ignoredRows, warning);
+                                });
+                            } catch (IOException exception) {
+                                runOnUiThread(() -> {
+                                    awaitingResult = false;
+                                    toast(R.string.err_advanced_import);
+                                });
+                            }
+                        });
+                    } catch (java.util.concurrent.RejectedExecutionException exception) {
+                        awaitingResult = false;
+                        toast(R.string.err_advanced_import);
+                    }
+                })
+                .show();
+    }
+
+    private String localizedImportWarning(String warning) {
+        if (AdvancedImportExport.WARNING_1PASSWORD_ATTACHMENTS_IGNORED.equals(warning)) {
+            return getString(R.string.import_1password_attachments_ignored);
+        }
+        String ignoredPrefix = AdvancedImportExport.WARNING_BITWARDEN_ITEMS_IGNORED + ":";
+        if (warning.startsWith(ignoredPrefix)) {
+            try {
+                int count = Integer.parseInt(warning.substring(ignoredPrefix.length()));
+                return getString(R.string.import_bitwarden_unsupported, count);
+            } catch (NumberFormatException exception) {
+                Log.w(IMAGE_LOG, "invalid import warning metadata");
+            }
+        }
+        return "";
+    }
+
+    private void showImportPreview(List<VaultItem> items, int ignoredRows, String warning) {
+        if (items.isEmpty()) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.import_preview_title)
+                    .setMessage(getString(R.string.import_empty, ignoredRows))
+                    .setPositiveButton(R.string.action_close, null)
+                    .show();
+            return;
+        }
+        int capacity = VaultTextDataCodec.MAX_ITEMS - currentData.items.size();
+        if (items.size() > capacity) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.import_preview_title)
+                    .setMessage(getString(R.string.import_capacity, items.size(), capacity))
+                    .setPositiveButton(R.string.action_close, null)
+                    .show();
+            return;
+        }
+        StringBuilder preview = new StringBuilder();
+        preview.append(getString(R.string.import_preview_count, items.size()));
+        if (ignoredRows > 0) {
+            preview.append("\n").append(getString(R.string.import_ignored_rows, ignoredRows));
+        }
+        if (!warning.isEmpty()) {
+            preview.append("\n\n").append(warning);
+        }
+        preview.append("\n\n");
+        int visible = Math.min(items.size(), 40);
+        for (int i = 0; i < visible; i++) {
+            VaultItem item = items.get(i);
+            preview.append("• ").append(item.username.isEmpty() ? item.title
+                    : getString(R.string.import_preview_login, item.title, item.username))
+                    .append('\n');
+        }
+        if (items.size() > visible) {
+            preview.append(getString(R.string.import_more_titles, items.size() - visible));
+        }
+        preview.append("\n").append(getString(R.string.import_append_confirm));
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.import_preview_title)
+                .setMessage(preview.toString())
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.import_append, (dialog, which) -> {
+                    List<VaultItem> appended = new ArrayList<>(currentData.items);
+                    appended.addAll(items);
+                    importSavePending = true;
+                    saveData(new VaultData(appended));
+                })
+                .show();
+    }
+
+    private void exportCsv(Uri uri) {
+        VaultData snapshot = currentData;
+        awaitingResult = true;
+        try {
+            ioExecutor.execute(() -> {
+                try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
+                    if (output == null) {
+                        throw new IOException("Unable to open export destination");
+                    }
+                    AdvancedImportExport.writeCsv(output, snapshot.items);
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.msg_csv_exported);
+                    });
+                } catch (IOException | SecurityException exception) {
+                    Log.e(IMAGE_LOG, "CSV export failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_csv_export);
+                    });
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            awaitingResult = false;
+            toast(R.string.err_csv_export);
+        }
     }
 
     private void renderList() {
@@ -761,6 +1075,8 @@ public final class MainActivity extends AppCompatActivity {
                 copyToClipboard(getString(R.string.hint_username), item.username));
         view.findViewById(R.id.copyPassword).setOnClickListener(v ->
                 copyToClipboard(item.title, item.password));
+        view.findViewById(R.id.btnPasswordHistory).setOnClickListener(v ->
+                showPasswordHistory(item));
         final String[] visibleTotp = {null};
         view.findViewById(R.id.showTotp).setOnClickListener(v -> {
             try {
@@ -785,6 +1101,42 @@ public final class MainActivity extends AppCompatActivity {
                 .setNeutralButton(R.string.action_edit, (d, w) -> showEntryDialog(item, item))
                 .setNegativeButton(R.string.action_delete, (d, w) -> confirmDelete(item))
                 .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void showPasswordHistory(VaultItem item) {
+        if (!premiumManager.isPro()) {
+            toast(R.string.msg_password_history_pro_required);
+            return;
+        }
+        if (item.passwordHistory.isEmpty()) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.password_history_title)
+                    .setMessage(R.string.password_history_empty)
+                    .setPositiveButton(R.string.action_close, null)
+                    .show();
+            return;
+        }
+        String[] entries = new String[item.passwordHistory.size()];
+        for (int i = 0; i < entries.length; i++) {
+            entries[i] = getString(R.string.password_history_entry, i + 1);
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.password_history_title)
+                .setItems(entries, (dialog, which) ->
+                        showPreviousPassword(item, which))
+                .setNegativeButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void showPreviousPassword(VaultItem item, int index) {
+        String previousPassword = item.passwordHistory.get(index);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.password_history_entry, index + 1))
+                .setMessage(previousPassword)
+                .setNegativeButton(R.string.action_close, null)
+                .setPositiveButton(R.string.action_copy, (dialog, which) ->
+                        copyToClipboard(item.title, previousPassword))
                 .show();
     }
 
@@ -1190,14 +1542,20 @@ public final class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) -> {
-                    VaultItem edited = replaceTarget == null
-                            ? new VaultItem(str(title), str(username), str(password),
-                            str(url), str(notes), str(tags), str(folder), str(totp),
-                            favorite.isChecked())
-                            : new VaultItem(replaceTarget.entryId, str(title), str(username),
-                            str(password), str(url), str(notes), str(tags), str(folder),
-                            str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
-                            null, null, "", 0);
+                    VaultItem edited;
+                    if (replaceTarget == null) {
+                        edited = new VaultItem(str(title), str(username), str(password),
+                                str(url), str(notes), str(tags), str(folder), str(totp),
+                                favorite.isChecked());
+                    } else {
+                        String newPassword = str(password);
+                        List<String> passwordHistory = replaceTarget.passwordHistoryAfterChange(
+                                newPassword, premiumManager.isPro());
+                        edited = new VaultItem(replaceTarget.entryId, str(title), str(username),
+                                newPassword, str(url), str(notes), str(tags), str(folder),
+                                str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
+                                null, null, "", 0, passwordHistory);
+                    }
                     List<VaultItem> items = new ArrayList<>(currentData.items);
                     if (replaceTarget != null) {
                         items.remove(replaceTarget);
@@ -1674,10 +2032,75 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void requestPassphraseForQr() {
+        byte[] recoverySecret = repository.copyRecoverySecret();
+        boolean hasRecoverySecret = recoverySecret != null;
+        Crypto.wipe(recoverySecret);
+        if (!hasRecoverySecret) {
+            authenticateForPassphraseQr();
+            return;
+        }
         if (sessionTruePin != null) {
             showPassphraseQrDialog(sessionTruePin);
             return;
         }
+        showPassphraseQrInput();
+    }
+
+    private void authenticateForPassphraseQr() {
+        try {
+            Cipher cipher = repository.prepareRecoveryQrCipher();
+            Executor executor = this::runOnUiThread;
+            awaitingResult = true;
+            new BiometricPrompt.Builder(this)
+                    .setTitle(getString(R.string.passphrase_qr_title))
+                    .setSubtitle(getString(R.string.app_tagline))
+                    .setNegativeButton(getString(R.string.action_cancel), executor,
+                            (dialog, which) -> awaitingResult = false)
+                    .build()
+                    .authenticate(new BiometricPrompt.CryptoObject(cipher),
+                            new CancellationSignal(), executor,
+                            new BiometricPrompt.AuthenticationCallback() {
+                                @Override
+                                public void onAuthenticationSucceeded(
+                                        BiometricPrompt.AuthenticationResult result) {
+                                    awaitingResult = false;
+                                    RecoveryQrPayload recovery = null;
+                                    try {
+                                        recovery = repository.openRecoveryQr(
+                                                result.getCryptoObject().getCipher());
+                                        Session.setRecoverySecret(recovery.qrSecret);
+                                    } catch (GeneralSecurityException | IOException exception) {
+                                        Log.w(RECOVERY_LOG, "Could not unlock local recovery QR ("
+                                                + exception.getClass().getSimpleName() + ")");
+                                        toast(R.string.err_recovery_create);
+                                        return;
+                                    } finally {
+                                        if (recovery != null) {
+                                            Crypto.wipe(recovery.qrSecret);
+                                        }
+                                    }
+                                    if (sessionTruePin != null) {
+                                        showPassphraseQrDialog(sessionTruePin);
+                                    } else {
+                                        showPassphraseQrInput();
+                                    }
+                                }
+
+                                @Override
+                                public void onAuthenticationError(int errorCode,
+                                                                  CharSequence errString) {
+                                    awaitingResult = false;
+                                }
+                            });
+        } catch (GeneralSecurityException | IOException exception) {
+            awaitingResult = false;
+            Log.w(RECOVERY_LOG, "Could not prepare passphrase QR authentication ("
+                    + exception.getClass().getSimpleName() + ")");
+            toast(R.string.err_recovery_create);
+        }
+    }
+
+    private void showPassphraseQrInput() {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_passphrase, null);
         TextInputEditText field = view.findViewById(R.id.editPassphrase);
         new MaterialAlertDialogBuilder(this)
@@ -1700,9 +2123,50 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showPassphraseQrDialog(char[] passphrase) {
+        char[] candidate = passphrase.clone();
+        awaitingResult = true;
         try {
-            PassphraseQrPayload payload = repository.createPassphraseQrPayload(passphrase);
-            String encoded = payload.toQrString();
+            ioExecutor.execute(() -> {
+                PassphraseQrPayload payload = null;
+                try {
+                    payload = repository.createPassphraseQrPayload(candidate);
+                    String encoded = payload.toQrString();
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        displayPassphraseQr(encoded);
+                    });
+                } catch (VaultV3Repository.PassphraseQrMismatchException exception) {
+                    Log.w(RECOVERY_LOG,
+                            "Passphrase QR refused because the supplied passphrase mismatched");
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_passphrase_qr_mismatch);
+                    });
+                } catch (GeneralSecurityException | IOException | IllegalArgumentException exception) {
+                    Log.w(RECOVERY_LOG, "Passphrase QR creation failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_recovery_create);
+                    });
+                } finally {
+                    clear(candidate);
+                    if (payload != null) {
+                        clear(payload.passphrase);
+                        Crypto.wipe(payload.vaultId);
+                        Crypto.wipe(payload.checksum);
+                    }
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            clear(candidate);
+            awaitingResult = false;
+            toast(R.string.err_recovery_create);
+        }
+    }
+
+    private void displayPassphraseQr(String encoded) {
+        try {
             View view = LayoutInflater.from(this).inflate(R.layout.dialog_passphrase_qr, null);
             ImageView qr = view.findViewById(R.id.passphraseQrImage);
             qr.setImageBitmap(encodeQrBitmap(encoded, 640));
@@ -1713,7 +2177,8 @@ public final class MainActivity extends AppCompatActivity {
                     .setView(view)
                     .setPositiveButton(R.string.action_close, null)
                     .show();
-        } catch (GeneralSecurityException | IOException | com.google.zxing.WriterException exception) {
+        } catch (com.google.zxing.WriterException exception) {
+            Log.w(RECOVERY_LOG, "Could not render verified passphrase QR");
             toast(R.string.err_recovery_create);
         }
     }
@@ -1762,10 +2227,15 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showRecoveryImport() {
+        selectedRecoveryVaultUri = null;
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_recovery, null);
         recoveryPayloadField = view.findViewById(R.id.editPayload);
         recoveryPinField = view.findViewById(R.id.editPin);
         recoveryFileStatus = view.findViewById(R.id.fileStatus);
+        com.google.android.material.textfield.TextInputLayout recoveryPinLayout =
+                view.findViewById(R.id.tilPin);
+        recoveryPinField.addTextChangedListener(new SimpleWatcher(value ->
+                recoveryPinLayout.setError(null)));
         view.findViewById(R.id.btnScan).setOnClickListener(v -> {
             scanningPassphraseQr = false;
             awaitingResult = true;
@@ -1795,54 +2265,114 @@ public final class MainActivity extends AppCompatActivity {
             awaitingResult = true;
             startActivityForResult(intent, REQUEST_VAULT_FILE);
         });
-        new MaterialAlertDialogBuilder(this)
+        androidx.appcompat.app.AlertDialog recoveryDialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.recovery_title)
                 .setView(view)
-                .setNegativeButton(R.string.action_cancel, null)
-                .setPositiveButton(R.string.action_recover, (d, w) -> {
-                    if (selectedRecoveryVaultUri == null) {
-                        toast(R.string.err_pick_file);
-                        return;
-                    }
-                    char[] pin = text(recoveryPinField);
-                    final RecoveryQrPayload recovery;
-                    try {
-                        recovery = RecoveryQrPayload.fromQrString(str(recoveryPayloadField));
-                    } catch (IOException | IllegalArgumentException exception) {
-                        clear(pin);
-                        toast(R.string.err_recovery);
-                        return;
-                    }
-                    Uri backup = selectedRecoveryVaultUri;
-                    awaitingResult = true;
-                    clearSession();
-                    showUnlock();
-                    ioExecutor.execute(() -> {
+                .setCancelable(false)
+                .setNegativeButton(R.string.action_close, (d, w) -> {
+                    selectedRecoveryVaultUri = null;
+                    recoveryPayloadField.setText("");
+                    recoveryPinField.setText("");
+                })
+                .setPositiveButton(R.string.action_recover, null)
+                .create();
+        recoveryDialog.setCancelable(false);
+        recoveryDialog.setCanceledOnTouchOutside(false);
+        recoveryDialog.setOnShowListener(ignored -> {
+            if (recoveryDialog.getWindow() != null) {
+                recoveryDialog.getWindow().setSoftInputMode(
+                        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            }
+            recoveryDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                    .setOnClickListener(button -> {
+                        if (selectedRecoveryVaultUri == null) {
+                            toast(R.string.err_pick_file);
+                            return;
+                        }
+                        char[] pin = text(recoveryPinField);
+                        if (!PinPolicy.isValid(pin)) {
+                            Log.w(RECOVERY_LOG, "Recovery passphrase rejected by local policy");
+                            clear(pin);
+                            recoveryPinLayout.setError(
+                                    getString(R.string.err_recovery_passphrase_policy));
+                            recoveryPinField.requestFocus();
+                            return;
+                        }
+                        final RecoveryQrPayload recovery;
                         try {
-                            repository.importCopy(backup, recovery, pin);
-                            runOnUiThread(() -> {
-                                selectedRecoveryVaultUri = null;
-                                clearSession();
-                                byte[] qrSecret = repository.copyRecoverySecret();
-                                Session.setRecoverySecret(qrSecret);
-                                Crypto.wipe(qrSecret);
-                                awaitingResult = false;
-                                showUnlock();
-                                toast(R.string.msg_imported_backup);
+                            recovery = RecoveryQrPayload.fromQrString(
+                                    str(recoveryPayloadField));
+                        } catch (IOException | IllegalArgumentException exception) {
+                            Log.w(RECOVERY_LOG, "Recovery QR could not be parsed");
+                            clear(pin);
+                            toast(R.string.err_recovery);
+                            return;
+                        }
+                        Uri backup = selectedRecoveryVaultUri;
+                        Log.i(RECOVERY_LOG, "Recovery form accepted; starting local import");
+                        selectedRecoveryVaultUri = null;
+                        recoveryPayloadField.setText("");
+                        recoveryPinField.setText("");
+                        recoveryDialog.dismiss();
+                        awaitingResult = true;
+                        clearSession();
+                        showUnlock();
+                        try {
+                            ioExecutor.execute(() -> {
+                                try {
+                                    repository.importCopy(backup, recovery, pin);
+                                    runOnUiThread(() -> {
+                                        clearSession();
+                                        byte[] qrSecret = repository.copyRecoverySecret();
+                                        Session.setRecoverySecret(qrSecret);
+                                        Crypto.wipe(qrSecret);
+                                        awaitingResult = false;
+                                        showUnlock();
+                                        toast(R.string.msg_imported_backup);
+                                    });
+                                } catch (GeneralSecurityException | IOException
+                                         | IllegalArgumentException | SecurityException exception) {
+                                    Log.e(RECOVERY_LOG, "backup recovery failed: "
+                                            + exception.getClass().getSimpleName());
+                                    String reason = recoveryFailureMessage(exception);
+                                    runOnUiThread(() -> {
+                                        awaitingResult = false;
+                                        showBackupError(getString(R.string.err_recovery), reason);
+                                    });
+                                } finally {
+                                    Crypto.wipe(recovery.qrSecret);
+                                    clear(pin);
+                                }
                             });
-                        } catch (GeneralSecurityException | IOException exception) {
-                            String reason = exception.getMessage();
-                            runOnUiThread(() -> {
-                                awaitingResult = false;
-                                showBackupError(getString(R.string.err_recovery), reason);
-                            });
-                        } finally {
+                        } catch (java.util.concurrent.RejectedExecutionException exception) {
                             Crypto.wipe(recovery.qrSecret);
                             clear(pin);
+                            awaitingResult = false;
+                            showBackupError(getString(R.string.err_recovery),
+                                    getString(R.string.err_recovery));
                         }
                     });
-                })
-                .show();
+        });
+        recoveryDialog.show();
+    }
+
+    private String recoveryFailureMessage(Exception exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof javax.crypto.BadPaddingException) {
+                return getString(R.string.err_recovery_decryption);
+            }
+            String message = cause.getMessage();
+            if (message != null) {
+                String normalized = message.toUpperCase(Locale.ROOT);
+                if (normalized.contains("BAD_ENCRYPTION")
+                        || normalized.contains("BAD_DECRYPT")
+                        || normalized.contains("BAD_PADDING")) {
+                    return getString(R.string.err_recovery_decryption);
+                }
+            }
+        }
+        return exception.getMessage() == null ? getString(R.string.err_recovery)
+                : exception.getMessage();
     }
 
     // endregion
@@ -1856,11 +2386,13 @@ public final class MainActivity extends AppCompatActivity {
     private void saveData(VaultData data, List<PendingVaultAsset> pending) {
         if (sessionRecoveredPrevious) {
             clearPending(pending);
+            importSavePending = false;
             toast(R.string.err_recovered_read_only);
             return;
         }
         if (saveInProgress) {
             clearPending(pending);
+            importSavePending = false;
             toast(R.string.err_save);
             return;
         }
@@ -1876,6 +2408,7 @@ public final class MainActivity extends AppCompatActivity {
         } else if (sessionTruePin == null || !PinPolicy.isValid(sessionTruePin)) {
             saveInProgress = false;
             awaitingResult = false;
+            importSavePending = false;
             clearPending(pending);
             toast(R.string.err_unlock);
             lock();
@@ -1904,6 +2437,7 @@ public final class MainActivity extends AppCompatActivity {
                 clearPending(pending);
                 saveInProgress = false;
                 awaitingResult = false;
+                importSavePending = false;
                 toast(R.string.err_save);
             }
         }
@@ -1921,12 +2455,16 @@ public final class MainActivity extends AppCompatActivity {
             toast(R.string.msg_image_saved);
         } else if (fileAdded) {
             toast(R.string.msg_file_saved);
+        } else if (importSavePending) {
+            importSavePending = false;
+            toast(R.string.msg_import_saved);
         }
     }
 
     private void failSave(@StringRes int message) {
         saveInProgress = false;
         awaitingResult = false;
+        importSavePending = false;
         toast(message);
     }
 
@@ -1944,6 +2482,7 @@ public final class MainActivity extends AppCompatActivity {
                                 clearPending(pending);
                                 saveInProgress = false;
                                 awaitingResult = false;
+                                importSavePending = false;
                             })
                     .build();
             prompt.authenticate(new BiometricPrompt.CryptoObject(cipher),
@@ -1978,12 +2517,14 @@ public final class MainActivity extends AppCompatActivity {
                             clearPending(pending);
                             saveInProgress = false;
                             awaitingResult = false;
+                            importSavePending = false;
                         }
                     });
         } catch (GeneralSecurityException | IOException exception) {
             clearPending(pending);
             saveInProgress = false;
             awaitingResult = false;
+            importSavePending = false;
             Log.e(IMAGE_LOG, "biometric save setup failed: "
                     + exception.getClass().getSimpleName());
             toast(R.string.err_biometric);

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import com.example.securepasswordmanager.security.PinPolicy;
+
 /**
  * Printable transport for the user's passphrase.
  *
@@ -25,7 +27,7 @@ public final class PassphraseQrPayload {
 
     public PassphraseQrPayload(byte[] vaultId, char[] passphrase) {
         if (vaultId == null || vaultId.length != 16 || passphrase == null
-                || passphrase.length < 12 || passphrase.length > 24) {
+                || !PinPolicy.isValid(passphrase)) {
             throw new IllegalArgumentException("Invalid passphrase QR");
         }
         this.vaultId = vaultId.clone();
@@ -89,13 +91,21 @@ public final class PassphraseQrPayload {
         byte[] checksum = new byte[32];
         input.readFully(checksum);
         if (input.available() != 0) {
+            Crypto.wipe(passphraseBytes);
             throw new IOException("Trailing passphrase QR data");
         }
         char[] passphrase = new String(passphraseBytes, StandardCharsets.UTF_8).toCharArray();
-        PassphraseQrPayload payload = new PassphraseQrPayload(vaultId, passphrase);
-        Crypto.wipe(passphraseBytes);
-        if (!Crypto.constantTimeEquals(checksum, payload.checksum)) {
+        final PassphraseQrPayload payload;
+        try {
+            payload = new PassphraseQrPayload(vaultId, passphrase);
+        } catch (IllegalArgumentException exception) {
+            throw new IOException("Invalid passphrase QR passphrase", exception);
+        } finally {
             java.util.Arrays.fill(passphrase, '\0');
+            Crypto.wipe(passphraseBytes);
+        }
+        if (!Crypto.constantTimeEquals(checksum, payload.checksum)) {
+            java.util.Arrays.fill(payload.passphrase, '\0');
             throw new IOException("Corrupt passphrase QR");
         }
         return payload;

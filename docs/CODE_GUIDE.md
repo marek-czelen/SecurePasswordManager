@@ -30,6 +30,20 @@ derives a domain-separated key from the DEK, vault ID, object ID, generation, ty
 schema. AAD authenticates that context; each object generation uses a fresh ID, key and
 96-bit nonce.
 
+The encrypted text block also stores each login's Pro password history, capped at five
+distinct previous passwords and updated only when a password changes while Pro is active.
+Text schema version 2 adds this field; schema version 1 remains readable and migrates with
+an empty history. History values are viewable and copyable but cannot be restored from the UI.
+
+`AdvancedImportExport` parses CSV and single-sheet-at-a-time XLSX tables for user-selected
+column mapping, plus unencrypted Bitwarden JSON, KeePass XML and 1Password 1PUX exports.
+Imports are size-bounded, previewed, and appended as new entries through `saveData`; encrypted
+source formats are rejected. Raw imports are limited to 20 MiB, archive expansion is capped,
+and imports cannot exceed the vault's 10,000-entry limit. CSV export uses the fixed
+`name, username, password, url, notes, folder, tags, totp` column order and writes plaintext
+only to a user-selected SAF destination. Images and file attachments are not represented in
+this CSV schema.
+
 ## Persistence and failure handling
 
 `VaultV3Repository` coordinates copy-on-write. New objects are synced before a new

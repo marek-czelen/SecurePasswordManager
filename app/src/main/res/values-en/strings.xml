@@ -12,6 +12,8 @@
     <string name="action_unlock">PIN + QR (recovery)</string>
     <string name="action_biometric">Unlock with strong biometrics</string>
     <string name="action_recovery">Recover on a new device</string>
+    <string name="err_recovery_passphrase_policy">The recovery passphrase must be 12–24 characters and cannot be digits only.</string>
+    <string name="err_recovery_decryption">Could not decrypt the backup. Check that the passphrase, Recovery QR and backup file belong to the same vault.</string>
     <string name="list_title">Passwords</string>
     <string name="hint_search">Search</string>
     <string name="action_add">Add</string>
@@ -20,6 +22,50 @@
     <string name="add_file">Add file (Pro)</string>
     <string name="item_image_kind">JPG image</string>
     <string name="item_file_kind">File</string>
+    <string name="action_password_history">Password history (Pro)</string>
+    <string name="password_history_title">Password history</string>
+    <string name="password_history_entry">Previous password %1$d</string>
+    <string name="password_history_empty">No previous passwords have been saved.</string>
+    <string name="msg_password_history_pro_required">Password history is available in Pro.</string>
+    <string name="err_passphrase_qr_mismatch">That passphrase does not match the current vault. No QR code was created.</string>
+    <string name="menu_advanced_import_export">Advanced import/export (Pro)</string>
+    <string name="msg_advanced_pro_required">Advanced import and export are available in Pro.</string>
+    <string name="advanced_import_export_title">Advanced import/export</string>
+    <string name="advanced_import">Import passwords</string>
+    <string name="advanced_export_csv">Export to CSV</string>
+    <string name="csv_plaintext_title">CSV export is not encrypted</string>
+    <string name="csv_plaintext_warning">The CSV file contains passwords and TOTP secrets in plain text and can be read by other apps. Spreadsheets may treat values starting with =, +, - or @ as formulas. Only password entries are exported; images and attachments are omitted. Continue?</string>
+    <string name="msg_csv_nothing_to_export">There are no password entries to export.</string>
+    <string name="msg_csv_exported">CSV file exported.</string>
+    <string name="err_csv_export">Could not export the CSV file.</string>
+    <string name="err_advanced_import">Could not read the file. Check its format; encrypted exports are not supported.</string>
+    <string name="err_import_size">The import file is too large. The maximum size is 20 MiB.</string>
+    <string name="import_select_sheet">Choose a sheet</string>
+    <string name="import_map_columns">Map columns: %1$s</string>
+    <string name="action_continue">Continue</string>
+    <string name="import_preview_title">Import preview</string>
+    <string name="import_no_supported_entries">No entries in a supported format were found.</string>
+    <string name="import_empty">No entries to import. Rows skipped: %1$d.</string>
+    <string name="import_capacity">Cannot add %1$d entries; the vault has room for %2$d more.</string>
+    <string name="import_preview_count">New entries to add: %1$d</string>
+    <string name="import_preview_login">%1$s — %2$s</string>
+    <string name="import_ignored_rows">Blank or unmapped rows skipped: %1$d</string>
+    <string name="import_more_titles">… and %1$d more entries</string>
+    <string name="import_append_confirm">Entries will be added as new. Existing entries will not be overwritten.</string>
+    <string name="import_append">Add as new</string>
+    <string name="msg_import_saved">Entries imported into the vault.</string>
+    <string name="import_1password_attachments_ignored">Attachments in the 1Password export are not imported.</string>
+    <string name="import_bitwarden_unsupported">Skipped %1$d Bitwarden items with unsupported types.</string>
+    <string-array name="import_mapping_fields">
+        <item>Name</item>
+        <item>Username</item>
+        <item>Password</item>
+        <item>URL</item>
+        <item>Notes</item>
+        <item>Folder</item>
+        <item>Tags</item>
+        <item>TOTP</item>
+    </string-array>
     <string name="file_details_message">Type: %1$s\nSize: %2$s</string>
     <string name="msg_file_pro_required">File attachments are available in Pro.</string>
     <string name="msg_file_saved">File saved in the encrypted vault.</string>

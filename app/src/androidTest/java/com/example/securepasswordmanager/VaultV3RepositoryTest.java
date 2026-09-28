@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.securepasswordmanager.crypto.Crypto;
+import com.example.securepasswordmanager.crypto.PassphraseQrPayload;
 import com.example.securepasswordmanager.crypto.PendingVaultAsset;
 import com.example.securepasswordmanager.crypto.RecoveryQrPayload;
 import com.example.securepasswordmanager.crypto.VaultData;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
@@ -51,6 +53,16 @@ public final class VaultV3RepositoryTest {
         try {
             source.create(passphrase);
             recovery = source.createRecoveryPayload();
+            PassphraseQrPayload passphraseQr = source.createPassphraseQrPayload(passphrase);
+            assertArrayEquals(passphrase, passphraseQr.passphrase);
+            Arrays.fill(passphraseQr.passphrase, '\0');
+            char[] wrongPassphrase = "another secure passphrase".toCharArray();
+            try {
+                assertThrows(java.security.GeneralSecurityException.class,
+                        () -> source.createPassphraseQrPayload(wrongPassphrase));
+            } finally {
+                Arrays.fill(wrongPassphrase, '\0');
+            }
             VaultItem login = new VaultItem("Entry", "login", "password", "https://example",
                     "", "", "Work", "", false);
             String imageId = VaultObjectIds.toHex(VaultObjectIds.randomId());

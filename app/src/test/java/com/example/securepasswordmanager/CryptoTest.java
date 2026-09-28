@@ -70,6 +70,15 @@ public final class CryptoTest {
     }
 
     @Test
+    public void passphraseQrRejectsSecretsOutsideVaultPolicy() {
+        byte[] vaultId = Crypto.randomBytes(16);
+        assertThrows(IllegalArgumentException.class,
+                () -> new PassphraseQrPayload(vaultId, "123456789012".toCharArray()));
+        assertThrows(IllegalArgumentException.class,
+                () -> new PassphraseQrPayload(vaultId, "short".toCharArray()));
+    }
+
+    @Test
     public void totpMatchesRfc6238Sha1Vector() throws Exception {
         assertEquals("287082", Totp.code("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", 59_000L));
     }

@@ -7,7 +7,10 @@ import com.example.securepasswordmanager.crypto.VaultTextDataCodec;
 
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,7 +26,8 @@ public final class VaultTextDataCodecTest {
         String entryId = repeat("01", 16);
         VaultItem login = new VaultItem(entryId, "Example", "user", "secret", "https://site",
                 "private note", "work,important", "Work", "JBSWY3DPEHPK3PXP",
-                true, VaultItem.TYPE_LOGIN, null, null, "", 0);
+                true, VaultItem.TYPE_LOGIN, null, null, "", 0,
+                Arrays.asList("old-secret", "older-secret"));
         VaultItem image = VaultItem.imageReference("ID card", repeat("ab", 32),
                 repeat("cd", 32), 120_000);
         VaultItem file = VaultItem.fileReference("Document", repeat("ef", 32),
@@ -36,10 +40,50 @@ public final class VaultTextDataCodecTest {
         assertEquals("secret", decoded.items.get(0).password);
         assertEquals("Work", decoded.items.get(0).folder);
         assertEquals("JBSWY3DPEHPK3PXP", decoded.items.get(0).totpSecret);
+        assertEquals(Arrays.asList("old-secret", "older-secret"),
+                decoded.items.get(0).passwordHistory);
         assertEquals(repeat("ab", 32), decoded.items.get(1).attachmentId);
         assertEquals(repeat("cd", 32), decoded.items.get(1).thumbnailId);
         assertEquals(VaultItem.TYPE_FILE, decoded.items.get(2).type);
         assertEquals("application/pdf", decoded.items.get(2).contentType);
+    }
+
+    @Test
+    public void decodesTextSchemaOneWithoutPasswordHistory() throws Exception {
+        byte[] legacy = legacySchemaOneLoginBlock();
+        VaultData decoded = VaultTextDataCodec.decode(legacy);
+
+        assertEquals(1, decoded.items.size());
+        assertEquals("legacy-secret", decoded.items.get(0).password);
+        assertTrue(decoded.items.get(0).passwordHistory.isEmpty());
+        Crypto.wipe(legacy);
+    }
+
+    @Test
+    public void keepsFiveDistinctPreviousPasswordsNewestFirst() {
+        VaultItem item = new VaultItem("Example", "user", "current", "", "", "");
+        for (int i = 1; i <= 6; i++) {
+            item = item.withPreviousPassword("password-" + i);
+        }
+        assertEquals(Arrays.asList("password-6", "password-5", "password-4",
+                "password-3", "password-2"), item.passwordHistory);
+
+        item = item.withPreviousPassword("password-4");
+        assertEquals(Arrays.asList("password-4", "password-6", "password-5",
+                "password-3", "password-2"), item.passwordHistory);
+        assertEquals(item.passwordHistory, item.withFavorite(true).passwordHistory);
+    }
+
+    @Test
+    public void removesNewCurrentPasswordAndRecordsPreviousOnlyWhenEnabled() {
+        VaultItem item = new VaultItem(repeat("02", 16), "Example", "user", "current",
+                "", "", "", "", "", false, VaultItem.TYPE_LOGIN,
+                null, null, "", 0, Arrays.asList("older", "oldest"));
+
+        assertEquals(Arrays.asList("current", "oldest"),
+                item.passwordHistoryAfterChange("older", true));
+        assertEquals(Collections.singletonList("oldest"),
+                item.passwordHistoryAfterChange("older", false));
     }
 
     @Test
@@ -130,5 +174,47 @@ public final class VaultTextDataCodecTest {
             output.append(value);
         }
         return output.toString();
+    }
+
+    private static byte[] legacySchemaOneLoginBlock() throws IOException {
+        ByteArrayOutputStream rawBytes = new ByteArrayOutputStream();
+        DataOutputStream raw = new DataOutputStream(rawBytes);
+        raw.writeInt(0x56544433);
+        raw.writeInt(1);
+        raw.writeInt(1);
+        writeHex(raw, repeat("01", 16));
+        raw.writeByte(1);
+        writeString(raw, "Old entry");
+        writeString(raw, "old-user");
+        writeString(raw, "legacy-secret");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        raw.writeBoolean(false);
+        raw.flush();
+
+        byte[] record = rawBytes.toByteArray();
+        ByteArrayOutputStream paddedBytes = new ByteArrayOutputStream(4096);
+        DataOutputStream padded = new DataOutputStream(paddedBytes);
+        padded.writeInt(record.length);
+        padded.write(record);
+        padded.write(new byte[4096 - Integer.BYTES - record.length]);
+        padded.flush();
+        return paddedBytes.toByteArray();
+    }
+
+    private static void writeHex(DataOutputStream output, String value) throws IOException {
+        for (int i = 0; i < value.length(); i += 2) {
+            output.writeByte((Character.digit(value.charAt(i), 16) << 4)
+                    | Character.digit(value.charAt(i + 1), 16));
+        }
+    }
+
+    private static void writeString(DataOutputStream output, String value) throws IOException {
+        byte[] encoded = value.getBytes(StandardCharsets.UTF_8);
+        output.writeInt(encoded.length);
+        output.write(encoded);
     }
 }

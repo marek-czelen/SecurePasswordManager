@@ -16,6 +16,8 @@
     <string name="action_unlock">PIN + QR (odzyskiwanie)</string>
     <string name="action_biometric">Odblokuj biometrią</string>
     <string name="action_recovery">Odzyskiwanie na nowym urządzeniu</string>
+    <string name="err_recovery_passphrase_policy">Hasło odzyskiwania musi mieć 12–24 znaki i nie może składać się wyłącznie z cyfr.</string>
+    <string name="err_recovery_decryption">Nie udało się odszyfrować kopii. Sprawdź, czy hasło, kod QR odzyskiwania i plik kopii należą do tego samego magazynu.</string>
 
     <!-- List -->
     <string name="list_title">Hasła</string>
@@ -26,6 +28,50 @@
     <string name="add_file">Dodaj plik (Pro)</string>
     <string name="item_image_kind">Obraz JPG</string>
     <string name="item_file_kind">Plik</string>
+    <string name="action_password_history">Historia haseł (Pro)</string>
+    <string name="password_history_title">Historia haseł</string>
+    <string name="password_history_entry">Poprzednie hasło %1$d</string>
+    <string name="password_history_empty">Brak zapisanych poprzednich haseł.</string>
+    <string name="msg_password_history_pro_required">Historia haseł jest dostępna w wersji Pro.</string>
+    <string name="err_passphrase_qr_mismatch">Podane hasło nie pasuje do bieżącego magazynu. Nie utworzono kodu QR.</string>
+    <string name="menu_advanced_import_export">Import/eksport zaawansowany (Pro)</string>
+    <string name="msg_advanced_pro_required">Zaawansowany import i eksport jest dostępny w wersji Pro.</string>
+    <string name="advanced_import_export_title">Import/eksport zaawansowany</string>
+    <string name="advanced_import">Importuj hasła</string>
+    <string name="advanced_export_csv">Eksportuj do CSV</string>
+    <string name="csv_plaintext_title">Eksport CSV nie jest szyfrowany</string>
+    <string name="csv_plaintext_warning">Plik CSV zawiera hasła i sekrety TOTP w postaci jawnej i może zostać odczytany przez inne aplikacje. Arkusze kalkulacyjne mogą potraktować wartości zaczynające się od =, +, - lub @ jako formuły. Eksport obejmuje tylko wpisy haseł; obrazy i załączniki nie zostaną wyeksportowane. Kontynuować?</string>
+    <string name="msg_csv_nothing_to_export">Brak wpisów haseł do eksportu.</string>
+    <string name="msg_csv_exported">Wyeksportowano plik CSV.</string>
+    <string name="err_csv_export">Nie udało się wyeksportować pliku CSV.</string>
+    <string name="err_advanced_import">Nie udało się odczytać pliku. Sprawdź format; zaszyfrowane eksporty nie są obsługiwane.</string>
+    <string name="err_import_size">Plik importu jest za duży. Maksymalny rozmiar to 20 MiB.</string>
+    <string name="import_select_sheet">Wybierz arkusz</string>
+    <string name="import_map_columns">Przypisz kolumny: %1$s</string>
+    <string name="action_continue">Dalej</string>
+    <string name="import_preview_title">Podgląd importu</string>
+    <string name="import_no_supported_entries">Nie znaleziono wpisów w obsługiwanym formacie.</string>
+    <string name="import_empty">Nie znaleziono wpisów do importu. Pominięto wierszy: %1$d.</string>
+    <string name="import_capacity">Nie można dodać %1$d wpisów — w sejfie pozostało miejsce na %2$d.</string>
+    <string name="import_preview_count">Nowe wpisy do dodania: %1$d</string>
+    <string name="import_preview_login">%1$s — %2$s</string>
+    <string name="import_ignored_rows">Pominięto pustych lub nieprzypisanych wierszy: %1$d</string>
+    <string name="import_more_titles">… i %1$d kolejnych wpisów</string>
+    <string name="import_append_confirm">Wpisy zostaną dodane jako nowe. Istniejące wpisy nie będą nadpisane.</string>
+    <string name="import_append">Dodaj jako nowe</string>
+    <string name="msg_import_saved">Zaimportowano wpisy do sejfu.</string>
+    <string name="import_1password_attachments_ignored">Załączniki z pliku 1Password nie są importowane.</string>
+    <string name="import_bitwarden_unsupported">Pominięto %1$d elementów Bitwarden, których typ nie jest obsługiwany.</string>
+    <string-array name="import_mapping_fields">
+        <item>Nazwa</item>
+        <item>Użytkownik</item>
+        <item>Hasło</item>
+        <item>URL</item>
+        <item>Notatki</item>
+        <item>Folder</item>
+        <item>Tagi</item>
+        <item>TOTP</item>
+    </string-array>
     <string name="file_details_message">Typ: %1$s\nRozmiar: %2$s</string>
     <string name="msg_file_pro_required">Dodawanie plików jest dostępne w wersji Pro.</string>
     <string name="msg_file_saved">Plik zapisano w zaszyfrowanym sejfie.</string>

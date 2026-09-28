@@ -12,6 +12,9 @@ recovery are never paywalled.
 | Strong biometric hardware unlock | Implemented | Yes | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes | Yes |
 | Password entries | Implemented | Yes | Yes |
+| Password history (up to 5 previous distinct passwords) | Implemented | No | Yes; automatic capture on change, view and copy |
+| File attachments up to 10 MiB | Implemented | No | Yes |
+| Advanced import/export | Implemented | No | CSV/XLSX mapping, plaintext Bitwarden/KeePass/1Password imports, standard CSV export |
 | Favorites, folders, tags and search | Implemented | Yes | Yes |
 | Password generator | Implemented | Yes | Yes |
 | TOTP codes | Implemented | Yes | Yes |
@@ -29,12 +32,8 @@ recovery are never paywalled.
 | Feature                                         | Current status | Proposed Pro behavior                               |
 |-------------------------------------------------|---|-----------------------------------------------------|
 | Google Play Billing entitlement                 | Not implemented | One-time `pro_upgrade` purchase                     |
-| File attachments up to 10 MiB                   | Implemented | Available to Pro only                               |
 | Offline Pro entitlement cache                   | Not implemented | Use the last verified Play purchase locally         |
 | Image storage limits                            | Not gated | Higher count/size limits                            |
-| Password history                                | Not implemented | Encrypted entry history and restore                 |
-| Advanced import                                 | Not implemented | Bitwarden, KeePass, 1Password and CSV import        |
-| Advanced export                                 | Basic encrypted vault copy | Additional encrypted interchange formats            |
 | Scheduled backups                               | Backup after update exists | WorkManager schedules and retry policy              |
 | Passkeys                                        | Not implemented | Android Credential Provider/WebAuthn                |
 | Advanced Autofill                               | Not implemented | Credential Manager provider and domain matching     |
