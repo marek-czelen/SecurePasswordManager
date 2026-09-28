@@ -31,6 +31,8 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         void onCopyPassword(VaultItem item);
 
         void onToggleFavorite(VaultItem item);
+
+        void onLoadThumbnail(VaultItem item, ImageView target);
     }
 
     private final List<VaultItem> items = new ArrayList<>();
@@ -59,11 +61,24 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         VaultItem item = items.get(position);
         String title = item.title.isEmpty() ? "—" : item.title;
         holder.title.setText(title);
-        holder.subtitle.setText(item.isImage() ? "JPG" :
-                (item.username.isEmpty() ? item.url : item.username));
-        holder.copy.setVisibility(item.isImage() ? View.GONE : View.VISIBLE);
-        holder.avatar.setVisibility(item.isImage() ? View.GONE : View.VISIBLE);
-        holder.typeIcon.setVisibility(item.isImage() ? View.VISIBLE : View.GONE);
+        holder.subtitle.setText(item.isImage()
+                ? holder.itemView.getContext().getString(R.string.item_image_kind)
+                : item.isFile()
+                ? holder.itemView.getContext().getString(R.string.item_file_kind)
+                : (item.username.isEmpty() ? item.url : item.username));
+        boolean attachment = item.isImage() || item.isFile();
+        holder.copy.setVisibility(attachment ? View.GONE : View.VISIBLE);
+        holder.avatar.setVisibility(attachment ? View.GONE : View.VISIBLE);
+        holder.typeIcon.setVisibility(attachment ? View.VISIBLE : View.GONE);
+        holder.typeIcon.setTag(item.entryId);
+        if (item.isImage()) {
+            holder.typeIcon.setImageResource(R.drawable.ic_image);
+            if (item.thumbnailId != null) {
+                listener.onLoadThumbnail(item, holder.typeIcon);
+            }
+        } else if (item.isFile()) {
+            holder.typeIcon.setImageResource(R.drawable.ic_note);
+        }
         holder.avatar.setText(initial(title));
         holder.favorite.setAlpha(item.favorite ? 1f : 0.25f);
         holder.itemView.setOnClickListener(view -> listener.onOpen(item));

@@ -6,10 +6,12 @@
 2. Replace all placeholders in `docs/PRIVACY_POLICY.md`.
 3. Review third-party licenses and include required notices in the release.
 4. Confirm no secrets, test vaults, QR payloads or local properties are in the source.
-5. Test first run, VLT2 QR generation, biometric unlock, PIN+QR recovery, old-format
-   rejection, import/export, OCR, auto-lock, clipboard clearing and delete-vault.
-6. Test wrong PIN, wrong QR, tampered QR, tampered vault, changed KDF parameters,
-   corrupted tags, rollback and malformed files.
+5. Test VLT3 first run, RQR2 generation, biometric unlock, passphrase+QR recovery,
+   unsupported VLT2 messaging, import/export, OCR, auto-lock, clipboard clearing and
+   delete-vault.
+6. Test wrong passphrase, wrong QR, tampered QR, tampered header/manifest/object,
+   unsupported independent schema versions, corrupted tags, previous-generation recovery
+   and malformed files. Deliberate rollback protection is not implemented.
 
 ## Build
 

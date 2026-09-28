@@ -13,7 +13,7 @@ import java.util.Base64;
  *
  * <p>This QR intentionally contains the passphrase in recoverable form. It is therefore
  * equivalent to writing the passphrase on paper and must be stored separately from RQR2.
- * Possession of this QR alone still cannot open VLT2 because the independent RQR2 secret
+ * Possession of this QR alone still cannot open VLT3 because the independent RQR2 secret
  * is also required.</p>
  */
 public final class PassphraseQrPayload {

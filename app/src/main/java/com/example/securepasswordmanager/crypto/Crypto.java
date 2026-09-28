@@ -51,13 +51,22 @@ public final class Crypto {
 
     public static byte[] open(byte[] key, SealedBox box, byte[] associatedData)
             throws GeneralSecurityException {
+        return open(key, box.nonce, box.ciphertext, associatedData);
+    }
+
+    public static byte[] open(byte[] key, byte[] nonce, byte[] ciphertext,
+                              byte[] associatedData) throws GeneralSecurityException {
+        if (key == null || key.length != KEY_SIZE || nonce == null
+                || nonce.length != NONCE_SIZE || ciphertext == null || ciphertext.length < 16) {
+            throw new IllegalArgumentException("Invalid AES-GCM input");
+        }
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"),
-                new GCMParameterSpec(TAG_BITS, box.nonce));
+                new GCMParameterSpec(TAG_BITS, nonce));
         if (associatedData != null) {
             cipher.updateAAD(associatedData);
         }
-        return cipher.doFinal(box.ciphertext);
+        return cipher.doFinal(ciphertext);
     }
 
     public static byte[] hmacSha256(byte[] key, byte[] data) throws GeneralSecurityException {

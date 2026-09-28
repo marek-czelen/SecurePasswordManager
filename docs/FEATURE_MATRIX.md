@@ -7,7 +7,7 @@ recovery are never paywalled.
 
 | Feature | Status | Free | Pro |
 |---|---|---:|---:|
-| VLT2 encrypted vault | Implemented | Yes | Yes |
+| VLT3 hybrid encrypted vault | Implemented | Yes | Yes |
 | Argon2id passphrase + independent QR recovery | Implemented | Yes | Yes |
 | Strong biometric hardware unlock | Implemented | Yes | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes | Yes |
@@ -26,22 +26,23 @@ recovery are never paywalled.
 
 ## Planned Pro features
 
-| Feature | Current status | Proposed Pro behavior |
-|---|---|---|
-| Google Play Billing entitlement | Not implemented | One-time `pro_upgrade` purchase |
-| Offline Pro entitlement cache | Not implemented | Use the last verified Play purchase locally |
-| Image storage limits | Not gated | Higher count/size limits |
-| Password history | Not implemented | Encrypted entry history and restore |
-| Advanced import | Not implemented | Bitwarden, KeePass, 1Password and CSV import |
-| Advanced export | Basic encrypted vault copy | Additional encrypted interchange formats |
-| Scheduled backups | Backup after update exists | WorkManager schedules and retry policy |
-| Passkeys | Not implemented | Android Credential Provider/WebAuthn |
-| Advanced Autofill | Not implemented | Credential Manager provider and domain matching |
-| Multiple vaults | Not implemented | Separate VLT2 vaults and device bindings |
-| Encrypted sharing | Not implemented | Recipient-key encrypted item packages |
-| Emergency access | Not implemented | Requires a backend, recipients and approval workflow |
-| Breach intelligence | Not implemented | Optional privacy-reviewed k-anonymity service |
-| Advanced reports | Basic local health exists | History, age and actionable health dashboard |
+| Feature                                         | Current status | Proposed Pro behavior                               |
+|-------------------------------------------------|---|-----------------------------------------------------|
+| Google Play Billing entitlement                 | Not implemented | One-time `pro_upgrade` purchase                     |
+| File attachments up to 10 MiB                   | Implemented | Available to Pro only                               |
+| Offline Pro entitlement cache                   | Not implemented | Use the last verified Play purchase locally         |
+| Image storage limits                            | Not gated | Higher count/size limits                            |
+| Password history                                | Not implemented | Encrypted entry history and restore                 |
+| Advanced import                                 | Not implemented | Bitwarden, KeePass, 1Password and CSV import        |
+| Advanced export                                 | Basic encrypted vault copy | Additional encrypted interchange formats            |
+| Scheduled backups                               | Backup after update exists | WorkManager schedules and retry policy              |
+| Passkeys                                        | Not implemented | Android Credential Provider/WebAuthn                |
+| Advanced Autofill                               | Not implemented | Credential Manager provider and domain matching     |
+| Multiple vaults                                 | Not implemented | Separate VLT2 vaults and device bindings            |
+| Encrypted sharing                               | Not implemented | Recipient-key encrypted item packages               |
+| Emergency access                                | Not implemented | Requires a backend, recipients and approval workflow |
+| Breach intelligence                             | Not implemented | Optional privacy-reviewed k-anonymity service       |
+| Advanced reports                                | Basic local health exists | History, age and actionable health dashboard        |
 
 ## Features that stay Free
 

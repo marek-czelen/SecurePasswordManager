@@ -22,22 +22,11 @@ public final class RecoveryQrPayload {
     public final byte[] wrapSalt;
     public final byte[] checksum;
 
-    /** Source compatibility for the old RQR1 unit fixture; its DEK box is intentionally ignored. */
-    @Deprecated
-    public RecoveryQrPayload(byte[] vaultId, byte[] ignoredSlotId, KdfParameters legacy,
-                             Crypto.SealedBox ignoredWrappedDek) {
-        this(vaultId, Crypto.randomBytes(Crypto.KEY_SIZE),
-                new KdfParameters(Crypto.randomBytes(KdfParameters.SALT_SIZE),
-                        KdfParameters.DEFAULT_MEMORY_KIB, KdfParameters.DEFAULT_TIME_COST,
-                        KdfParameters.DEFAULT_PARALLELISM),
-                Crypto.randomBytes(16));
-    }
-
     public RecoveryQrPayload(byte[] vaultId, byte[] qrSecret, KdfParameters parameters,
                              byte[] wrapSalt) {
         if (vaultId == null || vaultId.length != 16 || qrSecret == null
                 || qrSecret.length != Crypto.KEY_SIZE || wrapSalt == null || wrapSalt.length != 16
-                || !KdfParameters.ALGORITHM.equals(parameters.algorithm)) {
+                || parameters == null || !KdfParameters.ALGORITHM.equals(parameters.algorithm)) {
             throw new IllegalArgumentException("Invalid RQR2 payload");
         }
         try {
@@ -74,7 +63,7 @@ public final class RecoveryQrPayload {
         output.write(vaultId);
         output.write(qrSecret);
         output.write(qrId);
-        kdfParameters.writeV2(output);
+        kdfParameters.writeArgon2id(output);
         output.write(wrapSalt);
         output.flush();
         return bytes.toByteArray();
@@ -100,7 +89,7 @@ public final class RecoveryQrPayload {
         input.readFully(vaultId);
         input.readFully(secret);
         input.readFully(qrId);
-        KdfParameters parameters = KdfParameters.readV2(input);
+        KdfParameters parameters = KdfParameters.readArgon2id(input);
         byte[] wrapSalt = new byte[16];
         input.readFully(wrapSalt);
         byte[] suppliedChecksum = new byte[32];

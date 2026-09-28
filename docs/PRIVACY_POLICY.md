@@ -19,10 +19,11 @@ Recovery QR secrets, TOTP seeds, notes or vault plaintext.
 The app may process the following data locally at the user’s direction:
 
 - login names, passwords, URLs, notes, folders, tags and TOTP secrets;
+- user-selected file attachments and their display metadata;
 - a passphrase used to derive encryption material;
 - a Recovery QR containing a random recovery secret;
 - user-selected photos or camera images for OCR;
-- encrypted `vault.vlt` bytes selected for backup/export/import.
+- encrypted `vault.vlt3` containers selected for backup/export/import.
 
 This data is sensitive. It is stored in the encrypted local vault and is not used for
 advertising, profiling or sale.
@@ -38,8 +39,10 @@ OCR images.
 
 The user may explicitly select an external document provider such as Google Drive,
 Dropbox, OneDrive or local storage through Android’s Storage Access Framework. The app
-writes encrypted vault bytes only. The selected provider processes that file under its
-own terms and privacy policy. The publisher does not receive the plaintext vault key.
+writes encrypted VLT3 containers for backup. If the user explicitly exports an
+individual attachment, the selected destination receives that file's plaintext. The
+selected provider processes stored files under its own terms and privacy policy. The
+publisher does not receive the vault key.
 
 ## Biometrics and Keystore
 

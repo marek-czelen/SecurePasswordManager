@@ -1,47 +1,68 @@
-# VLT2 threat model
+# VLT3 threat model
 
 ## Security assumptions
 
-- The attacker may know the complete source code, APK and binary vault format.
-- The attacker may copy `vault.vlt`, cloud backups and the public Recovery QR format.
-- The attacker does not know both the user passphrase and the current Recovery QR.
-- A rooted/unlocked device with a hooked process is considered compromised after unlock.
+- The attacker may know the source, APK, VLT3 framing and a copy of the backup.
+- The attacker does not have both the passphrase and independent Recovery QR secret.
+- The attacker does not control the original device's hardware-backed Keystore key.
+- A rooted or instrumented process after unlock is considered compromised.
 
 ## Assets
 
-- 256-bit DEK;
-- password entries, notes, TOTP seeds and metadata;
-- 256-bit QR recovery secret;
-- Android Keystore private key;
-- user passphrase.
+- Random 256-bit DEK.
+- Password entries, notes, TOTP secrets, folders, tags and favorites.
+- Separately encrypted image, thumbnail and file objects.
+- Independent 256-bit Recovery QR secret and passphrase.
+- Android Keystore private key and biometric authorization state.
 
 ## Desired properties
 
 | Scenario | Required result |
 |---|---|
-| Source + vault, no PIN/QR | No DEK recovery or useful PIN verification |
-| Vault + PIN, no QR | No recovery |
-| Vault + QR, no PIN | No recovery |
-| Vault + PIN + QR | Recovery is allowed |
-| Original device + strong biometric | Daily local unlock is allowed |
-| New device + PIN + QR | New hardware wrapper is created |
+| Source + backup, no passphrase/QR | No DEK recovery or useful standalone passphrase verification |
+| Backup + passphrase, no QR | No recovery |
+| Backup + QR, no passphrase | No recovery |
+| Backup + passphrase + QR | Restore is allowed and creates a local hardware wrapper |
+| Original device + strong biometric | Daily unlock is allowed |
+| Text edit | Media ciphertext is unchanged |
+| Media ciphertext tampering | Hash/tag failure is surfaced; a matching previous resource may be offered |
+| Interrupted write | Current or previous complete manifest remains recoverable |
 | Rooted device after unlock | Plaintext cannot be guaranteed |
 
-## Why source disclosure is safe at rest
+## Exposure boundaries
 
-VLT2 uses public algorithms and runtime-generated secrets. The source contains no DEK,
-QR secret, passphrase or private Keystore key. Knowledge of the derivation code does not
-provide the missing runtime inputs. This is an assumption about encrypted-at-rest
-security only; it is not protection against a modified app observing user input.
+The encrypted manifest hides entry metadata, names and media references. Object IDs are
+random and filenames contain no user data. Container framing still reveals object count
+and approximate sizes. Ciphertext SHA-256 values are authenticated by the encrypted
+manifest and allow backup copies to be checked without decrypting every media object;
+AES-GCM remains the cryptographic authenticity check when data is opened.
+
+The list decrypts the bounded text block, not images or files. Visible image thumbnails
+are loaded lazily. A damaged media object is detected on open or backup rather than by
+reading all media during list display. Current and previous manifests are both roots for
+reachability, so GC must not remove objects needed by either or by an active backup.
+
+## Recovery and rollback
+
+`manifest.current` is the commit point; `manifest.previous` contains the prior complete
+state. Fallback to the previous state is reported to the user and editing stays disabled
+until the user confirms repair. This is accidental-corruption/crash recovery only, not
+protection against an attacker replaying an older valid backup.
+
+External SAF providers do not expose a universal atomic replacement protocol. The app
+stages and validates a complete encrypted backup locally before copying it to the
+provider. A provider failure during the final copy may leave an incomplete external
+document; the VLT3 importer rejects incomplete containers.
 
 ## QR handling
 
-The QR is a high-value secret. It must be shown behind `FLAG_SECURE`, must not be logged,
-must not be placed in clipboard history automatically and should be stored separately
-from the vault file. A replacement QR requires the current PIN and current QR.
+RQR2 contains the independent recovery secret and authenticated metadata, never a DEK.
+It is shown behind `FLAG_SECURE`, is not logged, and must be stored separately from the
+vault backup. The optional passphrase QR contains the passphrase itself and is equivalent
+to writing it on paper; it is not sufficient without RQR2.
 
-The optional passphrase QR is even more direct: it contains the passphrase itself in a
-printable transport format. It is equivalent to writing the passphrase on paper. The
-application warns about this and keeps the passphrase QR separate from RQR2. Possession
-of only the passphrase QR still does not open VLT2 because the independent RQR2 secret is
-also required.
+## Out of scope
+
+VLT2 migration, server synchronization, deliberate rollback prevention and chunked
+attachments are not implemented. Generic file attachment creation is Pro-gated; manual
+encrypted backup and recovery are not.

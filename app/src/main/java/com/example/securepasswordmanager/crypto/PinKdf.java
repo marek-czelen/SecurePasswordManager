@@ -2,37 +2,22 @@ package com.example.securepasswordmanager.crypto;
 
 import java.security.GeneralSecurityException;
 import java.nio.charset.StandardCharsets;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 
 /**
  * Derives a 256-bit wrapping key from the user passphrase.
  *
- * <p>VLT2 uses Argon2id from Bouncy Castle. The legacy PBKDF2 branch exists only to
- * recognize old VLT1 data; it is never selected when creating a VLT2 vault.</p>
+ * <p>VLT3 uses Argon2id from Bouncy Castle for passphrase-based DEK wrapping.</p>
  */
 public final class PinKdf {
     private PinKdf() {
     }
 
     public static byte[] derive(char[] pin, KdfParameters parameters) throws GeneralSecurityException {
-        // VLT2 uses Argon2id because a copied vault must resist GPU-assisted guessing.
-        // The PBKDF2 branch is read-only compatibility for explicitly identified VLT1 data.
-        if (pin == null || pin.length < (KdfParameters.LEGACY_ALGORITHM.equals(parameters.algorithm)
-                ? 6 : 12) || pin.length > (KdfParameters.LEGACY_ALGORITHM.equals(parameters.algorithm)
-                ? 64 : 24)) {
+        if (pin == null || pin.length < 12 || pin.length > 24 || parameters == null
+                || !KdfParameters.ALGORITHM.equals(parameters.algorithm)) {
             throw new IllegalArgumentException("Passphrase must contain 12 to 24 characters");
-        }
-        if (KdfParameters.LEGACY_ALGORITHM.equals(parameters.algorithm)) {
-            PBEKeySpec spec = new PBEKeySpec(pin, parameters.salt, parameters.iterations, 256);
-            try {
-                return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-                        .generateSecret(spec).getEncoded();
-            } finally {
-                spec.clearPassword();
-            }
         }
         byte[] password = new String(pin).getBytes(StandardCharsets.UTF_8);
         byte[] result = new byte[Crypto.KEY_SIZE];

@@ -1,6 +1,6 @@
 package com.example.securepasswordmanager.security;
 
-/** User-secret policy for VLT2; numeric-only short PINs are intentionally rejected. */
+/** User-secret policy for vault recovery; numeric-only short PINs are intentionally rejected. */
 public final class PinPolicy {
     private PinPolicy() {
     }

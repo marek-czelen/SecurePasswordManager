@@ -7,8 +7,8 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.biometrics.BiometricPrompt;
 import android.net.Uri;
 import android.os.Build;
@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.os.SystemClock;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -45,11 +46,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.securepasswordmanager.crypto.RecoveryQrPayload;
 import com.example.securepasswordmanager.crypto.PassphraseQrPayload;
+import com.example.securepasswordmanager.crypto.Crypto;
+import com.example.securepasswordmanager.crypto.PendingVaultAsset;
 import com.example.securepasswordmanager.crypto.PasswordHealth;
 import com.example.securepasswordmanager.crypto.Totp;
 import com.example.securepasswordmanager.crypto.VaultData;
+import com.example.securepasswordmanager.crypto.VaultImageProcessor;
 import com.example.securepasswordmanager.crypto.VaultItem;
-import com.example.securepasswordmanager.repository.VaultRepository;
+import com.example.securepasswordmanager.crypto.VaultObjectIds;
+import com.example.securepasswordmanager.crypto.VaultObjectRef;
+import com.example.securepasswordmanager.crypto.VaultSizeLimitException;
+import com.example.securepasswordmanager.repository.VaultV3Repository;
 import com.example.securepasswordmanager.security.PinPolicy;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -71,6 +78,7 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
@@ -96,10 +104,13 @@ public final class MainActivity extends AppCompatActivity {
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
     private static long sBackgroundedElapsed;
 
-    private VaultRepository repository;
+    private VaultV3Repository repository;
     private PremiumManager premiumManager;
     private char[] sessionTruePin;
+    private byte[] sessionDek;
     private boolean biometricSession;
+    private boolean sessionRecoveredPrevious;
+    private boolean saveInProgress;
     private boolean unlocked;
     private VaultData currentData = VaultData.empty();
 
@@ -110,7 +121,8 @@ public final class MainActivity extends AppCompatActivity {
     private TextInputEditText recoveryPayloadField;
     private TextInputEditText recoveryPinField;
     private TextView recoveryFileStatus;
-    private byte[] selectedRecoveryVault;
+    private Uri selectedRecoveryVaultUri;
+    private VaultItem pendingFileExport;
     private boolean scanningPassphraseQr;
 
     private final Handler clipboardHandler = new Handler(Looper.getMainLooper());
@@ -176,6 +188,24 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
 
+    private final ActivityResultLauncher<String[]> pickFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                awaitingResult = false;
+                if (uri != null) {
+                    addSelectedFile(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<String> exportFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument(
+                    "application/octet-stream"), uri -> {
+                awaitingResult = false;
+                if (uri != null && pendingFileExport != null) {
+                    exportAttachment(uri, pendingFileExport);
+                }
+                pendingFileExport = null;
+            });
+
     private final ActivityResultLauncher<Uri> containerTakePhotoLauncher =
             registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
                 if (Boolean.TRUE.equals(success) && pendingContainerPhotoUri != null) {
@@ -235,14 +265,6 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
 
-    private final ActivityResultLauncher<String[]> importBackupLauncher =
-            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
-                awaitingResult = false;
-                if (uri != null) {
-                    importBackup(uri);
-                }
-            });
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -258,11 +280,12 @@ public final class MainActivity extends AppCompatActivity {
             awaitingResult = savedInstanceState.getBoolean(KEY_AWAITING, false);
         }
         try {
-            repository = new VaultRepository(this);
+            repository = new VaultV3Repository(this);
             premiumManager = new PremiumManager(this);
             if (Session.isActive()) {
                 restoreSession();
-            } else if (repository.exists() && repository.isLegacyVault()) {
+            } else if (!repository.exists()
+                    && new File(getFilesDir(), "vault.vlt").isFile()) {
                 showFatalError(getString(R.string.err_legacy_vault));
             } else if (repository.exists()) {
                 showUnlock();
@@ -282,10 +305,20 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     /** Restores an in-memory session that survived Activity recreation (e.g. after OCR). */
-    private void restoreSession() {
+    private void restoreSession() throws GeneralSecurityException, IOException {
         sessionTruePin = Session.pin();
         biometricSession = Session.isBiometricSession();
+        sessionRecoveredPrevious = Session.isRecoveredPrevious();
         currentData = Session.data();
+        sessionDek = Session.dek();
+        byte[] qrSecret = Session.recoverySecret();
+        if (qrSecret != null) {
+            try {
+                repository.rememberRecoverySecret(qrSecret);
+            } finally {
+                Arrays.fill(qrSecret, (byte) 0);
+            }
+        }
         unlocked = true;
         showVault();
     }
@@ -410,18 +443,10 @@ public final class MainActivity extends AppCompatActivity {
         }
         if (requestCode == REQUEST_VAULT_FILE && resultCode == RESULT_OK
                 && data != null && data.getData() != null) {
-            try (java.io.InputStream input = getContentResolver().openInputStream(data.getData())) {
-                if (input == null) {
-                    throw new java.io.IOException("Vault file is unavailable");
-                }
-                selectedRecoveryVault = readLimited(input, 256 * 1024 * 1024);
-                if (recoveryFileStatus != null) {
-                    recoveryFileStatus.setVisibility(View.VISIBLE);
-                    recoveryFileStatus.setText(R.string.action_pick_file);
-                }
-            } catch (java.io.IOException exception) {
-                selectedRecoveryVault = null;
-                toast(R.string.err_read_file);
+            selectedRecoveryVaultUri = data.getData();
+            if (recoveryFileStatus != null) {
+                recoveryFileStatus.setVisibility(View.VISIBLE);
+                recoveryFileStatus.setText(R.string.action_pick_file);
             }
         }
     }
@@ -459,36 +484,12 @@ public final class MainActivity extends AppCompatActivity {
     private void showUnlock() {
         unlocked = false;
         setScreen(R.layout.screen_unlock);
-        TextInputEditText pin = findViewById(R.id.editPin);
-        // VLT2 never permits a PIN-only operation. PIN + RQR2 is exposed by the
+        // The primary unlock is biometric. PIN + RQR2 is exposed by the
         // explicit recovery flow below; daily unlock is intentionally biometric-first.
         findViewById(R.id.tilPin).setVisibility(View.GONE);
         findViewById(R.id.btnUnlock).setVisibility(View.GONE);
-        findViewById(R.id.btnUnlock).setOnClickListener(view -> openWithPin(text(pin)));
         findViewById(R.id.btnBiometric).setOnClickListener(view -> authenticateBiometric());
         findViewById(R.id.btnRecovery).setOnClickListener(view -> showRecoveryImport());
-    }
-
-    private void openWithPin(char[] entered) {
-        if (!PinPolicy.isValid(entered)) {
-            toast(R.string.err_unlock);
-            clear(entered);
-            return;
-        }
-        try {
-            VaultRepository.OpenResult result = repository.openWithPin(entered);
-            clearSession();
-            sessionTruePin = entered.clone();
-            biometricSession = false;
-            currentData = result.data;
-            showVault();
-            result.clear();
-        } catch (GeneralSecurityException | java.io.IOException
-                 | IllegalArgumentException exception) {
-            toast(R.string.err_unlock);
-        } finally {
-            clear(entered);
-        }
     }
 
     private void authenticateBiometric() {
@@ -507,11 +508,13 @@ public final class MainActivity extends AppCompatActivity {
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
                             try {
-                                VaultRepository.OpenResult opened =
+                                VaultV3Repository.OpenResult opened =
                                         repository.openWithBiometric(result.getCryptoObject().getCipher());
                                 clearSession();
                                 biometricSession = true;
                                 currentData = opened.data;
+                                sessionDek = opened.copyDek();
+                                sessionRecoveredPrevious = opened.recoveredPrevious;
                                 showVault();
                                 opened.clear();
                             } catch (GeneralSecurityException | java.io.IOException exception) {
@@ -556,6 +559,11 @@ public final class MainActivity extends AppCompatActivity {
             public void onToggleFavorite(VaultItem item) {
                 toggleFavorite(item);
             }
+
+            @Override
+            public void onLoadThumbnail(VaultItem item, ImageView target) {
+                loadThumbnail(item, target);
+            }
         });
         recycler.setAdapter(adapter);
 
@@ -567,8 +575,55 @@ public final class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.fabAdd).setOnClickListener(view -> showAddChooser());
         renderList();
-        Session.set(sessionTruePin, currentData, biometricSession);
+        Session.set(sessionTruePin, currentData, biometricSession, sessionDek);
+        Session.setRecoveredPrevious(sessionRecoveredPrevious);
+        byte[] qrSecret = repository.copyRecoverySecret();
+        Session.setRecoverySecret(qrSecret);
+        Crypto.wipe(qrSecret);
         scheduleAutoLock();
+        if (sessionRecoveredPrevious) {
+            showRecoveredPreviousDialog();
+        } else {
+            scheduleOrphanCollection();
+        }
+    }
+
+    private void showRecoveredPreviousDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.action_recovery)
+                .setMessage(R.string.msg_recovered_previous)
+                .setNegativeButton(R.string.action_close, null)
+                .setPositiveButton(R.string.action_repair_vault, (dialog, which) -> {
+                    if (sessionDek == null) {
+                        toast(R.string.err_unlock);
+                        return;
+                    }
+                    byte[] key = sessionDek.clone();
+                    awaitingResult = true;
+                    ioExecutor.execute(() -> {
+                        try {
+                            VaultData repaired = repository.repairCurrentFromPrevious(key);
+                            runOnUiThread(() -> {
+                                currentData = repaired;
+                                Session.updateData(currentData);
+                                renderList();
+                                sessionRecoveredPrevious = false;
+                                Session.setRecoveredPrevious(false);
+                                awaitingResult = false;
+                                toast(R.string.msg_vault_repaired);
+                            });
+                        } catch (IOException | GeneralSecurityException exception) {
+                            String reason = exception.getMessage();
+                            runOnUiThread(() -> {
+                                awaitingResult = false;
+                                showBackupError(getString(R.string.err_recovery), reason);
+                            });
+                        } finally {
+                            Crypto.wipe(key);
+                        }
+                    });
+                })
+                .show();
     }
 
     private boolean onMenuItem(android.view.MenuItem item) {
@@ -633,9 +688,7 @@ public final class MainActivity extends AppCompatActivity {
         if (index < 0) {
             return;
         }
-        VaultItem changed = new VaultItem(item.title, item.username, item.password, item.url,
-                item.notes, item.tags, item.folder, item.totpSecret, !item.favorite);
-        items.set(index, changed);
+        items.set(index, item.withFavorite(!item.favorite));
         saveData(new VaultData(items));
     }
 
@@ -657,6 +710,10 @@ public final class MainActivity extends AppCompatActivity {
     private void showDetails(VaultItem item) {
         if (item.isImage()) {
             showImageDetails(item);
+            return;
+        }
+        if (item.isFile()) {
+            showFileDetails(item);
             return;
         }
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_details, null);
@@ -715,11 +772,114 @@ public final class MainActivity extends AppCompatActivity {
     private void showImageDetails(VaultItem item) {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_image_details, null);
         ImageView image = view.findViewById(R.id.imagePreview);
-        image.setImageBitmap(BitmapFactory.decodeByteArray(
-                item.imageJpeg, 0, item.imageJpeg.length));
-        new MaterialAlertDialogBuilder(this)
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(item.title)
                 .setView(view)
+                .setNegativeButton(R.string.action_delete, (d, which) -> {
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.remove(item);
+                    saveData(new VaultData(items));
+                })
+                .setPositiveButton(R.string.action_close, null)
+                .create();
+        dialog.show();
+        loadImagePreview(item, image, dialog);
+    }
+
+    private void loadImagePreview(VaultItem item, ImageView target,
+                                  androidx.appcompat.app.AlertDialog dialog) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        ioExecutor.execute(() -> {
+            byte[] jpeg = null;
+            Bitmap bitmap = null;
+            try {
+                VaultV3Repository.ResourceResult resource = repository.readResource(key,
+                        item.attachmentId, item.entryId, VaultObjectRef.Type.IMAGE);
+                jpeg = resource.plaintext;
+                bitmap = VaultImageProcessor.decodeForDisplay(jpeg,
+                        VaultImageProcessor.MAX_IMAGE_BYTES, 2048);
+                Bitmap decoded = bitmap;
+                runOnUiThread(() -> {
+                    if (unlocked && dialog.isShowing()) {
+                        target.setImageBitmap(decoded);
+                        if (resource.recoveredPrevious) {
+                            notifyPreviousResourceRecovered();
+                        }
+                    } else {
+                        decoded.recycle();
+                    }
+                });
+            } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
+                runOnUiThread(() -> {
+                    if (dialog.isShowing()) {
+                        toast(R.string.err_image);
+                    }
+                });
+                if (bitmap != null) {
+                    bitmap.recycle();
+                }
+            } finally {
+                Crypto.wipe(jpeg);
+                Crypto.wipe(key);
+            }
+        });
+    }
+
+    private void loadThumbnail(VaultItem item, ImageView target) {
+        if (sessionDek == null || item.thumbnailId == null) {
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        ioExecutor.execute(() -> {
+            byte[] jpeg = null;
+            Bitmap bitmap = null;
+            try {
+                VaultV3Repository.ResourceResult resource = repository.readResource(key,
+                        item.thumbnailId, item.entryId, VaultObjectRef.Type.THUMBNAIL);
+                jpeg = resource.plaintext;
+                bitmap = VaultImageProcessor.decodeForDisplay(jpeg,
+                        VaultImageProcessor.MAX_THUMBNAIL_BYTES, 256);
+                Bitmap decoded = bitmap;
+                runOnUiThread(() -> {
+                    Object tag = target.getTag();
+                    if (unlocked && item.entryId.equals(tag)) {
+                        androidx.core.widget.ImageViewCompat.setImageTintList(target, null);
+                        target.setImageBitmap(decoded);
+                        if (resource.recoveredPrevious) {
+                            notifyPreviousResourceRecovered();
+                        }
+                    } else {
+                        decoded.recycle();
+                    }
+                });
+            } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
+                Log.w(IMAGE_LOG, "thumbnail load failed: "
+                        + exception.getClass().getSimpleName());
+                if (bitmap != null) {
+                    bitmap.recycle();
+                }
+            } finally {
+                Crypto.wipe(jpeg);
+                Crypto.wipe(key);
+            }
+        });
+    }
+
+    private void showFileDetails(VaultItem item) {
+        String message = getString(R.string.file_details_message, item.contentType,
+                android.text.format.Formatter.formatShortFileSize(this, item.attachmentSize));
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(item.title)
+                .setMessage(message)
+                .setNeutralButton(R.string.action_export, (dialog, which) -> {
+                    pendingFileExport = item;
+                    awaitingResult = true;
+                    exportFileLauncher.launch(safeFileName(item.title));
+                })
                 .setNegativeButton(R.string.action_delete, (dialog, which) -> {
                     List<VaultItem> items = new ArrayList<>(currentData.items);
                     items.remove(item);
@@ -727,6 +887,111 @@ public final class MainActivity extends AppCompatActivity {
                 })
                 .setPositiveButton(R.string.action_close, null)
                 .show();
+    }
+
+    private void exportAttachment(Uri uri, VaultItem item) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        ioExecutor.execute(() -> {
+            byte[] plaintext = null;
+            try {
+                VaultV3Repository.ResourceResult resource = repository.readResource(key,
+                        item.attachmentId, item.entryId, VaultObjectRef.Type.FILE);
+                plaintext = resource.plaintext;
+                try (java.io.OutputStream output =
+                             getContentResolver().openOutputStream(uri, "wt")) {
+                    if (output == null) {
+                        throw new IOException("Selected export location is unavailable");
+                    }
+                    output.write(plaintext);
+                    output.flush();
+                }
+                int message = resource.recoveredPrevious
+                        ? R.string.msg_recovered_previous_resource : R.string.msg_file_exported;
+                runOnUiThread(() -> {
+                    toast(message);
+                    if (resource.recoveredPrevious) {
+                        notifyPreviousResourceRecovered();
+                    }
+                });
+            } catch (IOException | GeneralSecurityException exception) {
+                runOnUiThread(() -> toast(R.string.err_file));
+            } finally {
+                Crypto.wipe(plaintext);
+                Crypto.wipe(key);
+            }
+        });
+    }
+
+    private String displayName(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    String name = cursor.getString(index);
+                    if (name != null && !name.trim().isEmpty()) {
+                        return name;
+                    }
+                }
+            }
+        }
+        String segment = uri.getLastPathSegment();
+        return segment == null || segment.trim().isEmpty()
+                ? getString(R.string.item_file_kind) : segment;
+    }
+
+    private static String validMimeType(String mimeType) {
+        if (mimeType == null || mimeType.length() > VaultObjectRef.MAX_CONTENT_TYPE_LENGTH
+                || !mimeType.contains("/")
+                || mimeType.contains(" ") || mimeType.contains("\n")) {
+            return "application/octet-stream";
+        }
+        for (int i = 0; i < mimeType.length(); i++) {
+            char value = mimeType.charAt(i);
+            if (!(value >= 'a' && value <= 'z') && !(value >= 'A' && value <= 'Z')
+                    && !(value >= '0' && value <= '9') && value != '/' && value != '-'
+                    && value != '+' && value != '.' && value != '_') {
+                return "application/octet-stream";
+            }
+        }
+        return mimeType;
+    }
+
+    private static String safeFileName(String value) {
+        String name = value == null ? "" : value.trim();
+        if (name.isEmpty()) {
+            return "attachment";
+        }
+        return name.replace('/', '_').replace('\\', '_');
+    }
+
+    private static String newObjectId() {
+        byte[] id = VaultObjectIds.randomId();
+        try {
+            return VaultObjectIds.toHex(id);
+        } finally {
+            Crypto.wipe(id);
+        }
+    }
+
+    private void notifyPreviousResourceRecovered() {
+        if (!sessionRecoveredPrevious) {
+            sessionRecoveredPrevious = true;
+            Session.setRecoveredPrevious(true);
+            showRecoveredPreviousDialog();
+        }
+    }
+
+    private static void clearPending(List<PendingVaultAsset> pending) {
+        for (PendingVaultAsset asset : pending) {
+            asset.clear();
+            Crypto.wipe(asset.objectId);
+            Crypto.wipe(asset.ownerEntryId);
+        }
     }
 
     private void confirmDelete(VaultItem item) {
@@ -774,9 +1039,14 @@ public final class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) -> {
-                    VaultItem edited = new VaultItem(str(title), str(username), str(password),
+                    VaultItem edited = replaceTarget == null
+                            ? new VaultItem(str(title), str(username), str(password),
                             str(url), str(notes), str(tags), str(folder), str(totp),
-                            favorite.isChecked());
+                            favorite.isChecked())
+                            : new VaultItem(replaceTarget.entryId, str(title), str(username),
+                            str(password), str(url), str(notes), str(tags), str(folder),
+                            str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
+                            null, null, "", 0);
                     List<VaultItem> items = new ArrayList<>(currentData.items);
                     if (replaceTarget != null) {
                         items.remove(replaceTarget);
@@ -948,8 +1218,7 @@ public final class MainActivity extends AppCompatActivity {
         });
         view.findViewById(R.id.rowImportBackup).setOnClickListener(v -> {
             dialog.dismiss();
-            awaitingResult = true;
-            importBackupLauncher.launch(new String[]{"application/octet-stream", "*/*"});
+            showRecoveryImport();
         });
         View syncNow = view.findViewById(R.id.rowSyncNow);
         View unlink = view.findViewById(R.id.rowUnlinkRemote);
@@ -1012,7 +1281,7 @@ public final class MainActivity extends AppCompatActivity {
                         clearSession();
                         deleteCacheContents();
                         showFirstRun();
-                    } catch (IOException exception) {
+                    } catch (IOException | GeneralSecurityException exception) {
                         toast(R.string.err_save);
                     }
                 })
@@ -1077,10 +1346,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showChangePin() {
-        if (sessionTruePin == null) {
-            toast(R.string.err_change_pin_true);
-            return;
-        }
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_change_pin, null);
         TextInputEditText oldPin = view.findViewById(R.id.editOldPin);
         TextInputEditText newPin = view.findViewById(R.id.editNewPin);
@@ -1091,20 +1356,103 @@ public final class MainActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.action_change, (d, w) -> {
                     char[] oldValue = text(oldPin);
                     char[] newValue = text(newPin);
-                    try {
-                        repository.changeTruePin(oldValue, newValue);
-                        clearSession();
-                        sessionTruePin = newValue.clone();
-                        unlocked = true;
-                        showVault();
-                    } catch (GeneralSecurityException | java.io.IOException exception) {
-                        toast(R.string.err_change_pin);
-                    } finally {
+                    if (!PinPolicy.isValid(oldValue) || !PinPolicy.isValid(newValue)) {
                         clear(oldValue);
                         clear(newValue);
+                        toast(R.string.err_unlock);
+                        return;
+                    }
+                    if (repository.copyRecoverySecret() != null) {
+                        performTruePinChange(oldValue, newValue);
+                    } else {
+                        authenticateForTruePinChange(oldValue, newValue);
                     }
                 })
                 .show();
+    }
+
+    private void authenticateForTruePinChange(char[] oldValue, char[] newValue) {
+        try {
+            Cipher cipher = repository.prepareRecoveryQrCipher();
+            Executor executor = this::runOnUiThread;
+            awaitingResult = true;
+            new BiometricPrompt.Builder(this)
+                    .setTitle(getString(R.string.change_pin_title))
+                    .setSubtitle(getString(R.string.app_tagline))
+                    .setNegativeButton(getString(R.string.action_cancel), executor,
+                            (dialog, which) -> {
+                                awaitingResult = false;
+                                clear(oldValue);
+                                clear(newValue);
+                            })
+                    .build()
+                    .authenticate(new BiometricPrompt.CryptoObject(cipher),
+                            new CancellationSignal(), executor,
+                            new BiometricPrompt.AuthenticationCallback() {
+                                @Override
+                                public void onAuthenticationSucceeded(
+                                        BiometricPrompt.AuthenticationResult result) {
+                                    awaitingResult = false;
+                                    try {
+                                        RecoveryQrPayload payload = repository.openRecoveryQr(
+                                                result.getCryptoObject().getCipher());
+                                        Crypto.wipe(payload.qrSecret);
+                                        performTruePinChange(oldValue, newValue);
+                                    } catch (GeneralSecurityException | IOException exception) {
+                                        clear(oldValue);
+                                        clear(newValue);
+                                        toast(R.string.err_change_pin);
+                                    }
+                                }
+
+                                @Override
+                                public void onAuthenticationError(int errorCode,
+                                                                  CharSequence errString) {
+                                    awaitingResult = false;
+                                    clear(oldValue);
+                                    clear(newValue);
+                                }
+                            });
+        } catch (GeneralSecurityException | IOException exception) {
+            clear(oldValue);
+            clear(newValue);
+            toast(R.string.err_biometric);
+        }
+    }
+
+    private void performTruePinChange(char[] oldValue, char[] newValue) {
+        char[] sessionPin = newValue.clone();
+        byte[] qrSecret = repository.copyRecoverySecret();
+        awaitingResult = true;
+        ioExecutor.execute(() -> {
+            try {
+                repository.changeTruePin(oldValue, newValue);
+                char[] confirmedPin = sessionPin.clone();
+                byte[] confirmedQr = qrSecret == null ? null : qrSecret.clone();
+                runOnUiThread(() -> {
+                    clear(sessionTruePin);
+                    sessionTruePin = confirmedPin.clone();
+                    Session.set(sessionTruePin, currentData, biometricSession, sessionDek);
+                    Session.setRecoverySecret(confirmedQr);
+                    Session.setRecoveredPrevious(sessionRecoveredPrevious);
+                    awaitingResult = false;
+                    autoBackupAfterSave();
+                    toast(R.string.msg_pin_changed);
+                    clear(confirmedPin);
+                    Crypto.wipe(confirmedQr);
+                });
+            } catch (GeneralSecurityException | IOException exception) {
+                runOnUiThread(() -> {
+                    awaitingResult = false;
+                    toast(R.string.err_change_pin);
+                });
+            } finally {
+                clear(oldValue);
+                clear(newValue);
+                clear(sessionPin);
+                Crypto.wipe(qrSecret);
+            }
+        });
     }
 
     private void showRecoveryQrDialog() {
@@ -1119,6 +1467,7 @@ public final class MainActivity extends AppCompatActivity {
 
     private void displayRecoveryQr(RecoveryQrPayload payload)
             throws IOException, com.google.zxing.WriterException {
+        Session.setRecoverySecret(payload.qrSecret);
         String encoded = payload.toQrString();
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_recovery_qr, null);
         ImageView qr = view.findViewById(R.id.qrImage);
@@ -1300,21 +1649,47 @@ public final class MainActivity extends AppCompatActivity {
                 .setView(view)
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_recover, (d, w) -> {
-                    if (selectedRecoveryVault == null) {
+                    if (selectedRecoveryVaultUri == null) {
                         toast(R.string.err_pick_file);
                         return;
                     }
                     char[] pin = text(recoveryPinField);
+                    final RecoveryQrPayload recovery;
                     try {
-                        repository.restore(selectedRecoveryVault,
-                                RecoveryQrPayload.fromQrString(str(recoveryPayloadField)), pin);
-                        selectedRecoveryVault = null;
-                        showUnlock();
-                    } catch (GeneralSecurityException | java.io.IOException exception) {
-                        toast(R.string.err_recovery);
-                    } finally {
+                        recovery = RecoveryQrPayload.fromQrString(str(recoveryPayloadField));
+                    } catch (IOException | IllegalArgumentException exception) {
                         clear(pin);
+                        toast(R.string.err_recovery);
+                        return;
                     }
+                    Uri backup = selectedRecoveryVaultUri;
+                    awaitingResult = true;
+                    clearSession();
+                    showUnlock();
+                    ioExecutor.execute(() -> {
+                        try {
+                            repository.importCopy(backup, recovery, pin);
+                            runOnUiThread(() -> {
+                                selectedRecoveryVaultUri = null;
+                                clearSession();
+                                byte[] qrSecret = repository.copyRecoverySecret();
+                                Session.setRecoverySecret(qrSecret);
+                                Crypto.wipe(qrSecret);
+                                awaitingResult = false;
+                                showUnlock();
+                                toast(R.string.msg_imported_backup);
+                            });
+                        } catch (GeneralSecurityException | IOException exception) {
+                            String reason = exception.getMessage();
+                            runOnUiThread(() -> {
+                                awaitingResult = false;
+                                showBackupError(getString(R.string.err_recovery), reason);
+                            });
+                        } finally {
+                            Crypto.wipe(recovery.qrSecret);
+                            clear(pin);
+                        }
+                    });
                 })
                 .show();
     }
@@ -1324,88 +1699,153 @@ public final class MainActivity extends AppCompatActivity {
     // region Persistence helpers
 
     private void saveData(VaultData data) {
+        saveData(data, Collections.emptyList());
+    }
+
+    private void saveData(VaultData data, List<PendingVaultAsset> pending) {
+        if (sessionRecoveredPrevious) {
+            clearPending(pending);
+            toast(R.string.err_recovered_read_only);
+            return;
+        }
+        if (saveInProgress) {
+            clearPending(pending);
+            toast(R.string.err_save);
+            return;
+        }
         boolean imageAdded = countImages(data) > countImages(currentData);
+        boolean fileAdded = countFiles(data) > countFiles(currentData);
         Log.d(IMAGE_LOG, "saveData imageEntries=" + countImages(data)
                 + ", biometric=" + biometricSession
                 + ", sessionActive=" + Session.isActive());
-        try {
-            if (biometricSession) {
-                authenticateBiometricForSave(data);
-            } else if (sessionTruePin == null || !PinPolicy.isValid(sessionTruePin)) {
-                // Session lost its PIN (e.g. after a lock). Ask the user to unlock again
-                // instead of crashing.
-                toast(R.string.err_unlock);
-                lock();
-            } else {
-                repository.updateWithTruePin(sessionTruePin, data);
-                Log.d(IMAGE_LOG, "vault update with passphrase completed");
-                currentData = data;
-                Session.updateData(currentData);
-                renderList();
-                autoBackupAfterSave();
-                if (imageAdded) {
-                    toast(R.string.msg_image_saved);
-                }
+        saveInProgress = true;
+        awaitingResult = true;
+        if (biometricSession) {
+            authenticateBiometricForSave(data, pending, imageAdded, fileAdded);
+        } else if (sessionTruePin == null || !PinPolicy.isValid(sessionTruePin)) {
+            saveInProgress = false;
+            awaitingResult = false;
+            clearPending(pending);
+            toast(R.string.err_unlock);
+            lock();
+        } else {
+            char[] pin = sessionTruePin.clone();
+            try {
+                ioExecutor.execute(() -> {
+                    try {
+                        repository.updateWithTruePin(pin, data, pending);
+                        runOnUiThread(() -> finishSave(data, imageAdded, fileAdded));
+                    } catch (VaultSizeLimitException exception) {
+                        Log.e(IMAGE_LOG, "vault size limit reached");
+                        runOnUiThread(() -> failSave(R.string.err_vault_full));
+                    } catch (GeneralSecurityException | IOException
+                             | IllegalArgumentException exception) {
+                        Log.e(IMAGE_LOG, "vault update failed: "
+                                + exception.getClass().getSimpleName());
+                        runOnUiThread(() -> failSave(R.string.err_save));
+                    } finally {
+                        clear(pin);
+                        clearPending(pending);
+                    }
+                });
+            } catch (java.util.concurrent.RejectedExecutionException exception) {
+                clear(pin);
+                clearPending(pending);
+                saveInProgress = false;
+                awaitingResult = false;
+                toast(R.string.err_save);
             }
-        } catch (GeneralSecurityException | java.io.IOException
-                 | IllegalArgumentException exception) {
-            Log.e(IMAGE_LOG, "vault update failed: "
-                    + exception.getClass().getSimpleName());
-            toast(R.string.err_save);
         }
     }
 
-    private void authenticateBiometricForSave(VaultData data) {
-        boolean imageAdded = countImages(data) > countImages(currentData);
+    private void finishSave(VaultData data, boolean imageAdded, boolean fileAdded) {
+        currentData = data;
+        Session.updateData(currentData);
+        renderList();
+        saveInProgress = false;
+        awaitingResult = false;
+        scheduleOrphanCollection();
+        autoBackupAfterSave();
+        if (imageAdded) {
+            toast(R.string.msg_image_saved);
+        } else if (fileAdded) {
+            toast(R.string.msg_file_saved);
+        }
+    }
+
+    private void failSave(@StringRes int message) {
+        saveInProgress = false;
+        awaitingResult = false;
+        toast(message);
+    }
+
+    private void authenticateBiometricForSave(VaultData data, List<PendingVaultAsset> pending,
+                                              boolean imageAdded, boolean fileAdded) {
         try {
-            Log.d(IMAGE_LOG, "preparing biometric authorization for image save");
+            Log.d(IMAGE_LOG, "preparing biometric authorization for vault save");
             Cipher cipher = repository.prepareBiometricCipher();
             Executor executor = this::runOnUiThread;
             BiometricPrompt prompt = new BiometricPrompt.Builder(this)
                     .setTitle(getString(R.string.action_save))
                     .setSubtitle(getString(R.string.app_tagline))
                     .setNegativeButton(getString(R.string.action_cancel), executor,
-                            (d, w) -> awaitingResult = false)
+                            (d, w) -> {
+                                clearPending(pending);
+                                saveInProgress = false;
+                                awaitingResult = false;
+                            })
                     .build();
-            awaitingResult = true;
-            Log.d(IMAGE_LOG, "biometric save prompt shown");
             prompt.authenticate(new BiometricPrompt.CryptoObject(cipher),
                     new CancellationSignal(), executor,
                     new BiometricPrompt.AuthenticationCallback() {
                         @Override
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
-                            Log.d(IMAGE_LOG, "biometric save authorization succeeded");
-                            awaitingResult = false;
-                            try {
-                                repository.updateWithBiometric(
-                                        result.getCryptoObject().getCipher(), data);
-                                Log.d(IMAGE_LOG, "vault update with biometric completed");
-                                currentData = data;
-                                Session.updateData(currentData);
-                                renderList();
-                                autoBackupAfterSave();
-                                if (imageAdded) {
-                                    toast(R.string.msg_image_saved);
+                            ioExecutor.execute(() -> {
+                                try {
+                                    repository.updateWithBiometric(
+                                            result.getCryptoObject().getCipher(), data, pending);
+                                    runOnUiThread(() ->
+                                            finishSave(data, imageAdded, fileAdded));
+                                } catch (VaultSizeLimitException exception) {
+                                    Log.e(IMAGE_LOG, "vault size limit reached");
+                                    runOnUiThread(() -> failSave(R.string.err_vault_full));
+                                } catch (GeneralSecurityException | IOException exception) {
+                                    Log.e(IMAGE_LOG, "biometric vault update failed: "
+                                            + exception.getClass().getSimpleName());
+                                    runOnUiThread(() -> failSave(R.string.err_save));
+                                } finally {
+                                    clearPending(pending);
                                 }
-                            } catch (GeneralSecurityException | java.io.IOException exception) {
-                                Log.e(IMAGE_LOG, "biometric vault update failed: "
-                                        + exception.getClass().getSimpleName());
-                                toast(R.string.err_save);
-                            }
+                            });
                         }
 
                         @Override
                         public void onAuthenticationError(int errorCode, CharSequence errString) {
                             Log.w(IMAGE_LOG, "biometric save authorization error code=" + errorCode);
+                            clearPending(pending);
+                            saveInProgress = false;
                             awaitingResult = false;
                         }
                     });
-        } catch (GeneralSecurityException | java.io.IOException exception) {
+        } catch (GeneralSecurityException | IOException exception) {
+            clearPending(pending);
+            saveInProgress = false;
+            awaitingResult = false;
             Log.e(IMAGE_LOG, "biometric save setup failed: "
                     + exception.getClass().getSimpleName());
             toast(R.string.err_biometric);
         }
+    }
+
+    private static int countFiles(VaultData data) {
+        int count = 0;
+        for (VaultItem item : data.items) {
+            if (item.isFile()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**
@@ -1417,14 +1857,42 @@ public final class MainActivity extends AppCompatActivity {
         if (!repository.hasRemote()) {
             return;
         }
+        if (sessionDek == null) {
+            showBackupError(getString(R.string.msg_saved_local_sync_failed),
+                    getString(R.string.err_unlock));
+            return;
+        }
+        byte[] key = sessionDek.clone();
         ioExecutor.execute(() -> {
             try {
-                repository.pushRemote();
+                repository.pushRemote(key);
                 runOnUiThread(() -> toast(R.string.msg_synced));
             } catch (Exception exception) {
                 String reason = exception.getMessage();
                 runOnUiThread(() -> showBackupError(
                         getString(R.string.msg_saved_local_sync_failed), reason));
+            } finally {
+                Crypto.wipe(key);
+            }
+        });
+    }
+
+    private void scheduleOrphanCollection() {
+        if (sessionDek == null) {
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        ioExecutor.execute(() -> {
+            try {
+                int removed = repository.collectOrphans(key);
+                if (removed > 0) {
+                    Log.i(IMAGE_LOG, "removed unreachable VLT3 objects=" + removed);
+                }
+            } catch (IOException | GeneralSecurityException exception) {
+                Log.w(IMAGE_LOG, "VLT3 orphan collection failed: "
+                        + exception.getClass().getSimpleName());
+            } finally {
+                Crypto.wipe(key);
             }
         });
     }
@@ -1434,17 +1902,22 @@ public final class MainActivity extends AppCompatActivity {
     // region Image container
 
     private void showAddChooser() {
-        String[] options = {
-                getString(R.string.add_manual),
-                getString(R.string.add_image_container)
-        };
+        List<String> options = new ArrayList<>();
+        options.add(getString(R.string.add_manual));
+        options.add(getString(R.string.add_image_container));
+        if (premiumManager.isPro()) {
+            options.add(getString(R.string.add_file));
+        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_choose_title)
-                .setItems(options, (dialog, which) -> {
+                .setItems(options.toArray(new String[0]), (dialog, which) -> {
                     if (which == 0) {
                         showEntryDialog(null, null);
-                    } else {
+                    } else if (which == 1) {
                         showImageSourceChooser();
+                    } else {
+                        awaitingResult = true;
+                        pickFileLauncher.launch(new String[]{"*/*"});
                     }
                 })
                 .show();
@@ -1507,19 +1980,30 @@ public final class MainActivity extends AppCompatActivity {
 
     private void addCroppedImage(Uri uri) {
         Log.d(IMAGE_LOG, "addCroppedImage started, uriPresent=" + (uri != null));
+        awaitingResult = true;
         ioExecutor.execute(() -> {
+            byte[] bytes = null;
+            byte[] thumbnail = null;
             try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
                 if (input == null) {
                     throw new IOException("Image is unavailable");
                 }
-                byte[] bytes = readLimited(input, 8 * 1024 * 1024);
+                bytes = readLimited(input, VaultImageProcessor.MAX_IMAGE_BYTES);
                 Log.d(IMAGE_LOG, "cropped JPG read bytes=" + bytes.length);
-                runOnUiThread(() -> requestImageName(bytes));
+                thumbnail = VaultImageProcessor.createThumbnail(bytes);
+                byte[] acceptedJpeg = bytes;
+                byte[] acceptedThumbnail = thumbnail;
+                runOnUiThread(() -> requestImageName(acceptedJpeg, acceptedThumbnail));
+                bytes = null;
+                thumbnail = null;
             } catch (IOException | IllegalArgumentException exception) {
                 Log.e(IMAGE_LOG, "cropped image read failed: "
                         + exception.getClass().getSimpleName());
                 runOnUiThread(() -> toast(R.string.err_image));
+                runOnUiThread(() -> awaitingResult = false);
             } finally {
+                Crypto.wipe(bytes);
+                Crypto.wipe(thumbnail);
                 try {
                     if (uri != null && getPackageName().concat(".fileprovider")
                             .equals(uri.getAuthority())) {
@@ -1532,26 +2016,83 @@ public final class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void requestImageName(byte[] jpeg) {
+    private void requestImageName(byte[] jpeg, byte[] thumbnail) {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_image_name, null);
         TextInputEditText name = view.findViewById(R.id.editImageName);
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_image_container)
                 .setView(view)
                 .setNegativeButton(R.string.action_cancel, (dialog, which) -> {
-                    Arrays.fill(jpeg, (byte) 0);
+                    Crypto.wipe(jpeg);
+                    Crypto.wipe(thumbnail);
+                    awaitingResult = false;
                 })
                 .setPositiveButton(R.string.action_save, (dialog, which) -> {
                     String title = str(name).trim();
                     if (title.isEmpty()) {
                         title = "Obraz";
                     }
+                    String imageId = newObjectId();
+                    String thumbnailId = newObjectId();
+                    VaultItem item = VaultItem.imageReference(title, imageId, thumbnailId,
+                            jpeg.length);
+                    List<PendingVaultAsset> pending = Arrays.asList(
+                            new PendingVaultAsset(imageId, item.entryId,
+                                    VaultObjectRef.Type.IMAGE, "image/jpeg", jpeg),
+                            new PendingVaultAsset(thumbnailId, item.entryId,
+                                    VaultObjectRef.Type.THUMBNAIL, "image/jpeg", thumbnail));
                     List<VaultItem> items = new ArrayList<>(currentData.items);
-                    items.add(VaultItem.image(title, jpeg));
-                    Arrays.fill(jpeg, (byte) 0);
-                    saveData(new VaultData(items));
+                    items.add(item);
+                    Crypto.wipe(jpeg);
+                    Crypto.wipe(thumbnail);
+                    saveData(new VaultData(items), pending);
                 })
                 .show();
+    }
+
+    private void addSelectedFile(Uri uri) {
+        if (!premiumManager.isPro()) {
+            toast(R.string.msg_file_pro_required);
+            return;
+        }
+        awaitingResult = true;
+        ioExecutor.execute(() -> {
+            byte[] contents = null;
+            try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
+                if (input == null) {
+                    throw new IOException("Selected file is unavailable");
+                }
+                contents = readLimited(input, 10 * 1024 * 1024);
+                String title = displayName(uri);
+                String contentType = validMimeType(getContentResolver().getType(uri));
+                byte[] objectId = VaultObjectIds.randomId();
+                String id = VaultObjectIds.toHex(objectId);
+                Crypto.wipe(objectId);
+                VaultItem item = VaultItem.fileReference(title, id, contentType,
+                        contents.length);
+                PendingVaultAsset pending = new PendingVaultAsset(id, item.entryId,
+                        VaultObjectRef.Type.FILE, contentType, contents);
+                List<VaultItem> items = new ArrayList<>(currentData.items);
+                items.add(item);
+                Crypto.wipe(contents);
+                contents = null;
+                runOnUiThread(() -> saveData(new VaultData(items),
+                        Collections.singletonList(pending)));
+            } catch (VaultSizeLimitException exception) {
+                Log.e(IMAGE_LOG, "file exceeds VLT3 attachment limit");
+                runOnUiThread(() -> {
+                    awaitingResult = false;
+                    toast(R.string.err_file_size);
+                });
+            } catch (IOException | IllegalArgumentException exception) {
+                Log.e(IMAGE_LOG, "file attachment failed: "
+                        + exception.getClass().getSimpleName());
+                runOnUiThread(() -> toast(R.string.err_file));
+                runOnUiThread(() -> awaitingResult = false);
+            } finally {
+                Crypto.wipe(contents);
+            }
+        });
     }
 
     private static int countImages(VaultData data) {
@@ -1592,56 +2133,60 @@ public final class MainActivity extends AppCompatActivity {
 
     /** Sets (or replaces) the automatic backup target and writes the first copy. */
     private void linkRemote(Uri uri) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
         ioExecutor.execute(() -> {
             try {
-                repository.linkRemote(uri);
+                repository.linkRemote(uri, key);
                 runOnUiThread(() -> toast(R.string.msg_remote_linked));
-            } catch (java.io.IOException exception) {
+            } catch (java.io.IOException | GeneralSecurityException exception) {
                 String reason = exception.getMessage();
                 runOnUiThread(() -> showBackupError(getString(R.string.err_remote_link), reason));
+            } finally {
+                Crypto.wipe(key);
             }
         });
     }
 
     /** Writes a one-off encrypted backup copy to any chosen location. */
     private void exportBackup(Uri uri) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
         ioExecutor.execute(() -> {
             try {
-                repository.exportCopy(uri);
+                repository.exportCopy(uri, key);
                 runOnUiThread(() -> toast(R.string.msg_backup_done));
-            } catch (java.io.IOException exception) {
+            } catch (java.io.IOException | GeneralSecurityException exception) {
                 String reason = exception.getMessage();
                 runOnUiThread(() -> showBackupError(getString(R.string.err_backup), reason));
-            }
-        });
-    }
-
-    /** Imports a validated encrypted copy and returns to the unlock screen. */
-    private void importBackup(Uri uri) {
-        ioExecutor.execute(() -> {
-            try {
-                repository.importCopy(uri);
-                runOnUiThread(() -> {
-                    clearSession();
-                    toast(R.string.msg_imported_backup);
-                    showUnlock();
-                });
-            } catch (java.io.IOException exception) {
-                String reason = exception.getMessage();
-                runOnUiThread(() -> showBackupError(getString(R.string.err_import_backup), reason));
+            } finally {
+                Crypto.wipe(key);
             }
         });
     }
 
     /** Immediately refreshes the copy at the configured automatic backup target. */
     private void syncNow() {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
         ioExecutor.execute(() -> {
             try {
-                repository.pushRemote();
+                repository.pushRemote(key);
                 runOnUiThread(() -> toast(R.string.msg_synced));
-            } catch (java.io.IOException exception) {
+            } catch (java.io.IOException | GeneralSecurityException exception) {
                 String reason = exception.getMessage();
                 runOnUiThread(() -> showBackupError(getString(R.string.err_sync), reason));
+            } finally {
+                Crypto.wipe(key);
             }
         });
     }
@@ -1713,6 +2258,7 @@ public final class MainActivity extends AppCompatActivity {
 
     private void lock() {
         clearSession();
+        repository.clearInMemorySecrets();
         showUnlock();
     }
 
@@ -1734,6 +2280,8 @@ public final class MainActivity extends AppCompatActivity {
             clear(sessionTruePin);
         }
         sessionTruePin = null;
+        Crypto.wipe(sessionDek);
+        sessionDek = null;
         Session.clear();
         biometricSession = false;
         unlocked = false;
@@ -1772,7 +2320,7 @@ public final class MainActivity extends AppCompatActivity {
         int read;
         while ((read = input.read(buffer)) != -1) {
             if (read > maximum - total) {
-                throw new java.io.IOException("Vault file is too large");
+                throw new VaultSizeLimitException("Input exceeds configured size limit");
             }
             output.write(buffer, 0, read);
             total += read;

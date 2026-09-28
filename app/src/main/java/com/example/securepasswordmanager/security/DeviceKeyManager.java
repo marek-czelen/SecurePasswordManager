@@ -30,7 +30,7 @@ import javax.crypto.spec.PSource;
  * unwrap after a successful {@code BiometricPrompt}.</p>
  *
  * <p>Security boundary: hardware-backed keys protect key material at rest and gate
- * biometric access. They do not protect plaintext once the app is unlocked. VLT2 fails
+ * biometric access. They do not protect plaintext once the app is unlocked. VLT3 fails
  * closed rather than silently accepting a software-backed key.</p>
  */
 public final class DeviceKeyManager {
@@ -46,7 +46,7 @@ public final class DeviceKeyManager {
     }
 
     /**
-     * Ensures an authentication-bound RSA key exists. VLT2 never uses an unauthenticated
+     * Ensures an authentication-bound RSA key exists. VLT3 never uses an unauthenticated
      * fallback: a device unable to provide strong biometric KeyMint support must fail closed.
      */
     public void ensureKey(String alias, boolean authenticationRequired) throws GeneralSecurityException {
@@ -54,7 +54,7 @@ public final class DeviceKeyManager {
             return;
         }
         if (!authenticationRequired) {
-            throw new KeyStoreException("VLT2 device keys must require strong biometric auth");
+            throw new KeyStoreException("VLT3 device keys must require strong biometric auth");
         }
         if (tryGenerateRsa(alias, true, 3072) || tryGenerateRsa(alias, false, 3072)
                 || tryGenerateRsa(alias, false, 2048)) {
@@ -147,7 +147,9 @@ public final class DeviceKeyManager {
             KeyFactory factory = KeyFactory.getInstance(key.getAlgorithm(), ANDROID_KEYSTORE);
             KeyInfo info = factory.getKeySpec(key, KeyInfo.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                return info.getSecurityLevel() != KeyProperties.SECURITY_LEVEL_SOFTWARE;
+                int securityLevel = info.getSecurityLevel();
+                return securityLevel == KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT
+                        || securityLevel == KeyProperties.SECURITY_LEVEL_STRONGBOX;
             }
             return info.isInsideSecureHardware();
         } catch (InvalidKeySpecException exception) {
@@ -180,5 +182,11 @@ public final class DeviceKeyManager {
     public void replaceAuthenticatedKey(String alias) throws GeneralSecurityException {
         safeDelete(alias);
         ensureKey(alias, true);
+    }
+
+    public void deleteKey(String alias) throws GeneralSecurityException {
+        if (keyStore.containsAlias(alias)) {
+            keyStore.deleteEntry(alias);
+        }
     }
 }

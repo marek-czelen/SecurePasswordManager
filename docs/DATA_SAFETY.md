@@ -13,15 +13,17 @@ notes or vault plaintext.
 
 ### Local processing
 
-The app processes authentication information, user-created password-manager content and
-user-selected images locally to provide the core functionality. These values are not
-sent to the publisher.
+The app processes authentication information, user-created password-manager content,
+separately encrypted file attachments and user-selected images locally. These values are
+not sent to the publisher.
 
 ### User-initiated external transfer
 
-The user can explicitly export or automatically copy encrypted `vault.vlt` bytes to a
-document provider. This is user-initiated transfer to the provider selected by the user;
-the application writes ciphertext, not plaintext.
+The user can explicitly export or automatically copy one complete encrypted `vault.vlt3`
+container to a document provider. This is user-initiated transfer to the provider
+selected by the user; the application writes the encrypted header, manifest and object
+ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
+that file's plaintext to the user-selected destination.
 
 ### Camera
 
@@ -34,7 +36,8 @@ inputs and are deleted after review. There is no background camera access.
   user-directed provider transfer according to the current Play form definitions.
 - Is data encrypted in transit? The app does not send vault plaintext to a publisher
   server; document-provider connections are handled by Android/provider transport.
-- Is data encrypted at rest? Yes for the local vault and exported `vault.vlt` bytes.
+- Is data encrypted at rest? Yes for the local VLT3 header, manifest, text block and
+  separate media objects, and for exported `vault.vlt3` containers.
 - Can users request deletion? Provide the local delete-vault flow and explain that
   provider copies are deleted by the user at the provider.
 - Is data shared? Declare any actual third-party SDK collection according to the final
