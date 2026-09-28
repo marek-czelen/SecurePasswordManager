@@ -56,9 +56,9 @@ public final class VaultV3RepositoryTest {
             PassphraseQrPayload passphraseQr = source.createPassphraseQrPayload(passphrase);
             assertArrayEquals(passphrase, passphraseQr.passphrase);
             Arrays.fill(passphraseQr.passphrase, '\0');
-            char[] wrongPassphrase = "another secure passphrase".toCharArray();
+            char[] wrongPassphrase = "wrong secure pass".toCharArray();
             try {
-                assertThrows(java.security.GeneralSecurityException.class,
+                assertThrows(VaultV3Repository.PassphraseQrMismatchException.class,
                         () -> source.createPassphraseQrPayload(wrongPassphrase));
             } finally {
                 Arrays.fill(wrongPassphrase, '\0');

@@ -279,6 +279,7 @@ public final class VaultV3Repository {
 
     public synchronized PassphraseQrPayload createPassphraseQrPayload(char[] passphrase)
             throws IOException, GeneralSecurityException {
+        enforceRateLimit();
         requirePassphrase(passphrase);
         VaultHeaderV3 header = headerStore.read();
         byte[] qrSecret = copyRecoverySecret();
@@ -290,8 +291,10 @@ public final class VaultV3Repository {
             try {
                 dek = VaultV3KeyDerivation.unwrapDek(header, passphrase, qrSecret);
             } catch (javax.crypto.BadPaddingException exception) {
+                registerFailure();
                 throw new PassphraseQrMismatchException(exception);
             }
+            state.edit().putInt(PREF_FAILED, 0).putLong(PREF_LOCKED_UNTIL, 0).apply();
             return new PassphraseQrPayload(header.vaultId, passphrase);
         } finally {
             Crypto.wipe(dek);

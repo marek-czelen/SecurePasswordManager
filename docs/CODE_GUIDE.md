@@ -24,6 +24,12 @@ independent Recovery QR secret and Android Keystore wrapper. Passphrase changes 
 the same DEK. The Recovery QR never contains the DEK, and recovery requires both QR and
 passphrase.
 
+Passphrase QR export verifies the entered phrase by unwrapping the current DEK with the
+in-memory Recovery QR secret; it does not persist the passphrase. If that secret is absent
+after a biometric-only process restart, the user must authenticate once to unlock the local
+Keystore-wrapped Recovery QR before the passphrase can be verified. Failed passphrase
+checks use the same local rate limit as vault recovery.
+
 `VaultTextDataCodec` serializes text entries and opaque media references only. Images,
 thumbnails and files use independent immutable AES-256-GCM objects. HKDF-SHA-256
 derives a domain-separated key from the DEK, vault ID, object ID, generation, type and
@@ -56,6 +62,11 @@ snapshots.
 and referenced object records. Restore validates the manifest and object ciphertext
 hashes in a staging directory, validates the text block, rewraps the same DEK for a new
 device key, then switches the staged vault directory.
+
+Passphrase QR creation verifies the entered passphrase by unwrapping the current DEK with
+the independent Recovery QR secret. The app never persists the passphrase for QR display;
+after a biometric-only process restart it can load the local Recovery QR secret from its
+Keystore wrapper, then verify the manually entered passphrase.
 
 ## UI security rules
 

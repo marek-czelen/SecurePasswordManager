@@ -513,7 +513,7 @@ public final class MainActivity extends AppCompatActivity {
             try {
                 repository.create(first);
                 sessionTruePin = first.clone();
-                showRecoveryQrDialog();
+                showInitialRecoveryQrDialog();
                 showUnlock();
             } catch (GeneralSecurityException | java.io.IOException exception) {
                 toast(R.string.err_create);
@@ -1965,6 +1965,10 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showRecoveryQrDialog() {
+        authenticateForRecoveryQr();
+    }
+
+    private void showInitialRecoveryQrDialog() {
         try {
             RecoveryQrPayload payload = repository.createRecoveryPayload();
             displayRecoveryQr(payload);
@@ -2033,17 +2037,15 @@ public final class MainActivity extends AppCompatActivity {
 
     private void requestPassphraseForQr() {
         byte[] recoverySecret = repository.copyRecoverySecret();
-        boolean hasRecoverySecret = recoverySecret != null;
+        boolean recoverySecretAvailable = recoverySecret != null;
         Crypto.wipe(recoverySecret);
-        if (!hasRecoverySecret) {
+        if (!recoverySecretAvailable) {
             authenticateForPassphraseQr();
-            return;
-        }
-        if (sessionTruePin != null) {
+        } else if (sessionTruePin != null) {
             showPassphraseQrDialog(sessionTruePin);
-            return;
+        } else {
+            showPassphraseQrInput();
         }
-        showPassphraseQrInput();
     }
 
     private void authenticateForPassphraseQr() {
