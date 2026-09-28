@@ -25,13 +25,15 @@
     <string name="msg_file_saved">Datei im verschlüsselten Tresor gespeichert.</string>
     <string name="msg_file_exported">Datei exportiert.</string>
     <string name="action_export">Exportieren</string>
+    <string name="action_preview_file">Vorschau</string>
+    <string name="err_file_preview_unavailable">Keine App kann diesen Dateityp anzeigen. Du kannst die Datei stattdessen exportieren.</string>
     <string name="msg_recovered_previous">Der vorherige Tresorstand wurde geöffnet. Die letzte Änderung fehlt möglicherweise.</string>
     <string name="msg_recovered_previous_resource">Die vorherige Version des Anhangs wurde geöffnet.</string>
     <string name="action_repair_vault">Tresor auf den vorherigen Stand zurücksetzen</string>
     <string name="msg_vault_repaired">Der Tresorstand wurde repariert.</string>
     <string name="err_recovered_read_only">Der Tresor befindet sich im Wiederherstellungsmodus. Repariere ihn vor Änderungen.</string>
     <string name="err_file">Die Datei konnte nicht gelesen oder gespeichert werden.</string>
-    <string name="err_file_size">Die Datei darf höchstens 10 MiB groß sein.</string>
+    <string name="err_file_size">Die Datei ist zu groß. Die maximal zulässige Größe beträgt 10 MiB.</string>
     <string name="err_vault_full">Das Größen- oder Eintragslimit des Tresors wurde erreicht. Die Änderung wurde nicht gespeichert.</string>
     <string name="image_container_title">Bilder</string>
     <string name="image_container_empty">Keine gespeicherten Bilder</string>

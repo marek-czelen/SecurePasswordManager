@@ -1,6 +1,7 @@
 package com.example.securepasswordmanager;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
@@ -26,6 +27,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -92,6 +94,7 @@ import javax.crypto.Cipher;
 public final class MainActivity extends AppCompatActivity {
     private static final String IMAGE_LOG = "SPM_IMAGE_FLOW";
     private static final int REQUEST_VAULT_FILE = 4101;
+    private static final int MAX_FILE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
     private static final String KEY_PENDING_PHOTO = "pending_photo";
     private static final String KEY_AWAITING = "awaiting_result";
@@ -123,6 +126,8 @@ public final class MainActivity extends AppCompatActivity {
     private TextView recoveryFileStatus;
     private Uri selectedRecoveryVaultUri;
     private VaultItem pendingFileExport;
+    private File pendingPreviewFile;
+    private boolean pendingPreviewRecoveredPrevious;
     private boolean scanningPassphraseQr;
 
     private final Handler clipboardHandler = new Handler(Looper.getMainLooper());
@@ -355,6 +360,20 @@ public final class MainActivity extends AppCompatActivity {
             }
         }
         sBackgroundedElapsed = 0;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pendingPreviewFile != null) {
+            cleanupPendingPreview();
+            awaitingResult = false;
+            if (pendingPreviewRecoveredPrevious) {
+                pendingPreviewRecoveredPrevious = false;
+                toast(R.string.msg_recovered_previous_resource);
+                notifyPreviousResourceRecovered();
+            }
+        }
     }
 
     @Override
@@ -885,8 +904,140 @@ public final class MainActivity extends AppCompatActivity {
                     items.remove(item);
                     saveData(new VaultData(items));
                 })
-                .setPositiveButton(R.string.action_close, null)
+                .setPositiveButton(R.string.action_preview_file, (dialog, which) ->
+                        previewAttachment(item))
                 .show();
+    }
+
+    private void previewAttachment(VaultItem item) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        awaitingResult = true;
+        ioExecutor.execute(() -> {
+            byte[] plaintext = null;
+            File previewFile = null;
+            try {
+                VaultV3Repository.ResourceResult resource = repository.readResource(key,
+                        item.attachmentId, item.entryId, VaultObjectRef.Type.FILE);
+                plaintext = resource.plaintext;
+                File directory = new File(getCacheDir(), "preview");
+                if (!directory.exists() && !directory.mkdirs()) {
+                    throw new IOException("Cannot create preview directory");
+                }
+                previewFile = File.createTempFile("attachment-",
+                        previewFileSuffix(item), directory);
+                try (java.io.FileOutputStream output =
+                             new java.io.FileOutputStream(previewFile)) {
+                    output.write(plaintext);
+                    output.flush();
+                }
+                File readyFile = previewFile;
+                previewFile = null;
+                runOnUiThread(() -> launchAttachmentPreview(item, readyFile,
+                        previewMimeType(item), resource.recoveredPrevious));
+            } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
+                Log.e(IMAGE_LOG, "file preview failed: "
+                        + exception.getClass().getSimpleName());
+                runOnUiThread(() -> {
+                    awaitingResult = false;
+                    toast(R.string.err_file);
+                });
+            } finally {
+                Crypto.wipe(plaintext);
+                Crypto.wipe(key);
+                if (previewFile != null && !previewFile.delete()) {
+                    Log.w(IMAGE_LOG, "could not remove incomplete file preview");
+                }
+            }
+        });
+    }
+
+    private void launchAttachmentPreview(VaultItem item, File file, String mimeType,
+                                         boolean recoveredPrevious) {
+        try {
+            Uri uri = FileProvider.getUriForFile(this,
+                    getPackageName() + ".fileprovider", file);
+            Intent view = new Intent(Intent.ACTION_VIEW);
+            view.setDataAndType(uri, mimeType);
+            view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            view.setClipData(ClipData.newUri(getContentResolver(), item.title, uri));
+            pendingPreviewFile = file;
+            pendingPreviewRecoveredPrevious = recoveredPrevious;
+            awaitingResult = true;
+            startActivity(Intent.createChooser(view, getString(R.string.action_preview_file)));
+        } catch (ActivityNotFoundException exception) {
+            Log.w(IMAGE_LOG, "no installed app can preview " + mimeType);
+            pendingPreviewFile = null;
+            if (!file.delete()) {
+                Log.w(IMAGE_LOG, "could not remove unavailable file preview");
+            }
+            pendingPreviewRecoveredPrevious = false;
+            awaitingResult = false;
+            toast(R.string.err_file_preview_unavailable);
+        } catch (IllegalArgumentException | SecurityException exception) {
+            Log.e(IMAGE_LOG, "could not launch file preview: "
+                    + exception.getClass().getSimpleName());
+            pendingPreviewFile = null;
+            if (!file.delete()) {
+                Log.w(IMAGE_LOG, "could not remove failed file preview");
+            }
+            pendingPreviewRecoveredPrevious = false;
+            awaitingResult = false;
+            toast(R.string.err_file);
+        }
+    }
+
+    private void cleanupPendingPreview() {
+        File file = pendingPreviewFile;
+        pendingPreviewFile = null;
+        if (file.exists() && !file.delete()) {
+            Log.w(IMAGE_LOG, "could not remove temporary file preview");
+        }
+    }
+
+    private static String previewMimeType(VaultItem item) {
+        String mimeType = validMimeType(item.contentType);
+        if (!"application/octet-stream".equals(mimeType)) {
+            return mimeType;
+        }
+        String extension = fileExtension(item.title);
+        String inferred = extension.isEmpty() ? null
+                : MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        return inferred == null ? mimeType : inferred;
+    }
+
+    private static String previewFileSuffix(VaultItem item) {
+        String extension = fileExtension(item.title);
+        if (extension.isEmpty()) {
+            String mimeExtension = MimeTypeMap.getSingleton()
+                    .getExtensionFromMimeType(previewMimeType(item));
+            if (mimeExtension != null && mimeExtension.length() <= 16) {
+                extension = fileExtension("file." + mimeExtension);
+            }
+        }
+        return extension.isEmpty() ? ".tmp" : "." + extension;
+    }
+
+    private static String fileExtension(String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot <= 0 || dot == fileName.length() - 1) {
+            return "";
+        }
+        String extension = fileName.substring(dot + 1).toLowerCase(Locale.ROOT);
+        if (extension.length() > 16) {
+            return "";
+        }
+        for (int i = 0; i < extension.length(); i++) {
+            char character = extension.charAt(i);
+            if (!(character >= 'a' && character <= 'z')
+                    && !(character >= '0' && character <= '9')) {
+                return "";
+            }
+        }
+        return extension;
     }
 
     private void exportAttachment(Uri uri, VaultItem item) {
@@ -1810,7 +1961,8 @@ public final class MainActivity extends AppCompatActivity {
                                 } catch (VaultSizeLimitException exception) {
                                     Log.e(IMAGE_LOG, "vault size limit reached");
                                     runOnUiThread(() -> failSave(R.string.err_vault_full));
-                                } catch (GeneralSecurityException | IOException exception) {
+                                } catch (GeneralSecurityException | IOException
+                                         | IllegalArgumentException exception) {
                                     Log.e(IMAGE_LOG, "biometric vault update failed: "
                                             + exception.getClass().getSimpleName());
                                     runOnUiThread(() -> failSave(R.string.err_save));
@@ -1905,9 +2057,7 @@ public final class MainActivity extends AppCompatActivity {
         List<String> options = new ArrayList<>();
         options.add(getString(R.string.add_manual));
         options.add(getString(R.string.add_image_container));
-        if (premiumManager.isPro()) {
-            options.add(getString(R.string.add_file));
-        }
+        options.add(getString(R.string.add_file));
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.add_choose_title)
                 .setItems(options.toArray(new String[0]), (dialog, which) -> {
@@ -2058,11 +2208,18 @@ public final class MainActivity extends AppCompatActivity {
         awaitingResult = true;
         ioExecutor.execute(() -> {
             byte[] contents = null;
-            try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
-                if (input == null) {
-                    throw new IOException("Selected file is unavailable");
+            try {
+                long declaredSize = declaredFileSize(uri);
+                if (declaredSize > MAX_FILE_ATTACHMENT_BYTES) {
+                    throw new VaultSizeLimitException("File exceeds attachment limit");
                 }
-                contents = readLimited(input, 10 * 1024 * 1024);
+
+                try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
+                    if (input == null) {
+                        throw new IOException("Selected file is unavailable");
+                    }
+                    contents = readLimited(input, MAX_FILE_ATTACHMENT_BYTES);
+                }
                 String title = displayName(uri);
                 String contentType = validMimeType(getContentResolver().getType(uri));
                 byte[] objectId = VaultObjectIds.randomId();
@@ -2093,6 +2250,21 @@ public final class MainActivity extends AppCompatActivity {
                 Crypto.wipe(contents);
             }
         });
+    }
+
+    private long declaredFileSize(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri,
+                new String[]{OpenableColumns.SIZE}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeColumn = cursor.getColumnIndex(OpenableColumns.SIZE);
+                if (sizeColumn >= 0 && !cursor.isNull(sizeColumn)) {
+                    return cursor.getLong(sizeColumn);
+                }
+            }
+        } catch (IllegalArgumentException | UnsupportedOperationException exception) {
+            Log.d(IMAGE_LOG, "provider does not expose file size metadata");
+        }
+        return -1;
     }
 
     private static int countImages(VaultData data) {

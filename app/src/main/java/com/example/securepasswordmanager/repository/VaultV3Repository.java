@@ -778,7 +778,7 @@ public final class VaultV3Repository {
         }
         String id = resourceId.toLowerCase(java.util.Locale.ROOT);
         VaultObjectRef ref = indexed.get(id);
-        byte[] owner = VaultObjectIds.fromHex(item.entryId);
+        byte[] owner = parseEntryId(item.entryId);
         try {
             if (ref == null || ref.type != type || ref.plaintextLength != size
                     && size >= 0

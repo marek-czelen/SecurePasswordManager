@@ -5,4 +5,5 @@
     <!-- Temporary QR JPG shared only after an explicit user action. -->
     <cache-path name="shared" path="shared/" />
     <cache-path name="images" path="images/" />
+    <cache-path name="preview" path="preview/" />
 </paths>

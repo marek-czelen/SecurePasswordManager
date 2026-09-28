@@ -25,13 +25,15 @@
     <string name="msg_file_saved">File saved in the encrypted vault.</string>
     <string name="msg_file_exported">File exported.</string>
     <string name="action_export">Export</string>
+    <string name="action_preview_file">Preview</string>
+    <string name="err_file_preview_unavailable">No app can preview this file type. You can export the file instead.</string>
     <string name="msg_recovered_previous">The previous vault state was opened. The latest change may be missing.</string>
     <string name="msg_recovered_previous_resource">The previous attachment version was opened.</string>
     <string name="action_repair_vault">Repair vault to previous state</string>
     <string name="msg_vault_repaired">The vault state was repaired.</string>
     <string name="err_recovered_read_only">The vault is in recovery mode. Repair it before making changes.</string>
     <string name="err_file">The file could not be read or saved.</string>
-    <string name="err_file_size">The file must be 10 MiB or smaller.</string>
+    <string name="err_file_size">The file is too large. The maximum allowed size is 10 MiB.</string>
     <string name="err_vault_full">The vault size or entry limit was reached. The change was not saved.</string>
     <string name="image_container_title">Images</string>
     <string name="image_container_empty">No saved images</string>

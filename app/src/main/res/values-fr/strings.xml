@@ -25,13 +25,15 @@
     <string name="msg_file_saved">Fichier enregistré dans le coffre chiffré.</string>
     <string name="msg_file_exported">Fichier exporté.</string>
     <string name="action_export">Exporter</string>
+    <string name="action_preview_file">Aperçu</string>
+    <string name="err_file_preview_unavailable">Aucune application ne peut afficher ce type de fichier. Vous pouvez l’exporter.</string>
     <string name="msg_recovered_previous">L’état précédent du coffre a été ouvert. La dernière modification peut manquer.</string>
     <string name="msg_recovered_previous_resource">La version précédente de la pièce jointe a été ouverte.</string>
     <string name="action_repair_vault">Restaurer l’état précédent du coffre</string>
     <string name="msg_vault_repaired">L’état du coffre a été réparé.</string>
     <string name="err_recovered_read_only">Le coffre est en mode récupération. Réparez-le avant toute modification.</string>
     <string name="err_file">Impossible de lire ou d’enregistrer le fichier.</string>
-    <string name="err_file_size">Le fichier doit faire 10 Mio ou moins.</string>
+    <string name="err_file_size">Le fichier est trop volumineux. La taille maximale autorisée est de 10 Mio.</string>
     <string name="err_vault_full">La limite de taille ou d’entrées du coffre est atteinte. La modification n’a pas été enregistrée.</string>
     <string name="image_container_title">Images</string>
     <string name="image_container_empty">Aucune image enregistrée</string>

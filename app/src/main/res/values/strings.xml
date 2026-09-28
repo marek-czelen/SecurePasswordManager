@@ -31,13 +31,15 @@
     <string name="msg_file_saved">Plik zapisano w zaszyfrowanym sejfie.</string>
     <string name="msg_file_exported">Plik wyeksportowano.</string>
     <string name="action_export">Eksportuj</string>
+    <string name="action_preview_file">Podgląd</string>
+    <string name="err_file_preview_unavailable">Brak aplikacji obsługującej podgląd tego typu pliku. Możesz go wyeksportować.</string>
     <string name="msg_recovered_previous">Otworzono poprzedni stan sejfu. Ostatnia zmiana może być nieobecna.</string>
     <string name="msg_recovered_previous_resource">Otworzono poprzednią wersję załącznika.</string>
     <string name="action_repair_vault">Napraw sejf do poprzedniego stanu</string>
     <string name="msg_vault_repaired">Naprawiono stan sejfu.</string>
     <string name="err_recovered_read_only">Sejf jest w trybie odzyskiwania. Napraw go przed wprowadzaniem zmian.</string>
     <string name="err_file">Nie udało się odczytać lub zapisać pliku.</string>
-    <string name="err_file_size">Plik musi mieć maksymalnie 10 MiB.</string>
+    <string name="err_file_size">Plik jest za duży. Maksymalny dozwolony rozmiar to 10 MiB.</string>
     <string name="err_vault_full">Sejf osiągnął limit rozmiaru lub liczby wpisów. Dane nie zostały zapisane.</string>
     <string name="image_container_title">Kontener obrazów</string>
     <string name="image_container_empty">Brak zapisanych obrazów</string>
