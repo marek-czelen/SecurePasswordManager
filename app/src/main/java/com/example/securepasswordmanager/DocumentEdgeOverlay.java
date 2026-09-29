@@ -40,12 +40,13 @@ public final class DocumentEdgeOverlay extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        float horizontal = getWidth() * 0.05f;
+        float vertical = getHeight() * 0.08f;
+        RectF targetFrame = new RectF(horizontal, vertical,
+                getWidth() - horizontal, getHeight() - vertical);
+        float cornerRadius = 18f * getResources().getDisplayMetrics().density;
         if (quad == null) {
-            float horizontal = getWidth() * 0.12f;
-            float vertical = getHeight() * 0.18f;
-            canvas.drawRoundRect(new RectF(horizontal, vertical,
-                            getWidth() - horizontal, getHeight() - vertical),
-                    18f, 18f, guidePaint);
+            canvas.drawRoundRect(targetFrame, cornerRadius, cornerRadius, guidePaint);
             return;
         }
 
@@ -70,5 +71,8 @@ public final class DocumentEdgeOverlay extends View {
         outsideMask.setFillType(Path.FillType.EVEN_ODD);
         canvas.drawPath(outsideMask, maskPaint);
         canvas.drawPath(polygon, outlinePaint);
+        guidePaint.setAlpha(110);
+        canvas.drawRoundRect(targetFrame, cornerRadius, cornerRadius, guidePaint);
+        guidePaint.setAlpha(191);
     }
 }

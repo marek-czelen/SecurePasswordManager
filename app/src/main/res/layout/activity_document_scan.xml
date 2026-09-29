@@ -1,147 +1,194 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/documentScanRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
-    android:orientation="vertical">
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/documentCameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.example.securepasswordmanager.DocumentEdgeOverlay
+        android:id="@+id/documentEdgeOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/documentReviewImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:contentDescription="@string/document_review_description"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/documentCancel"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_document_scan_icon_button"
+        android:clickable="true"
+        android:contentDescription="@string/document_cancel_scan"
+        android:focusable="true"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_arrow_back"
+        android:tooltipText="@string/document_cancel_scan"
+        android:tint="@android:color/white" />
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="18dp"
-        android:text="@string/document_scan_title"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        android:textColor="?attr/colorOnSurface" />
+        android:id="@+id/documentPageCount"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_document_scan_chip"
+        android:gravity="center"
+        android:minWidth="76dp"
+        android:paddingHorizontal="14dp"
+        android:textAppearance="?attr/textAppearanceLabelMedium"
+        android:textColor="@android:color/white" />
 
     <TextView
         android:id="@+id/documentScanStatus"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="6dp"
-        android:paddingBottom="14dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginHorizontal="64dp"
+        android:layout_marginTop="64dp"
+        android:background="@drawable/bg_document_scan_chip"
+        android:gravity="center"
+        android:maxLines="2"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="7dp"
         android:text="@string/document_scan_hint"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@android:color/white" />
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginHorizontal="12dp"
-        android:layout_weight="1"
-        android:background="@android:color/black">
-
-        <androidx.camera.view.PreviewView
-            android:id="@+id/documentCameraPreview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <com.example.securepasswordmanager.DocumentEdgeOverlay
-            android:id="@+id/documentEdgeOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <ImageView
-            android:id="@+id/documentReviewImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/colorSurface"
-            android:contentDescription="@string/document_review_description"
-            android:scaleType="fitCenter"
-            android:visibility="gone" />
-    </FrameLayout>
-
-    <LinearLayout
         android:id="@+id/documentCameraControls"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp">
-
-        <TextView
-            android:id="@+id/documentPageCount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/documentFlashlight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="4dp"
-            android:text="@string/document_flashlight"
-            android:visibility="gone" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/documentCalibrate"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="center_horizontal"
-            android:text="@string/document_calibrate_camera" />
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/documentCameraTools"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/documentCapture"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:text="@string/document_scan_capture"
-                app:cornerRadius="18dp"
-                app:icon="@drawable/ic_camera"
-                app:iconGravity="textStart" />
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/documentFlashlight"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_document_scan_icon_button"
+                android:clickable="true"
+                android:contentDescription="@string/document_flashlight_turn_on"
+                android:focusable="true"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_flash_off"
+                android:tooltipText="@string/document_flashlight_turn_on"
+                android:tint="@android:color/white"
+                android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/documentFinish"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/documentCalibrate"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:enabled="false"
-                android:text="@string/document_scan_finish"
-                app:cornerRadius="18dp" />
+                android:background="@drawable/bg_document_scan_icon_button"
+                android:clickable="true"
+                android:contentDescription="@string/document_calibrate_camera"
+                android:focusable="true"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_settings"
+                android:tooltipText="@string/document_calibrate_camera"
+                android:tint="@android:color/white" />
         </LinearLayout>
-    </LinearLayout>
 
-    <LinearLayout
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/documentCapture"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/bg_document_scan_capture"
+            android:clickable="true"
+            android:contentDescription="@string/document_scan_capture"
+            android:focusable="true"
+            android:padding="18dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_camera"
+            android:tooltipText="@string/document_scan_capture"
+            android:tint="?attr/colorOnPrimary" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/documentFinish"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="26dp"
+            android:background="@drawable/bg_document_scan_icon_button"
+            android:clickable="true"
+            android:contentDescription="@string/document_scan_finish"
+            android:enabled="false"
+            android:focusable="true"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_document_done"
+            android:tooltipText="@string/document_scan_finish"
+            android:tint="@android:color/white" />
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/documentReviewControls"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp"
+        android:layout_height="match_parent"
         android:visibility="gone">
 
-        <com.google.android.material.button.MaterialButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/documentRetake"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="0dp"
+            android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_weight="1"
-            android:text="@string/document_scan_retake" />
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="26dp"
+            android:background="@drawable/bg_document_scan_icon_button"
+            android:clickable="true"
+            android:contentDescription="@string/document_scan_retake"
+            android:focusable="true"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_camera"
+            android:tooltipText="@string/document_scan_retake"
+            android:tint="@android:color/white" />
 
-        <com.google.android.material.button.MaterialButton
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/documentAccept"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
-            android:text="@string/document_scan_accept"
-            app:cornerRadius="18dp" />
-    </LinearLayout>
-</LinearLayout>
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/bg_document_scan_capture"
+            android:clickable="true"
+            android:contentDescription="@string/document_scan_accept"
+            android:focusable="true"
+            android:padding="18dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_check"
+            android:tooltipText="@string/document_scan_accept"
+            android:tint="?attr/colorOnPrimary" />
+    </FrameLayout>
+</FrameLayout>

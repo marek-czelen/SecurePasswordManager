@@ -35,16 +35,19 @@ import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.securepasswordmanager.crypto.VaultImageProcessor;
 import com.example.securepasswordmanager.crypto.VaultItem;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -67,6 +70,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
     public static final String EXTRA_CALIBRATION_ONLY = "calibration_only";
     private static final int CALIBRATION_TARGET_VIEWS = 8;
     private static final int MAX_CALIBRATION_VIEWS = 12;
+    private static final int MAX_MISSED_EDGE_FRAMES = 7;
+    private static final float EDGE_SMOOTHING = 0.3f;
 
     private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService processingExecutor = Executors.newSingleThreadExecutor();
@@ -86,10 +91,10 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private ImageView reviewImage;
     private TextView status;
     private TextView pageCount;
-    private MaterialSwitch flashlightToggle;
-    private MaterialButton captureButton;
-    private MaterialButton finishButton;
-    private MaterialButton calibrateButton;
+    private AppCompatImageButton flashlightToggle;
+    private AppCompatImageButton captureButton;
+    private AppCompatImageButton finishButton;
+    private AppCompatImageButton calibrateButton;
     private View cameraControls;
     private View reviewControls;
     private ImageCapture imageCapture;
@@ -107,15 +112,16 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private File reviewFile;
     private File capturingFile;
     private Bitmap reviewBitmap;
+    private DocumentEdgeDetector.Quad displayedQuad;
     private volatile boolean cameraMode = true;
     private boolean captureInProgress;
     private boolean resultDelivered;
     private boolean torchEnabled;
     private boolean torchRequestPending;
-    private boolean updatingFlashlightToggle;
     private boolean aspectChooserShown;
     private boolean calibrating;
     private boolean calibrationOnly;
+    private int missedEdgeFrames;
     private long lastAnalysisAt;
 
     @Override
@@ -127,7 +133,16 @@ public final class DocumentScanActivity extends AppCompatActivity {
         }
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_document_scan);
+        View root = findViewById(R.id.documentScanRoot);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+        ViewCompat.requestApplyInsets(root);
 
         previewView = findViewById(R.id.documentCameraPreview);
         edgeOverlay = findViewById(R.id.documentEdgeOverlay);
@@ -141,6 +156,10 @@ public final class DocumentScanActivity extends AppCompatActivity {
         cameraControls = findViewById(R.id.documentCameraControls);
         reviewControls = findViewById(R.id.documentReviewControls);
 
+        findViewById(R.id.documentCancel).setOnClickListener(view -> {
+            setResult(RESULT_CANCELED);
+            finish();
+        });
         captureButton.setOnClickListener(view -> capturePage());
         finishButton.setOnClickListener(view -> {
             if (calibrating) {
@@ -150,11 +169,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
             }
         });
         calibrateButton.setOnClickListener(view -> startCalibrationWizard(false));
-        flashlightToggle.setOnCheckedChangeListener((button, checked) -> {
-            if (!updatingFlashlightToggle) {
-                setTorchEnabled(checked);
-            }
-        });
+        flashlightToggle.setOnClickListener(view -> setTorchEnabled(!torchEnabled));
         findViewById(R.id.documentRetake).setOnClickListener(view -> discardReview());
         findViewById(R.id.documentAccept).setOnClickListener(view -> acceptPage());
         updatePageCount();
@@ -482,8 +497,12 @@ public final class DocumentScanActivity extends AppCompatActivity {
         captureInProgress = false;
         setTorchEnabled(false);
         calibrateButton.setVisibility(View.GONE);
-        captureButton.setText(R.string.document_calibration_capture);
-        finishButton.setText(R.string.document_calibration_finish);
+        captureButton.setImageResource(R.drawable.ic_camera);
+        captureButton.setContentDescription(getString(R.string.document_calibration_capture));
+        captureButton.setTooltipText(getString(R.string.document_calibration_capture));
+        finishButton.setImageResource(R.drawable.ic_settings);
+        finishButton.setContentDescription(getString(R.string.document_calibration_finish));
+        finishButton.setTooltipText(getString(R.string.document_calibration_finish));
         status.setText(R.string.document_calibration_instructions);
         updateCalibrationCount();
         updateCameraActions();
@@ -521,10 +540,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                         calibration = candidate;
                         calibrating = false;
                         calibrateButton.setVisibility(View.VISIBLE);
-                        captureButton.setText(acceptedPages.isEmpty()
-                                ? R.string.document_scan_capture
-                                : R.string.document_scan_add_page);
-                        finishButton.setText(R.string.document_scan_finish);
+                        updateScannerButtonIcons();
                         updatePageCount();
                         status.setText(R.string.document_calibration_success);
                         updateCameraActions();
@@ -596,7 +612,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                     frame.getImageInfo().getRotationDegrees());
             runOnUiThread(() -> {
                 if (cameraMode && !isFinishing()) {
-                    edgeOverlay.setQuad(quad);
+                    updateStableEdge(quad);
                 }
             });
         } catch (RuntimeException exception) {
@@ -605,6 +621,30 @@ public final class DocumentScanActivity extends AppCompatActivity {
         } finally {
             frame.close();
         }
+    }
+
+    private void updateStableEdge(DocumentEdgeDetector.Quad candidate) {
+        if (candidate == null) {
+            if (displayedQuad == null || ++missedEdgeFrames > MAX_MISSED_EDGE_FRAMES) {
+                displayedQuad = null;
+                missedEdgeFrames = 0;
+                edgeOverlay.setQuad(null);
+            }
+            return;
+        }
+
+        missedEdgeFrames = 0;
+        if (displayedQuad == null) {
+            displayedQuad = candidate;
+        } else {
+            float[] points = new float[candidate.points.length];
+            for (int index = 0; index < points.length; index++) {
+                points[index] = displayedQuad.points[index] * (1f - EDGE_SMOOTHING)
+                        + candidate.points[index] * EDGE_SMOOTHING;
+            }
+            displayedQuad = new DocumentEdgeDetector.Quad(points, candidate.aspectRatio);
+        }
+        edgeOverlay.setQuad(displayedQuad);
     }
 
     private void capturePage() {
@@ -857,6 +897,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private void showReview() {
         setTorchEnabled(false);
         cameraMode = false;
+        pageCount.setText(getString(R.string.document_review_page, acceptedPages.size() + 1));
         previewView.setVisibility(View.GONE);
         edgeOverlay.setVisibility(View.GONE);
         reviewImage.setImageBitmap(reviewBitmap);
@@ -890,20 +931,46 @@ public final class DocumentScanActivity extends AppCompatActivity {
         reviewImage.setImageDrawable(null);
         previewView.setVisibility(View.VISIBLE);
         edgeOverlay.setVisibility(View.VISIBLE);
+        displayedQuad = null;
+        missedEdgeFrames = 0;
         edgeOverlay.setQuad(null);
         reviewControls.setVisibility(View.GONE);
         cameraControls.setVisibility(View.VISIBLE);
         calibrateButton.setVisibility(View.VISIBLE);
-        captureButton.setText(acceptedPages.isEmpty()
-                ? R.string.document_scan_capture : R.string.document_scan_add_page);
-        finishButton.setText(R.string.document_scan_finish);
+        if (!calibrating) {
+            updatePageCount();
+        }
+        updateScannerButtonIcons();
         status.setText(acceptedPages.size() >= VaultItem.MAX_DOCUMENT_PAGES
                 ? R.string.document_scan_max_reached : R.string.document_scan_hint);
         updateCameraActions();
     }
 
     private void updatePageCount() {
-        pageCount.setText(getString(R.string.document_scan_page_count, acceptedPages.size()));
+        pageCount.setText(getString(R.string.document_page_count_compact,
+                acceptedPages.size()));
+    }
+
+    private void updateScannerButtonIcons() {
+        int captureDescription;
+        if (calibrating) {
+            captureButton.setImageResource(R.drawable.ic_camera);
+            captureDescription = R.string.document_calibration_capture;
+            finishButton.setImageResource(R.drawable.ic_settings);
+            finishButton.setContentDescription(getString(R.string.document_calibration_finish));
+            finishButton.setTooltipText(getString(R.string.document_calibration_finish));
+        } else {
+            boolean addingPage = !acceptedPages.isEmpty();
+            captureButton.setImageResource(addingPage
+                    ? R.drawable.ic_document_add_page : R.drawable.ic_camera);
+            captureDescription = addingPage
+                    ? R.string.document_scan_add_page : R.string.document_scan_capture;
+            finishButton.setImageResource(R.drawable.ic_document_done);
+            finishButton.setContentDescription(getString(R.string.document_scan_finish));
+            finishButton.setTooltipText(getString(R.string.document_scan_finish));
+        }
+        captureButton.setContentDescription(getString(captureDescription));
+        captureButton.setTooltipText(getString(captureDescription));
     }
 
     private void requestDocumentName() {
@@ -1060,11 +1127,14 @@ public final class DocumentScanActivity extends AppCompatActivity {
         if (flashlightToggle == null) {
             return;
         }
-        updatingFlashlightToggle = true;
-        flashlightToggle.setChecked(torchEnabled);
+        flashlightToggle.setImageResource(torchEnabled
+                ? R.drawable.ic_flash_on : R.drawable.ic_flash_off);
+        int description = torchEnabled ? R.string.document_flashlight_turn_off
+                : R.string.document_flashlight_turn_on;
+        flashlightToggle.setContentDescription(getString(description));
+        flashlightToggle.setTooltipText(getString(description));
         flashlightToggle.setEnabled(camera != null
                 && camera.getCameraInfo().hasFlashUnit() && !torchRequestPending);
-        updatingFlashlightToggle = false;
         updateCameraActions();
     }
 
