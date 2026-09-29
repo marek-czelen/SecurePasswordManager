@@ -81,6 +81,17 @@
             android:text="@string/action_create_vault"
             app:cornerRadius="16dp" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRecovery"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="@string/action_recovery"
+            app:icon="@drawable/ic_restore"
+            app:iconGravity="textStart"
+            app:cornerRadius="16dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

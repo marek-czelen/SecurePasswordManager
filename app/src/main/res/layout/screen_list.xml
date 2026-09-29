@@ -16,7 +16,7 @@
             android:layout_height="?attr/actionBarSize"
             android:title="@string/list_title"
             app:titleCentered="false"
-            app:menu="@menu/menu_list" />
+            app:menu="@menu/menu_toolbar" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"

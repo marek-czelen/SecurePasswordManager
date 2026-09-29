@@ -66,6 +66,7 @@ import com.example.securepasswordmanager.repository.VaultV3Repository;
 import com.example.securepasswordmanager.security.PinPolicy;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
@@ -104,11 +105,6 @@ public final class MainActivity extends AppCompatActivity {
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
     private static final String KEY_PENDING_PHOTO = "pending_photo";
     private static final String KEY_AWAITING = "awaiting_result";
-    private static final String APP_PREFS = "app_settings";
-    private static final String PREF_AUTOLOCK_MIN = "autolock_min";
-    private static final String PREF_AUTOLOCK_ENABLED = "autolock_enabled";
-    private static final String PREF_LOCK_BACKGROUND = "lock_background";
-    private static final int DEFAULT_AUTOLOCK_MIN = 5;
     private static boolean sImageFlowActive;
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
     private static long sBackgroundedElapsed;
@@ -294,6 +290,17 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
 
+    private final ActivityResultLauncher<Intent> settingsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                            handleSettingsAction(result.getData().getStringExtra(
+                                    SettingsActivity.EXTRA_ACTION));
+                        }
+                    });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -418,40 +425,11 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private int autoLockMinutes() {
-        if (!isAutoLockEnabled()) {
-            return 0;
-        }
-        return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
-                .getInt(PREF_AUTOLOCK_MIN, DEFAULT_AUTOLOCK_MIN);
-    }
-
-    private void setAutoLockMinutes(int minutes) {
-        getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
-                .putInt(PREF_AUTOLOCK_MIN, minutes)
-                .putBoolean(PREF_AUTOLOCK_ENABLED, true)
-                .apply();
-        scheduleAutoLock();
-    }
-
-    private boolean isAutoLockEnabled() {
-        return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
-                .getBoolean(PREF_AUTOLOCK_ENABLED, true);
-    }
-
-    private void setAutoLockEnabled(boolean enabled) {
-        getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
-                .putBoolean(PREF_AUTOLOCK_ENABLED, enabled).apply();
-        scheduleAutoLock();
+        return AppSettings.autoLockMinutes(this);
     }
 
     private boolean lockOnBackground() {
-        return getSharedPreferences(APP_PREFS, MODE_PRIVATE)
-                .getBoolean(PREF_LOCK_BACKGROUND, true);
-    }
-
-    private void setLockOnBackground(boolean enabled) {
-        getSharedPreferences(APP_PREFS, MODE_PRIVATE).edit()
-                .putBoolean(PREF_LOCK_BACKGROUND, enabled).apply();
+        return AppSettings.lockOnBackground(this);
     }
 
     @Override
@@ -501,6 +479,7 @@ public final class MainActivity extends AppCompatActivity {
         setScreen(R.layout.screen_first_run);
         TextInputEditText pin = findViewById(R.id.editPin);
         TextInputEditText confirm = findViewById(R.id.editConfirm);
+        findViewById(R.id.btnRecovery).setOnClickListener(view -> showRecoveryImport());
         findViewById(R.id.btnCreate).setOnClickListener(view -> {
             char[] first = text(pin);
             char[] second = text(confirm);
@@ -583,7 +562,13 @@ public final class MainActivity extends AppCompatActivity {
         unlocked = true;
         setScreen(R.layout.screen_list);
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setOnMenuItemClickListener(this::onMenuItem);
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_open_menu) {
+                showListMenu();
+                return true;
+            }
+            return false;
+        });
 
         RecyclerView recycler = findViewById(R.id.recycler);
         recycler.setLayoutManager(new LinearLayoutManager(this));
@@ -629,6 +614,44 @@ public final class MainActivity extends AppCompatActivity {
         } else {
             scheduleOrphanCollection();
         }
+    }
+
+    private void showListMenu() {
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_list_menu, null);
+        LinearLayout vaultActions = content.findViewById(R.id.menuVaultActions);
+        LinearLayout appActions = content.findViewById(R.id.menuAppActions);
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(content);
+
+        androidx.appcompat.widget.PopupMenu menuSource =
+                new androidx.appcompat.widget.PopupMenu(this, findViewById(R.id.toolbar));
+        getMenuInflater().inflate(R.menu.menu_list, menuSource.getMenu());
+        for (int index = 0; index < menuSource.getMenu().size(); index++) {
+            android.view.MenuItem item = menuSource.getMenu().getItem(index);
+            LinearLayout destination = item.getItemId() == R.id.action_settings
+                    || item.getItemId() == R.id.action_tutorial
+                    || item.getItemId() == R.id.action_lock
+                    ? appActions : vaultActions;
+            View row = LayoutInflater.from(this)
+                    .inflate(R.layout.item_list_menu_action, destination, false);
+            ImageView icon = row.findViewById(R.id.menuIcon);
+            icon.setImageDrawable(item.getIcon());
+            ((TextView) row.findViewById(R.id.menuTitle)).setText(item.getTitle());
+
+            if (item.getItemId() == R.id.action_favorites) {
+                MaterialSwitch toggle = row.findViewById(R.id.menuToggle);
+                toggle.setVisibility(View.VISIBLE);
+                toggle.setChecked(favoritesOnly);
+                item.setChecked(favoritesOnly);
+            }
+
+            row.setOnClickListener(view -> {
+                dialog.dismiss();
+                onMenuItem(item);
+            });
+            destination.addView(row);
+        }
+        dialog.show();
     }
 
     private void showRecoveredPreviousDialog() {
@@ -1647,105 +1670,67 @@ public final class MainActivity extends AppCompatActivity {
     // region Settings / recovery / change PIN
 
     private void showSettings() {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_settings, null);
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.settings_title)
-                .setView(view)
-                .setNegativeButton(R.string.action_close, null)
-                .create();
-        View premiumRow = view.findViewById(R.id.rowPremiumDebug);
-        premiumRow.setVisibility(premiumManager.isDebugOverrideAvailable()
-                ? View.VISIBLE : View.GONE);
-        if (premiumManager.isDebugOverrideAvailable()) {
-            com.google.android.material.materialswitch.MaterialSwitch premiumSwitch =
-                    view.findViewById(R.id.switchPremiumDebug);
-            TextView premiumStatus = view.findViewById(R.id.premiumDebugStatus);
-            premiumSwitch.setChecked(premiumManager.isPro());
-            premiumStatus.setText(getString(R.string.premium_debug_status,
-                    premiumManager.isPro() ? getString(R.string.premium_pro)
-                            : getString(R.string.premium_free)));
-            premiumSwitch.setOnCheckedChangeListener((button, checked) -> {
-                premiumManager.setDebugPro(checked);
-                premiumStatus.setText(getString(R.string.premium_debug_status,
-                        checked ? getString(R.string.premium_pro)
-                                : getString(R.string.premium_free)));
-            });
-        }
-        view.findViewById(R.id.rowRecovery).setOnClickListener(v -> {
-            dialog.dismiss();
-            showRecoveryQrDialog();
-        });
-        view.findViewById(R.id.rowPassphraseQr).setOnClickListener(v -> {
-            dialog.dismiss();
-            requestPassphraseForQr();
-        });
-        view.findViewById(R.id.rowPrivacy).setOnClickListener(v -> showPrivacyDialog());
-        view.findViewById(R.id.rowTutorial).setOnClickListener(v -> {
-            dialog.dismiss();
-            showTutorial();
-        });
-        View changePin = view.findViewById(R.id.rowChangePin);
-        changePin.setOnClickListener(v -> {
-            dialog.dismiss();
-            showChangePin();
-        });
-        TextView autoLockValue = view.findViewById(R.id.autoLockValue);
-        autoLockValue.setText(autoLockStatus(autoLockMinutes()));
-        view.findViewById(R.id.rowAutoLock).setOnClickListener(v ->
-                showAutoLockChooser(autoLockValue));
-        com.google.android.material.materialswitch.MaterialSwitch autoLockSwitch =
-                view.findViewById(R.id.switchAutoLock);
-        autoLockSwitch.setChecked(isAutoLockEnabled());
-        autoLockSwitch.setOnCheckedChangeListener((button, checked) -> {
-            setAutoLockEnabled(checked);
-            autoLockValue.setText(autoLockStatus(autoLockMinutes()));
-        });
-        com.google.android.material.materialswitch.MaterialSwitch backgroundSwitch =
-                view.findViewById(R.id.switchLockBackground);
-        backgroundSwitch.setChecked(lockOnBackground());
-        backgroundSwitch.setOnCheckedChangeListener((button, checked) ->
-                setLockOnBackground(checked));
-        view.findViewById(R.id.rowLock).setOnClickListener(v -> {
-            dialog.dismiss();
-            lock();
-        });
-
         boolean linked = repository.hasRemote();
-        TextView remoteStatus = view.findViewById(R.id.remoteStatus);
-        remoteStatus.setText(linked
-                ? getString(R.string.remote_status_linked, repository.remoteLabel())
-                : getString(R.string.remote_status_none));
-        view.findViewById(R.id.rowLinkRemote).setOnClickListener(v -> {
-            dialog.dismiss();
-            awaitingResult = true;
-            linkRemoteLauncher.launch(getString(R.string.vault_default_filename));
-        });
-        view.findViewById(R.id.rowBackup).setOnClickListener(v -> {
-            dialog.dismiss();
-            awaitingResult = true;
-            backupLauncher.launch(getString(R.string.vault_default_filename));
-        });
-        view.findViewById(R.id.rowImportBackup).setOnClickListener(v -> {
-            dialog.dismiss();
-            showRecoveryImport();
-        });
-        View syncNow = view.findViewById(R.id.rowSyncNow);
-        View unlink = view.findViewById(R.id.rowUnlinkRemote);
-        syncNow.setVisibility(linked ? View.VISIBLE : View.GONE);
-        unlink.setVisibility(linked ? View.VISIBLE : View.GONE);
-        syncNow.setOnClickListener(v -> {
-            dialog.dismiss();
-            syncNow();
-        });
-        unlink.setOnClickListener(v -> {
-            dialog.dismiss();
-            repository.unlinkRemote();
-        });
-        view.findViewById(R.id.rowDeleteVault).setOnClickListener(v -> {
-            dialog.dismiss();
-            confirmDeleteLocalVault();
-        });
-        dialog.show();
+        Intent intent = new Intent(this, SettingsActivity.class)
+                .putExtra(SettingsActivity.EXTRA_REMOTE_LINKED, linked)
+                .putExtra(SettingsActivity.EXTRA_REMOTE_STATUS, linked
+                        ? getString(R.string.remote_status_linked, repository.remoteLabel())
+                        : getString(R.string.remote_status_none))
+                .putExtra(SettingsActivity.EXTRA_DEBUG_OVERRIDE,
+                        premiumManager.isDebugOverrideAvailable())
+                .putExtra(SettingsActivity.EXTRA_DEBUG_PRO, premiumManager.isPro());
+        awaitingResult = true;
+        settingsLauncher.launch(intent);
+    }
+
+    private void handleSettingsAction(String action) {
+        if (action == null) {
+            Log.w(IMAGE_LOG, "Settings activity returned no action");
+            return;
+        }
+        switch (action) {
+            case SettingsActivity.ACTION_SHOW_RECOVERY:
+                showRecoveryQrDialog();
+                break;
+            case SettingsActivity.ACTION_SHOW_PASSPHRASE_QR:
+                requestPassphraseForQr();
+                break;
+            case SettingsActivity.ACTION_CHANGE_PIN:
+                showChangePin();
+                break;
+            case SettingsActivity.ACTION_LOCK:
+                lock();
+                break;
+            case SettingsActivity.ACTION_PRIVACY:
+                showPrivacyDialog();
+                break;
+            case SettingsActivity.ACTION_TUTORIAL:
+                showTutorial();
+                break;
+            case SettingsActivity.ACTION_LINK_REMOTE:
+                awaitingResult = true;
+                linkRemoteLauncher.launch(getString(R.string.vault_default_filename));
+                break;
+            case SettingsActivity.ACTION_BACKUP:
+                awaitingResult = true;
+                backupLauncher.launch(getString(R.string.vault_default_filename));
+                break;
+            case SettingsActivity.ACTION_IMPORT_BACKUP:
+                showRecoveryImport();
+                break;
+            case SettingsActivity.ACTION_SYNC_NOW:
+                syncNow();
+                break;
+            case SettingsActivity.ACTION_UNLINK_REMOTE:
+                repository.unlinkRemote();
+                break;
+            case SettingsActivity.ACTION_DELETE_VAULT:
+                confirmDeleteLocalVault();
+                break;
+            default:
+                Log.w(IMAGE_LOG, "Unknown settings action: " + action);
+                break;
+        }
     }
 
     private void showPrivacyDialog() {
@@ -1816,42 +1801,6 @@ public final class MainActivity extends AppCompatActivity {
             }
         }
         file.delete();
-    }
-
-    private void showAutoLockChooser(TextView valueLabel) {
-        int[] minutes = {1, 5, 15, 30};
-        String[] labels = new String[minutes.length];
-        int current = 0;
-        int currentMinutes = autoLockMinutes();
-        for (int i = 0; i < minutes.length; i++) {
-            labels[i] = autoLockLabel(minutes[i]);
-            if (minutes[i] == currentMinutes) {
-                current = i;
-            }
-        }
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.settings_autolock)
-                .setSingleChoiceItems(labels, current, (dialog, which) -> {
-                    setAutoLockMinutes(minutes[which]);
-                    valueLabel.setText(autoLockStatus(minutes[which]));
-                    dialog.dismiss();
-                })
-                .setNegativeButton(R.string.action_cancel, null)
-                .show();
-    }
-
-    private String autoLockStatus(int minutes) {
-        return autoLockLabel(minutes);
-    }
-
-    private String autoLockLabel(int minutes) {
-        switch (minutes) {
-            case 1: return getString(R.string.autolock_1);
-            case 15: return getString(R.string.autolock_15);
-            case 30: return getString(R.string.autolock_30);
-            case 0: return getString(R.string.autolock_never);
-            default: return getString(R.string.autolock_5);
-        }
     }
 
     private void showChangePin() {

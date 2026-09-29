@@ -13,6 +13,7 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/action_advanced_import_export"
+        android:icon="@drawable/ic_import"
         android:title="@string/menu_advanced_import_export"
         app:showAsAction="never" />
     <item

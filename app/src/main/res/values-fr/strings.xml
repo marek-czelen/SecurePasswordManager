@@ -95,6 +95,9 @@
     <string name="menu_settings">Paramètres</string>
     <string name="menu_lock">Verrouiller</string>
     <string name="menu_tutorial">Guide</string>
+    <string name="menu_open">Ouvrir le menu d’actions</string>
+    <string name="menu_section_vault">Outils du coffre-fort</string>
+    <string name="menu_section_app">Application</string>
     <string name="menu_ocr">Scanner (OCR)</string>
     <string name="add_choose_title">Ajouter une entrée</string>
     <string name="add_manual">Saisir manuellement</string>

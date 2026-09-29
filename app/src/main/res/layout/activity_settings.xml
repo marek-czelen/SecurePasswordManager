@@ -1,24 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:maxHeight="480dp">
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/settingsToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="?attr/colorOnSurface"
+        app:title="@string/settings_title"
+        app:titleCentered="false"
+        app:titleTextColor="?attr/colorOnSurface" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="4dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="20dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="10dp"
+        android:paddingHorizontal="4dp"
         android:text="@string/settings_security"
         android:textAppearance="?attr/textAppearanceLabelLarge"
         android:textColor="?attr/colorPrimary" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+        app:cardCornerRadius="20dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/rowPremiumDebug"
@@ -26,7 +61,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="24dp"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="12dp">
         <LinearLayout
             android:layout_width="0dp"
@@ -59,8 +94,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -74,7 +109,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_show_recovery"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -87,8 +122,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
         <ImageView
@@ -100,7 +135,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/action_show_passphrase_qr"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -113,8 +148,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -128,7 +163,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_change_pin"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -141,7 +176,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="12dp">
 
         <ImageView
@@ -155,7 +190,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
@@ -184,8 +219,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -197,9 +232,10 @@
             android:contentDescription="@null" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
@@ -230,8 +266,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -245,7 +281,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_lock"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -258,8 +294,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
         <ImageView
@@ -271,7 +307,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_privacy"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -284,8 +320,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
         <ImageView
@@ -297,33 +333,48 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_tutorial"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
-        android:background="?attr/colorOutlineVariant" />
+    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="8dp"
-        android:text="@string/settings_sync"
-        android:textAppearance="?attr/textAppearanceLabelLarge"
-        android:textColor="?attr/colorPrimary" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:paddingHorizontal="4dp"
+            android:text="@string/settings_sync"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary" />
+
+    <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="18dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer"
+            app:cardCornerRadius="20dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
     <TextView
-        android:id="@+id/remoteStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="24dp"
-        android:paddingBottom="8dp"
+            android:id="@+id/remoteStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/bg_settings_status"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
         android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
@@ -334,8 +385,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -349,7 +400,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:orientation="vertical">
 
             <TextView
@@ -375,8 +426,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -390,7 +441,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_sync_now"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -403,8 +454,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -418,7 +469,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_backup"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
@@ -431,8 +482,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
         <ImageView
@@ -444,7 +495,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
@@ -468,8 +519,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
 
@@ -483,11 +534,23 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:text="@string/settings_unlink"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface" />
     </LinearLayout>
+
+    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        app:cardBackgroundColor="?attr/colorErrorContainer"
+        app:cardCornerRadius="20dp"
+        app:strokeColor="?attr/colorError"
+        app:strokeWidth="1dp">
 
     <LinearLayout
         android:id="@+id/rowDeleteVault"
@@ -496,8 +559,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="16dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
         android:clickable="true"
         android:focusable="true">
         <ImageView
@@ -509,7 +572,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:orientation="vertical">
             <TextView
                 android:layout_width="wrap_content"
@@ -525,5 +588,7 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
     </LinearLayout>
-    </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 </ScrollView>
+</LinearLayout>

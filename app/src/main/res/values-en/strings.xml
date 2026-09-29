@@ -95,6 +95,9 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_lock">Lock</string>
     <string name="menu_tutorial">Tutorial</string>
+    <string name="menu_open">Open actions menu</string>
+    <string name="menu_section_vault">Vault tools</string>
+    <string name="menu_section_app">App</string>
     <string name="menu_ocr">Scan (OCR)</string>
     <string name="add_choose_title">Add entry</string>
     <string name="add_manual">Enter manually</string>

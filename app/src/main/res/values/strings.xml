@@ -101,6 +101,9 @@
     <string name="menu_settings">Ustawienia</string>
     <string name="menu_lock">Zablokuj</string>
     <string name="menu_tutorial">Instrukcja</string>
+    <string name="menu_open">Otwórz menu</string>
+    <string name="menu_section_vault">Narzędzia magazynu</string>
+    <string name="menu_section_app">Aplikacja</string>
     <string name="menu_ocr">Skanuj (OCR)</string>
 
     <!-- OCR -->
