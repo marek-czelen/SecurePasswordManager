@@ -100,6 +100,7 @@
     <string name="menu_section_app">App</string>
     <string name="menu_ocr">Scannen (OCR)</string>
     <string name="add_choose_title">Eintrag hinzufügen</string>
+    <string name="add_choose_subtitle">Wähle aus, was du zum Tresor hinzufügen möchtest.</string>
     <string name="add_manual">Manuell eingeben</string>
     <string name="add_from_camera">Foto aufnehmen (OCR)</string>
     <string name="add_from_gallery">Foto auswählen (OCR)</string>

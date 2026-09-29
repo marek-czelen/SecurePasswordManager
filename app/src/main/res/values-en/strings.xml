@@ -100,6 +100,7 @@
     <string name="menu_section_app">App</string>
     <string name="menu_ocr">Scan (OCR)</string>
     <string name="add_choose_title">Add entry</string>
+    <string name="add_choose_subtitle">Choose what you want to add to your vault.</string>
     <string name="add_manual">Enter manually</string>
     <string name="add_from_camera">Take photo (OCR)</string>
     <string name="add_from_gallery">Choose photo (OCR)</string>

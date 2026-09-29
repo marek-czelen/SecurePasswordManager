@@ -100,6 +100,7 @@
     <string name="menu_section_app">Application</string>
     <string name="menu_ocr">Scanner (OCR)</string>
     <string name="add_choose_title">Ajouter une entrée</string>
+    <string name="add_choose_subtitle">Choisissez ce que vous souhaitez ajouter au coffre.</string>
     <string name="add_manual">Saisir manuellement</string>
     <string name="add_from_camera">Prendre une photo (OCR)</string>
     <string name="add_from_gallery">Choisir une photo (OCR)</string>

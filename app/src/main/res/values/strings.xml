@@ -108,6 +108,7 @@
 
     <!-- OCR -->
     <string name="add_choose_title">Dodaj wpis</string>
+    <string name="add_choose_subtitle">Wybierz, co chcesz dodać do sejfu.</string>
     <string name="add_manual">Wpisz ręcznie</string>
     <string name="add_from_camera">Zrób zdjęcie (OCR)</string>
     <string name="add_from_gallery">Wybierz zdjęcie (OCR)</string>

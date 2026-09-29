@@ -2546,23 +2546,41 @@ public final class MainActivity extends AppCompatActivity {
     // region Image container
 
     private void showAddChooser() {
-        List<String> options = new ArrayList<>();
-        options.add(getString(R.string.add_manual));
-        options.add(getString(R.string.add_image_container));
-        options.add(getString(R.string.add_file));
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.add_choose_title)
-                .setItems(options.toArray(new String[0]), (dialog, which) -> {
-                    if (which == 0) {
-                        showEntryDialog(null, null);
-                    } else if (which == 1) {
-                        showImageSourceChooser();
-                    } else {
-                        awaitingResult = true;
-                        pickFileLauncher.launch(new String[]{"*/*"});
-                    }
-                })
-                .show();
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_add_chooser, null);
+        LinearLayout actions = content.findViewById(R.id.addChooserActions);
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        dialog.setContentView(content);
+
+        int[] titles = {
+                R.string.add_manual,
+                R.string.add_image_container,
+                R.string.add_file
+        };
+        int[] icons = {
+                R.drawable.ic_key,
+                R.drawable.ic_image,
+                R.drawable.ic_folder
+        };
+        for (int index = 0; index < titles.length; index++) {
+            View row = LayoutInflater.from(this)
+                    .inflate(R.layout.item_list_menu_action, actions, false);
+            ((ImageView) row.findViewById(R.id.menuIcon)).setImageResource(icons[index]);
+            ((TextView) row.findViewById(R.id.menuTitle)).setText(titles[index]);
+            int option = index;
+            row.setOnClickListener(view -> {
+                dialog.dismiss();
+                if (option == 0) {
+                    showEntryDialog(null, null);
+                } else if (option == 1) {
+                    showImageSourceChooser();
+                } else {
+                    awaitingResult = true;
+                    pickFileLauncher.launch(new String[]{"*/*"});
+                }
+            });
+            actions.addView(row);
+        }
+        dialog.show();
     }
 
     private void showImageSourceChooser() {
