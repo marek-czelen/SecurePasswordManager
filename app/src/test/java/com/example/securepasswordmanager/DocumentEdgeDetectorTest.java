@@ -8,6 +8,24 @@ import static org.junit.Assert.assertTrue;
 
 public final class DocumentEdgeDetectorTest {
     @Test
+    public void edgePaddingExpandsEverySideOfTheDetectedQuadrilateral() {
+        Point[] detected = {
+                new Point(10, 20), new Point(110, 20),
+                new Point(110, 220), new Point(10, 220)
+        };
+        Point[] padded = DocumentGeometry.expandQuadrilateral(detected, 10);
+
+        assertEquals(0, padded[0].x, 0.001);
+        assertEquals(10, padded[0].y, 0.001);
+        assertEquals(120, padded[1].x, 0.001);
+        assertEquals(10, padded[1].y, 0.001);
+        assertEquals(120, padded[2].x, 0.001);
+        assertEquals(230, padded[2].y, 0.001);
+        assertEquals(0, padded[3].x, 0.001);
+        assertEquals(230, padded[3].y, 0.001);
+    }
+
+    @Test
     public void calibratedHomographyRecoversPhysicalAspectUnderPerspective() {
         double width = DocumentCameraCalibration.ID1_WIDTH_MM;
         double height = DocumentCameraCalibration.ID1_HEIGHT_MM;

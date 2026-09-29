@@ -33,6 +33,7 @@ final class DocumentEdgeDetector {
     private static final double MAX_DOCUMENT_AREA = 0.95;
     private static final int DETECTION_WIDTH = 640;
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
+    private static final double DOCUMENT_EDGE_PADDING_RATIO = 0.02;
 
     static final class Quad {
         final float[] points;
@@ -169,23 +170,28 @@ final class DocumentEdgeDetector {
                     + distance(corners[3], corners[2])) / 2d;
             double verticalEdge = (distance(corners[0], corners[3])
                     + distance(corners[1], corners[2])) / 2d;
-            Point[] rectificationCorners = corners;
+            double edgePadding = Math.max(3d,
+                    Math.min(horizontalEdge, verticalEdge) * DOCUMENT_EDGE_PADDING_RATIO);
+            Point[] paddedCorners = DocumentGeometry.expandQuadrilateral(corners, edgePadding);
+            double paddedHorizontalEdge = (distance(paddedCorners[0], paddedCorners[1])
+                    + distance(paddedCorners[3], paddedCorners[2])) / 2d;
+            double paddedVerticalEdge = (distance(paddedCorners[0], paddedCorners[3])
+                    + distance(paddedCorners[1], paddedCorners[2])) / 2d;
+            Point[] rectificationCorners = paddedCorners;
             double aspectRatio;
             DocumentCameraCalibration.ImageTransform imageTransform = null;
             if (calibration != null) {
                 imageTransform = new DocumentCameraCalibration.ImageTransform(gray.cols(),
                         gray.rows(), rotationDegrees, calibration.pixelWidth,
                         calibration.pixelHeight, activeArray);
-                Point[] sensorPoints = new Point[corners.length];
+                Point[] normalizedCorners = new Point[corners.length];
+                double[] normalizedCoordinates = new double[corners.length * 2];
                 for (int index = 0; index < corners.length; index++) {
-                    sensorPoints[index] = imageTransform.toSensor(corners[index]);
-                }
-                Point[] normalized = new Point[sensorPoints.length];
-                double[] normalizedCoordinates = new double[sensorPoints.length * 2];
-                for (int index = 0; index < sensorPoints.length; index++) {
-                    normalized[index] = calibration.undistortNormalized(sensorPoints[index]);
-                    normalizedCoordinates[index * 2] = normalized[index].x;
-                    normalizedCoordinates[index * 2 + 1] = normalized[index].y;
+                    Point sensorPoint = imageTransform.toSensor(corners[index]);
+                    normalizedCorners[index] =
+                            calibration.undistortNormalized(sensorPoint);
+                    normalizedCoordinates[index * 2] = normalizedCorners[index].x;
+                    normalizedCoordinates[index * 2 + 1] = normalizedCorners[index].y;
                 }
                 double calibratedAspect =
                         DocumentGeometry.metricAspectRatio(normalizedCoordinates);
@@ -196,10 +202,12 @@ final class DocumentEdgeDetector {
                 } else {
                     aspectRatio = calibratedAspect;
                 }
-                rectificationCorners = new Point[corners.length];
-                for (int index = 0; index < normalized.length; index++) {
+                rectificationCorners = new Point[paddedCorners.length];
+                for (int index = 0; index < paddedCorners.length; index++) {
+                    Point sensorPoint = imageTransform.toSensor(paddedCorners[index]);
+                    Point normalized = calibration.undistortNormalized(sensorPoint);
                     rectificationCorners[index] = imageTransform.toUpright(
-                            calibration.sensorPixelFromNormalized(normalized[index]));
+                            calibration.sensorPixelFromNormalized(normalized));
                 }
             } else {
                 if (requestedAspect == null) {
@@ -209,7 +217,7 @@ final class DocumentEdgeDetector {
             }
 
             int[] dimensions = DocumentGeometry.outputDimensions(
-                    horizontalEdge, verticalEdge, aspectRatio);
+                    paddedHorizontalEdge, paddedVerticalEdge, aspectRatio);
             int outputWidth = dimensions[0];
             int outputHeight = dimensions[1];
             sourceCorners = new MatOfPoint2f(rectificationCorners);
