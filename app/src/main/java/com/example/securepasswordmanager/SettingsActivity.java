@@ -35,6 +35,7 @@ public final class SettingsActivity extends AppCompatActivity {
     public static final String ACTION_SYNC_NOW = "sync_now";
     public static final String ACTION_UNLINK_REMOTE = "unlink_remote";
     public static final String ACTION_DELETE_VAULT = "delete_vault";
+    public static final String ACTION_CALIBRATE_DOCUMENT_CAMERA = "calibrate_document_camera";
 
     private TextView autoLockValue;
     private MaterialSwitch autoLockSwitch;
@@ -83,6 +84,8 @@ public final class SettingsActivity extends AppCompatActivity {
                 returnAction(ACTION_SHOW_PASSPHRASE_QR));
         findViewById(R.id.rowChangePin).setOnClickListener(view ->
                 returnAction(ACTION_CHANGE_PIN));
+        findViewById(R.id.rowDocumentCalibration).setOnClickListener(view ->
+                returnAction(ACTION_CALIBRATE_DOCUMENT_CAMERA));
         findViewById(R.id.rowLock).setOnClickListener(view -> returnAction(ACTION_LOCK));
         findViewById(R.id.rowPrivacy).setOnClickListener(view -> returnAction(ACTION_PRIVACY));
         findViewById(R.id.rowTutorial).setOnClickListener(view -> returnAction(ACTION_TUTORIAL));

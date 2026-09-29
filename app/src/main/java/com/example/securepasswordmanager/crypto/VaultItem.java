@@ -11,6 +11,8 @@ public final class VaultItem {
     public static final String TYPE_LOGIN = "login";
     public static final String TYPE_IMAGE = "image";
     public static final String TYPE_FILE = "file";
+    public static final String TYPE_DOCUMENT = "document";
+    public static final int MAX_DOCUMENT_PAGES = 20;
     public static final int MAX_PASSWORD_HISTORY_ENTRIES = 5;
 
     public final String entryId;
@@ -28,6 +30,7 @@ public final class VaultItem {
     public final String thumbnailId;
     public final String contentType;
     public final long attachmentSize;
+    public final List<String> documentPageIds;
     public final List<String> passwordHistory;
 
     public VaultItem(String title, String username, String password, String url,
@@ -49,7 +52,7 @@ public final class VaultItem {
                      String thumbnailId, String contentType, long attachmentSize) {
         this(entryId, title, username, password, url, notes, tags, folder, totpSecret,
                 favorite, type, attachmentId, thumbnailId, contentType, attachmentSize,
-                Collections.emptyList());
+                Collections.emptyList(), Collections.emptyList());
     }
 
     public VaultItem(String entryId, String title, String username, String password, String url,
@@ -57,12 +60,28 @@ public final class VaultItem {
                      boolean favorite, String type, String attachmentId,
                      String thumbnailId, String contentType, long attachmentSize,
                      List<String> passwordHistory) {
+        this(entryId, title, username, password, url, notes, tags, folder, totpSecret,
+                favorite, type, attachmentId, thumbnailId, contentType, attachmentSize,
+                Collections.emptyList(), passwordHistory);
+    }
+
+    public VaultItem(String entryId, String title, String username, String password, String url,
+                     String notes, String tags, String folder, String totpSecret,
+                     boolean favorite, String type, String attachmentId,
+                     String thumbnailId, String contentType, long attachmentSize,
+                     List<String> documentPageIds, List<String> passwordHistory) {
         if (!isHexId(entryId, 16)
                 || (!TYPE_LOGIN.equals(type) && !TYPE_IMAGE.equals(type)
-                && !TYPE_FILE.equals(type))
+                && !TYPE_FILE.equals(type) && !TYPE_DOCUMENT.equals(type))
                 || attachmentSize < 0 || passwordHistory == null
+                || documentPageIds == null
                 || passwordHistory.size() > MAX_PASSWORD_HISTORY_ENTRIES
-                || (!TYPE_LOGIN.equals(type) && !passwordHistory.isEmpty())) {
+                || (!TYPE_LOGIN.equals(type) && !passwordHistory.isEmpty())
+                || (TYPE_DOCUMENT.equals(type)
+                ? documentPageIds.isEmpty() || documentPageIds.size() > MAX_DOCUMENT_PAGES
+                || attachmentId != null || thumbnailId != null || attachmentSize != 0
+                || (contentType != null && !contentType.isEmpty())
+                : !documentPageIds.isEmpty())) {
             throw new IllegalArgumentException("Invalid vault entry");
         }
         this.entryId = entryId.toLowerCase(java.util.Locale.ROOT);
@@ -80,6 +99,13 @@ public final class VaultItem {
         this.thumbnailId = normalizeId(thumbnailId);
         this.contentType = value(contentType);
         this.attachmentSize = attachmentSize;
+        List<String> pageIds = new ArrayList<>(documentPageIds);
+        for (String pageId : pageIds) {
+            if (!isHexId(pageId, 32)) {
+                throw new IllegalArgumentException("Invalid document page reference");
+            }
+        }
+        this.documentPageIds = Collections.unmodifiableList(pageIds);
         List<String> history = new ArrayList<>(passwordHistory);
         Set<String> uniquePasswords = new HashSet<>();
         for (String previousPassword : history) {
@@ -104,6 +130,11 @@ public final class VaultItem {
                 false, TYPE_FILE, fileId, null, contentType, fileSize);
     }
 
+    public static VaultItem documentReference(String title, List<String> pageIds) {
+        return new VaultItem(randomEntryId(), title, "", "", "", "", "", "", "",
+                false, TYPE_DOCUMENT, null, null, "", 0, pageIds, Collections.emptyList());
+    }
+
     public boolean isImage() {
         return TYPE_IMAGE.equals(type);
     }
@@ -112,10 +143,14 @@ public final class VaultItem {
         return TYPE_FILE.equals(type);
     }
 
+    public boolean isDocument() {
+        return TYPE_DOCUMENT.equals(type);
+    }
+
     public VaultItem withFavorite(boolean value) {
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, value, type, attachmentId, thumbnailId, contentType, attachmentSize,
-                passwordHistory);
+                documentPageIds, passwordHistory);
     }
 
     /** Returns a copy with the immediately previous password at the front of its history. */

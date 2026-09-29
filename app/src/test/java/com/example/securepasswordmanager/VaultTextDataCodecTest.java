@@ -32,10 +32,12 @@ public final class VaultTextDataCodecTest {
                 repeat("cd", 32), 120_000);
         VaultItem file = VaultItem.fileReference("Document", repeat("ef", 32),
                 "application/pdf", 0);
+        VaultItem document = VaultItem.documentReference("Passport",
+                Arrays.asList(repeat("12", 32), repeat("34", 32)));
         VaultData decoded = VaultTextDataCodec.decode(VaultTextDataCodec.encode(
-                new VaultData(Arrays.asList(login, image, file))));
+                new VaultData(Arrays.asList(login, image, file, document))));
 
-        assertEquals(3, decoded.items.size());
+        assertEquals(4, decoded.items.size());
         assertEquals(entryId, decoded.items.get(0).entryId);
         assertEquals("secret", decoded.items.get(0).password);
         assertEquals("Work", decoded.items.get(0).folder);
@@ -46,6 +48,9 @@ public final class VaultTextDataCodecTest {
         assertEquals(repeat("cd", 32), decoded.items.get(1).thumbnailId);
         assertEquals(VaultItem.TYPE_FILE, decoded.items.get(2).type);
         assertEquals("application/pdf", decoded.items.get(2).contentType);
+        assertEquals(VaultItem.TYPE_DOCUMENT, decoded.items.get(3).type);
+        assertEquals(Arrays.asList(repeat("12", 32), repeat("34", 32)),
+                decoded.items.get(3).documentPageIds);
     }
 
     @Test
@@ -56,6 +61,16 @@ public final class VaultTextDataCodecTest {
         assertEquals(1, decoded.items.size());
         assertEquals("legacy-secret", decoded.items.get(0).password);
         assertTrue(decoded.items.get(0).passwordHistory.isEmpty());
+        Crypto.wipe(legacy);
+    }
+
+    @Test
+    public void decodesTextSchemaTwoWithPasswordHistory() throws Exception {
+        byte[] legacy = legacySchemaTwoLoginBlock();
+        VaultData decoded = VaultTextDataCodec.decode(legacy);
+
+        assertEquals(Collections.singletonList("legacy-old"),
+                decoded.items.get(0).passwordHistory);
         Crypto.wipe(legacy);
     }
 
@@ -110,12 +125,17 @@ public final class VaultTextDataCodecTest {
                 "", "", false, VaultItem.TYPE_IMAGE, null, null, "image/jpeg", 12);
         assertThrows(IOException.class, () -> VaultTextDataCodec.encode(
                 new VaultData(Collections.singletonList(missingRef))));
+
+        VaultItem duplicateDocumentPages = VaultItem.documentReference("bad",
+                Arrays.asList(repeat("55", 32), repeat("55", 32)));
+        assertThrows(IOException.class, () -> VaultTextDataCodec.encode(
+                new VaultData(Collections.singletonList(duplicateDocumentPages))));
     }
 
     @Test
     public void rejectsUnsupportedVersionTruncationAndEntryCountOverflow() throws Exception {
         byte[] encoded = VaultTextDataCodec.encode(VaultData.empty());
-        encoded[11] ^= 1;
+        encoded[11] = 99;
         assertThrows(IOException.class, () -> VaultTextDataCodec.decode(encoded));
         assertThrows(IOException.class,
                 () -> VaultTextDataCodec.decode(Arrays.copyOf(encoded, encoded.length - 1)));
@@ -193,6 +213,37 @@ public final class VaultTextDataCodecTest {
         writeString(raw, "");
         writeString(raw, "");
         raw.writeBoolean(false);
+        raw.flush();
+
+        byte[] record = rawBytes.toByteArray();
+        ByteArrayOutputStream paddedBytes = new ByteArrayOutputStream(4096);
+        DataOutputStream padded = new DataOutputStream(paddedBytes);
+        padded.writeInt(record.length);
+        padded.write(record);
+        padded.write(new byte[4096 - Integer.BYTES - record.length]);
+        padded.flush();
+        return paddedBytes.toByteArray();
+    }
+
+    private static byte[] legacySchemaTwoLoginBlock() throws IOException {
+        ByteArrayOutputStream rawBytes = new ByteArrayOutputStream();
+        DataOutputStream raw = new DataOutputStream(rawBytes);
+        raw.writeInt(0x56544433);
+        raw.writeInt(2);
+        raw.writeInt(1);
+        writeHex(raw, repeat("02", 16));
+        raw.writeByte(1);
+        writeString(raw, "Old entry");
+        writeString(raw, "old-user");
+        writeString(raw, "current-secret");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        raw.writeBoolean(false);
+        raw.writeInt(1);
+        writeString(raw, "legacy-old");
         raw.flush();
 
         byte[] record = rawBytes.toByteArray();

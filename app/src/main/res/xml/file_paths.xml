@@ -6,4 +6,5 @@
     <cache-path name="shared" path="shared/" />
     <cache-path name="images" path="images/" />
     <cache-path name="preview" path="preview/" />
+    <cache-path name="documents" path="documents/" />
 </paths>

@@ -68,6 +68,11 @@ public final class VaultTextDataCodec {
                         writeFixedHex(raw, item.thumbnailId, 32);
                     }
                 }
+            } else if (item.isDocument()) {
+                raw.writeInt(item.documentPageIds.size());
+                for (String pageId : item.documentPageIds) {
+                    writeFixedHex(raw, pageId, 32);
+                }
             }
             raw.writeInt(item.passwordHistory.size());
             for (String previousPassword : item.passwordHistory) {
@@ -117,8 +122,8 @@ public final class VaultTextDataCodec {
             throw new IOException("Invalid VLT3 text data magic");
         }
         int schemaVersion = raw.readInt();
-        if (schemaVersion != LEGACY_TEXT_DATA_SCHEMA_VERSION
-                && schemaVersion != VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
+        if (schemaVersion < LEGACY_TEXT_DATA_SCHEMA_VERSION
+                || schemaVersion > VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
             throw new IOException("Unsupported VLT3 text data schema");
         }
         int count = raw.readInt();
@@ -144,12 +149,24 @@ public final class VaultTextDataCodec {
             String thumbnailId = null;
             String contentType = "";
             long attachmentSize = 0;
+            List<String> documentPageIds = new ArrayList<>();
             if (VaultItem.TYPE_IMAGE.equals(type) || VaultItem.TYPE_FILE.equals(type)) {
                 attachmentId = readHex(raw, 32);
                 attachmentSize = raw.readLong();
                 contentType = readString(raw);
                 if (VaultItem.TYPE_IMAGE.equals(type) && raw.readBoolean()) {
                     thumbnailId = readHex(raw, 32);
+                }
+            } else if (VaultItem.TYPE_DOCUMENT.equals(type)) {
+                if (schemaVersion < VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
+                    throw new IOException("Document entries require VLT3 text schema 3");
+                }
+                int pageCount = raw.readInt();
+                if (pageCount < 1 || pageCount > VaultItem.MAX_DOCUMENT_PAGES) {
+                    throw new IOException("Invalid VLT3 document page count");
+                }
+                for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                    documentPageIds.add(readHex(raw, 32));
                 }
             }
             List<String> passwordHistory = new ArrayList<>();
@@ -167,7 +184,7 @@ public final class VaultTextDataCodec {
             try {
                 item = new VaultItem(entryId, title, username, password, url, notes, tags,
                         folder, totp, favorite, type, attachmentId, thumbnailId,
-                        contentType, attachmentSize, passwordHistory);
+                        contentType, attachmentSize, documentPageIds, passwordHistory);
                 validateItem(item, entryIds, resourceIds);
             } catch (IllegalArgumentException exception) {
                 throw new IOException("Invalid VLT3 entry", exception);
@@ -216,6 +233,19 @@ public final class VaultTextDataCodec {
                 throw new IOException("Invalid VLT3 file reference");
             }
             addResourceId(resourceIds, item.attachmentId);
+        } else if (VaultItem.TYPE_DOCUMENT.equals(item.type)) {
+            if (item.documentPageIds.isEmpty()
+                    || item.documentPageIds.size() > VaultItem.MAX_DOCUMENT_PAGES
+                    || item.attachmentId != null || item.thumbnailId != null
+                    || item.attachmentSize != 0 || !item.contentType.isEmpty()) {
+                throw new IOException("Invalid VLT3 document reference");
+            }
+            for (String pageId : item.documentPageIds) {
+                if (!VaultItem.isHexId(pageId, 32)) {
+                    throw new IOException("Invalid VLT3 document page reference");
+                }
+                addResourceId(resourceIds, pageId);
+            }
         } else {
             throw new IOException("Unknown VLT3 entry type");
         }
@@ -255,6 +285,9 @@ public final class VaultTextDataCodec {
         if (VaultItem.TYPE_FILE.equals(type)) {
             return 3;
         }
+        if (VaultItem.TYPE_DOCUMENT.equals(type)) {
+            return 4;
+        }
         throw new IOException("Unknown VLT3 entry type");
     }
 
@@ -266,6 +299,8 @@ public final class VaultTextDataCodec {
                 return VaultItem.TYPE_IMAGE;
             case 3:
                 return VaultItem.TYPE_FILE;
+            case 4:
+                return VaultItem.TYPE_DOCUMENT;
             default:
                 throw new IOException("Unknown VLT3 entry type");
         }

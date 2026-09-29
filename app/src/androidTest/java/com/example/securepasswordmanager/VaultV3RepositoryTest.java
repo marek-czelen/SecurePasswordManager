@@ -48,6 +48,8 @@ public final class VaultV3RepositoryTest {
         byte[] imageBytes = Crypto.randomBytes(4096);
         byte[] thumbnailBytes = Crypto.randomBytes(256);
         byte[] replacementImageBytes = Crypto.randomBytes(2048);
+        byte[] firstDocumentPage = Crypto.randomBytes(1024);
+        byte[] secondDocumentPage = Crypto.randomBytes(2048);
         RecoveryQrPayload recovery = null;
         byte[] dek = null;
         try {
@@ -73,14 +75,24 @@ public final class VaultV3RepositoryTest {
                     VaultObjectRef.Type.IMAGE, "image/jpeg", imageBytes);
             PendingVaultAsset thumbnailAsset = new PendingVaultAsset(thumbnailId, image.entryId,
                     VaultObjectRef.Type.THUMBNAIL, "image/jpeg", thumbnailBytes);
-            VaultData initial = new VaultData(Arrays.asList(login, image));
+            String firstPageId = VaultObjectIds.toHex(VaultObjectIds.randomId());
+            String secondPageId = VaultObjectIds.toHex(VaultObjectIds.randomId());
+            VaultItem document = VaultItem.documentReference("Passport",
+                    Arrays.asList(firstPageId, secondPageId));
+            PendingVaultAsset firstPageAsset = new PendingVaultAsset(firstPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE, "image/jpeg",
+                    firstDocumentPage);
+            PendingVaultAsset secondPageAsset = new PendingVaultAsset(secondPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE, "image/jpeg",
+                    secondDocumentPage);
+            VaultData initial = new VaultData(Arrays.asList(login, image, document));
             source.updateWithTruePin(passphrase, initial,
-                    Arrays.asList(imageAsset, thumbnailAsset));
+                    Arrays.asList(imageAsset, thumbnailAsset, firstPageAsset, secondPageAsset));
 
             VaultV3Repository.OpenResult opened =
                     source.openWithPassphraseAndQr(passphrase, recovery);
             dek = opened.copyDek();
-            assertEquals(2, opened.data.items.size());
+            assertEquals(3, opened.data.items.size());
             opened.clear();
 
             File imageObject = new File(new File(firstRoot, "objects"), imageId + ".obj");
@@ -90,11 +102,15 @@ public final class VaultV3RepositoryTest {
                     login.totpSecret, login.favorite, VaultItem.TYPE_LOGIN,
                     null, null, "", 0);
             source.updateWithTruePin(passphrase,
-                    new VaultData(Arrays.asList(changedLogin, image)),
+                    new VaultData(Arrays.asList(changedLogin, image, document)),
                     Collections.emptyList());
             assertArrayEquals(originalCiphertext, Files.readAllBytes(imageObject.toPath()));
             assertArrayEquals(imageBytes, source.readResource(dek, imageId,
                     VaultObjectRef.Type.IMAGE));
+            assertArrayEquals(firstDocumentPage, source.readResource(dek, firstPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE).plaintext);
+            assertArrayEquals(secondDocumentPage, source.readResource(dek, secondPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE).plaintext);
 
             String replacementImageId = VaultObjectIds.toHex(VaultObjectIds.randomId());
             String replacementThumbnailId = VaultObjectIds.toHex(VaultObjectIds.randomId());
@@ -107,7 +123,7 @@ public final class VaultV3RepositoryTest {
                     replacementThumbnailId, replacementImage.entryId,
                     VaultObjectRef.Type.THUMBNAIL, "image/jpeg", thumbnailBytes);
             source.updateWithTruePin(passphrase,
-                    new VaultData(Arrays.asList(changedLogin, replacementImage)),
+                    new VaultData(Arrays.asList(changedLogin, replacementImage, document)),
                     Arrays.asList(replacementAsset, replacementThumbnail));
             File replacementObject = new File(new File(firstRoot, "objects"),
                     replacementImageId + ".obj");
@@ -147,6 +163,10 @@ public final class VaultV3RepositoryTest {
                     VaultObjectRef.Type.IMAGE));
             assertArrayEquals(thumbnailBytes, restored.readResource(restoredDek, thumbnailId,
                     VaultObjectRef.Type.THUMBNAIL));
+            assertArrayEquals(firstDocumentPage, restored.readResource(restoredDek, firstPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE).plaintext);
+            assertArrayEquals(secondDocumentPage, restored.readResource(restoredDek, secondPageId,
+                    document.entryId, VaultObjectRef.Type.DOCUMENT_PAGE).plaintext);
             Crypto.wipe(restoredDek);
         } finally {
             if (restored != null) {
@@ -158,6 +178,8 @@ public final class VaultV3RepositoryTest {
             Crypto.wipe(imageBytes);
             Crypto.wipe(thumbnailBytes);
             Crypto.wipe(replacementImageBytes);
+            Crypto.wipe(firstDocumentPage);
+            Crypto.wipe(secondDocumentPage);
             Crypto.wipe(dek);
             if (recovery != null) {
                 Crypto.wipe(recovery.qrSecret);

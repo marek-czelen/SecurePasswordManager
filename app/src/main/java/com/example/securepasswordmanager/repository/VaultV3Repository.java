@@ -380,7 +380,8 @@ public final class VaultV3Repository {
         }
         try {
             VaultManifest previous = readManifest(header, dek, true);
-            VaultObjectRef previousRef = findResource(previous, id, owner, type, false);
+            VaultObjectRef previousRef = findResource(previous, id, owner, type,
+                    type == VaultObjectRef.Type.DOCUMENT_PAGE);
             return new ResourceResult(objectStore(header).read(previousRef, dek), true);
         } catch (IOException | GeneralSecurityException previousFailure) {
             if (ioFailure != null) {
@@ -785,6 +786,12 @@ public final class VaultV3Repository {
                 addExpectedResource(result, referenced, available, pendingIds,
                         item.attachmentId, VaultObjectRef.Type.FILE, item.entryId,
                         item.attachmentSize, item.contentType);
+            } else if (item.isDocument()) {
+                for (String pageId : item.documentPageIds) {
+                    addExpectedResource(result, referenced, available, pendingIds,
+                            pageId, VaultObjectRef.Type.DOCUMENT_PAGE, item.entryId,
+                            -1, "image/jpeg");
+                }
             }
         }
         if (!referenced.containsAll(pendingIds)) {
@@ -838,6 +845,11 @@ public final class VaultV3Repository {
             } else if (item.isFile()) {
                 validateOneLink(indexed, referenced, item, item.attachmentId,
                         VaultObjectRef.Type.FILE, item.attachmentSize, item.contentType);
+            } else if (item.isDocument()) {
+                for (String pageId : item.documentPageIds) {
+                    validateOneLink(indexed, referenced, item, pageId,
+                            VaultObjectRef.Type.DOCUMENT_PAGE, -1, "image/jpeg");
+                }
             }
         }
         if (referenced.size() != resources.size()) {
@@ -858,6 +870,8 @@ public final class VaultV3Repository {
         try {
             if (ref == null || ref.type != type || ref.plaintextLength != size
                     && size >= 0
+                    || (type == VaultObjectRef.Type.DOCUMENT_PAGE
+                    && ref.plaintextLength < 1)
                     || !Crypto.constantTimeEquals(ref.ownerEntryId, owner)
                     || (contentType != null && !contentType.equals(ref.contentType))
                     || !referenced.add(id)) {

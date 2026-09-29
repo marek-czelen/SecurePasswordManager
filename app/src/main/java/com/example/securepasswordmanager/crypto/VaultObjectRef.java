@@ -8,7 +8,8 @@ public final class VaultObjectRef {
         TEXT_BLOCK(1),
         IMAGE(2),
         THUMBNAIL(3),
-        FILE(4);
+        FILE(4),
+        DOCUMENT_PAGE(5);
 
         final int id;
 
@@ -74,6 +75,7 @@ public final class VaultObjectRef {
                 return 32L * 1024 * 1024;
             case IMAGE:
             case FILE:
+            case DOCUMENT_PAGE:
                 return 10L * 1024 * 1024;
             case THUMBNAIL:
                 return 256L * 1024;

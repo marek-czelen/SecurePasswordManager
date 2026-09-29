@@ -26,6 +26,7 @@
     <string name="menu_images">Kontener obrazów</string>
     <string name="add_image_container">Dodaj obraz do kontenera</string>
     <string name="add_file">Dodaj plik (Pro)</string>
+    <string name="add_document">Dodaj dokument (Pro)</string>
     <string name="item_image_kind">Obraz JPG</string>
     <string name="item_file_kind">Plik</string>
     <string name="action_password_history">Historia haseł (Pro)</string>
@@ -75,6 +76,7 @@
     <string name="file_details_message">Typ: %1$s\nRozmiar: %2$s</string>
     <string name="msg_file_pro_required">Dodawanie plików jest dostępne w wersji Pro.</string>
     <string name="msg_file_saved">Plik zapisano w zaszyfrowanym sejfie.</string>
+    <string name="msg_document_saved">Dokument zapisano w zaszyfrowanym sejfie.</string>
     <string name="msg_file_exported">Plik wyeksportowano.</string>
     <string name="action_export">Eksportuj</string>
     <string name="action_preview_file">Podgląd</string>
@@ -86,6 +88,7 @@
     <string name="err_recovered_read_only">Sejf jest w trybie odzyskiwania. Napraw go przed wprowadzaniem zmian.</string>
     <string name="err_file">Nie udało się odczytać lub zapisać pliku.</string>
     <string name="err_file_size">Plik jest za duży. Maksymalny dozwolony rozmiar to 10 MiB.</string>
+    <string name="err_document_page_size">Skan przekracza limit 10 MiB na stronę lub 60 MiB na dokument. Zeskanuj w niższej jakości.</string>
     <string name="err_vault_full">Sejf osiągnął limit rozmiaru lub liczby wpisów. Dane nie zostały zapisane.</string>
     <string name="image_container_title">Kontener obrazów</string>
     <string name="image_container_empty">Brak zapisanych obrazów</string>
@@ -95,6 +98,65 @@
     <string name="image_crop_select">Zaznacz fragment obrazu</string>
     <string name="msg_image_saved">Obraz zapisano w zaszyfrowanym kontenerze</string>
     <string name="err_image">Nie udało się przygotować obrazu.</string>
+    <string name="msg_document_pro_required">Skanowanie dokumentów jest dostępne w wersji Pro.</string>
+    <string name="document_scan_title">Skan dokumentu</string>
+    <string name="document_scan_hint">Umieść dokument w ramce. Aparat wykryje jego brzegi i wyprostuje stronę.</string>
+    <string name="document_scan_capture">Skanuj stronę</string>
+    <string name="document_scan_add_page">Dodaj kolejną stronę</string>
+    <string name="document_scan_finish">Zakończ</string>
+    <string name="document_scan_page_count">Dodane strony: %1$d</string>
+    <string name="document_scan_max_reached">Osiągnięto limit 20 stron w jednym dokumencie.</string>
+    <string name="document_scan_accept">Użyj strony</string>
+    <string name="document_scan_retake">Zrób ponownie</string>
+    <string name="document_review_hint">Przejrzyj wyprostowaną stronę. Zatwierdź ją lub zrób zdjęcie ponownie.</string>
+    <string name="document_review_description">Wyprostowany skan dokumentu</string>
+    <string name="document_edge_not_found">Nie wykryto całego dokumentu. Ustaw go w ramce i spróbuj ponownie.</string>
+    <string name="document_scan_failed">Nie udało się uruchomić aparatu ani przygotować skanu.</string>
+    <string name="document_flashlight">Lampa doświetlająca</string>
+    <string name="document_calibrate_camera">Kalibruj aparat</string>
+    <string name="document_aspect_title">Proporcje strony</string>
+    <string name="document_aspect_prompt">Wybierz typ dokumentu. Proporcje będą używane na wszystkich stronach tego wpisu.</string>
+    <string-array name="document_aspect_options">
+        <item>Karta ID-1 / dowód / prawo jazdy (85,60 × 53,98 mm)</item>
+        <item>Strona paszportu (125 × 88 mm)</item>
+        <item>Strona A4 (210 × 297 mm)</item>
+        <item>Własne proporcje</item>
+        <item>Nieznane — użyj kalibracji aparatu</item>
+    </string-array>
+    <string name="document_aspect_custom_title">Własne proporcje</string>
+    <string name="document_aspect_width">Szerokość</string>
+    <string name="document_aspect_height">Wysokość</string>
+    <string name="document_aspect_invalid">Podaj dodatnią, skończoną szerokość i wysokość.</string>
+    <string name="document_aspect_choose_known">Wybierz znany format</string>
+    <string name="document_calibration_title">Kalibracja aparatu</string>
+    <string name="document_calibration_required">Aby poprawnie ustalić proporcje nieznanego dokumentu, potrzebna jest kalibracja. Użyj karty ID-1 albo wybierz znany format.</string>
+    <string name="document_calibration_unavailable">Ten aparat nie udostępnia wymaganych danych obrazu do kalibracji. Wybierz znany format lub własne proporcje.</string>
+    <string name="document_calibration_instructions">Użyj standardowej karty ID-1 (85,60 × 53,98 mm). Zrób 8 zdjęć, za każdym razem delikatnie przechylając kartę w innym kierunku. Trzymaj dłuższą krawędź poziomo i nie obracaj karty w jej płaszczyźnie. Unikaj odblasków; cała karta ma być widoczna i wypełniać znaczną część ramki. Zdjęcia kalibracyjne są usuwane po odczytaniu narożników.</string>
+    <string name="document_calibration_start">Rozpocznij</string>
+    <string name="document_calibration_capture">Zrób zdjęcie karty</string>
+    <string name="document_calibration_finish">Kalibruj aparat</string>
+    <string name="document_calibration_count">Zdjęcia kalibracyjne: %1$d z %2$d</string>
+    <string name="document_calibration_ready">Zebrano wystarczająco zdjęć. Możesz rozpocząć kalibrację.</string>
+    <string name="document_calibration_view_failed">Nie wykryto karty. Ustaw całą kartę w ramce i spróbuj ponownie.</string>
+    <string name="document_calibration_more_angles">Ujęcia są zbyt podobne. Przechyl kartę w co najmniej trzech różnych kierunkach.</string>
+    <string name="document_calibration_working">Obliczanie i sprawdzanie kalibracji…</string>
+    <string name="document_calibration_success">Kalibracja aparatu zapisana. Możesz skanować dokument.</string>
+    <string name="document_calibration_saved">Zapisano kalibrację aparatu.</string>
+    <string name="document_calibration_failed">Kalibracja jest niedokładna. Dodaj różne ujęcia karty lub wybierz znany format.</string>
+    <string name="document_flash_failed">Nie udało się zmienić stanu lampy błyskowej.</string>
+    <string name="document_max_pages">Dokument musi mieć od 1 do 20 stron.</string>
+    <string name="document_name_title">Nazwa dokumentu</string>
+    <string name="document_name_hint">Nazwa</string>
+    <string name="document_name_required">Wpisz nazwę dokumentu.</string>
+    <string name="document_page_counter">%1$d z %2$d</string>
+    <string name="document_previous_page">Poprzednia</string>
+    <string name="document_next_page">Następna</string>
+    <plurals name="item_document_pages">
+        <item quantity="one">Dokument · %1$d strona</item>
+        <item quantity="few">Dokument · %1$d strony</item>
+        <item quantity="many">Dokument · %1$d stron</item>
+        <item quantity="other">Dokument · %1$d strony</item>
+    </plurals>
     <string name="empty_title">Brak wpisów</string>
     <string name="empty_subtitle">Dodaj pierwszy wpis przyciskiem poniżej.</string>
     <string name="menu_generator">Generator hasła</string>
@@ -183,6 +245,7 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_security">Bezpieczeństwo</string>
     <string name="settings_show_recovery">Pokaż kod odzyskiwania</string>
+    <string name="settings_document_calibration">Kalibracja aparatu do skanowania dokumentów (Pro)</string>
     <string name="settings_change_pin">Zmień PIN</string>
     <string name="settings_autolock">Auto-blokada</string>
     <string name="autolock_1">1 minuta</string>

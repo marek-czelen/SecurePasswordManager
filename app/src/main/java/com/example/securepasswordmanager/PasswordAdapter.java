@@ -63,10 +63,14 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         holder.title.setText(title);
         holder.subtitle.setText(item.isImage()
                 ? holder.itemView.getContext().getString(R.string.item_image_kind)
+                : item.isDocument()
+                ? holder.itemView.getContext().getResources().getQuantityString(
+                R.plurals.item_document_pages,
+                item.documentPageIds.size(), item.documentPageIds.size())
                 : item.isFile()
                 ? holder.itemView.getContext().getString(R.string.item_file_kind)
                 : (item.username.isEmpty() ? item.url : item.username));
-        boolean attachment = item.isImage() || item.isFile();
+        boolean attachment = item.isImage() || item.isFile() || item.isDocument();
         holder.copy.setVisibility(attachment ? View.GONE : View.VISIBLE);
         holder.avatar.setVisibility(attachment ? View.GONE : View.VISIBLE);
         holder.typeIcon.setVisibility(attachment ? View.VISIBLE : View.GONE);
@@ -77,6 +81,8 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
                 listener.onLoadThumbnail(item, holder.typeIcon);
             }
         } else if (item.isFile()) {
+            holder.typeIcon.setImageResource(R.drawable.ic_note);
+        } else if (item.isDocument()) {
             holder.typeIcon.setImageResource(R.drawable.ic_note);
         }
         holder.avatar.setText(initial(title));

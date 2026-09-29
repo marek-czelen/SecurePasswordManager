@@ -51,6 +51,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SecurePasswordManager" />
 
+        <activity
+            android:name=".DocumentScanActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SecurePasswordManager" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

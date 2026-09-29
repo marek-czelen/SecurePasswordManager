@@ -102,6 +102,7 @@ public final class MainActivity extends AppCompatActivity {
     private static final String RECOVERY_LOG = "SPM_RECOVERY";
     private static final int REQUEST_VAULT_FILE = 4101;
     private static final int MAX_FILE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_DOCUMENT_BYTES = 60 * 1024 * 1024;
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
     private static final String KEY_PENDING_PHOTO = "pending_photo";
     private static final String KEY_AWAITING = "awaiting_result";
@@ -153,6 +154,36 @@ public final class MainActivity extends AppCompatActivity {
                 awaitingResult = false;
                 if (uri != null) {
                     launchOcrReview(uri);
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> documentCalibrationLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                awaitingResult = false;
+                sImageFlowActive = false;
+                if (result.getResultCode() == RESULT_OK) {
+                    toast(R.string.document_calibration_saved);
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> documentScanLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                awaitingResult = false;
+                sImageFlowActive = false;
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                   ArrayList<Uri> pages = result.getData().getParcelableArrayListExtra(
+                           DocumentScanActivity.EXTRA_PAGE_URIS);
+                   String title = result.getData().getStringExtra(
+                           DocumentScanActivity.EXTRA_TITLE);
+                   if (pages != null && !pages.isEmpty() && title != null
+                           && !title.trim().isEmpty()) {
+                       addScannedDocument(pages, title);
+                   } else {
+                       if (pages != null) {
+                           deleteTemporaryDocumentPages(pages);
+                       }
+                       toast(R.string.err_image);
+                   }
                 }
             });
 
@@ -330,6 +361,92 @@ public final class MainActivity extends AppCompatActivity {
             }
         } catch (GeneralSecurityException | java.io.IOException exception) {
             showFatalError(getString(R.string.err_init));
+        }
+    }
+
+    private void addScannedDocument(ArrayList<Uri> pages, String title) {
+        if (!premiumManager.isPro()) {
+            deleteTemporaryDocumentPages(pages);
+            toast(R.string.msg_document_pro_required);
+            return;
+        }
+        if (pages.isEmpty() || pages.size() > VaultItem.MAX_DOCUMENT_PAGES) {
+            deleteTemporaryDocumentPages(pages);
+            toast(R.string.document_max_pages);
+            return;
+        }
+        awaitingResult = true;
+        try {
+            ioExecutor.execute(() -> {
+                List<PendingVaultAsset> pending = new ArrayList<>(pages.size());
+                try {
+                    List<String> pageIds = new ArrayList<>(pages.size());
+                    for (int index = 0; index < pages.size(); index++) {
+                        pageIds.add(newObjectId());
+                    }
+                    VaultItem item = VaultItem.documentReference(title.trim(), pageIds);
+                    int documentBytes = 0;
+                    for (int index = 0; index < pages.size(); index++) {
+                        byte[] contents;
+                        try (java.io.InputStream input =
+                                     getContentResolver().openInputStream(pages.get(index))) {
+                            if (input == null) {
+                                throw new IOException("Document scan page is unavailable");
+                            }
+                            contents = readLimited(input, VaultImageProcessor.MAX_IMAGE_BYTES);
+                        }
+                        try {
+                            if (contents.length > MAX_DOCUMENT_BYTES - documentBytes) {
+                                throw new VaultSizeLimitException(
+                                        "Document exceeds the attachment limit");
+                            }
+                            documentBytes += contents.length;
+                            pending.add(new PendingVaultAsset(pageIds.get(index), item.entryId,
+                                    VaultObjectRef.Type.DOCUMENT_PAGE, "image/jpeg", contents));
+                        } finally {
+                            Crypto.wipe(contents);
+                        }
+                    }
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.add(item);
+                    List<PendingVaultAsset> savePending = pending;
+                    pending = null;
+                    runOnUiThread(() -> saveData(new VaultData(items), savePending));
+                } catch (VaultSizeLimitException exception) {
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_document_page_size);
+                    });
+                } catch (IOException | IllegalArgumentException exception) {
+                    Log.e(IMAGE_LOG, "document import failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_image);
+                    });
+                } finally {
+                    if (pending != null) {
+                        clearPending(pending);
+                    }
+                    deleteTemporaryDocumentPages(pages);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            awaitingResult = false;
+            deleteTemporaryDocumentPages(pages);
+            toast(R.string.err_image);
+        }
+    }
+
+    private void deleteTemporaryDocumentPages(List<Uri> pages) {
+        for (Uri uri : pages) {
+            if (uri != null && getPackageName().concat(".fileprovider").equals(uri.getAuthority())) {
+                try {
+                    getContentResolver().delete(uri, null, null);
+                } catch (SecurityException | IllegalArgumentException exception) {
+                    Log.w(IMAGE_LOG, "could not remove temporary document page");
+                }
+            }
         }
     }
 
@@ -652,6 +769,37 @@ public final class MainActivity extends AppCompatActivity {
             destination.addView(row);
         }
         dialog.show();
+    }
+
+    private void requestDocumentScan() {
+        if (!premiumManager.isPro()) {
+            toast(R.string.msg_document_pro_required);
+            return;
+        }
+        if (awaitingResult || saveInProgress) {
+            toast(R.string.err_save);
+            return;
+        }
+        Intent intent = new Intent(this, DocumentScanActivity.class);
+        awaitingResult = true;
+        sImageFlowActive = true;
+        documentScanLauncher.launch(intent);
+    }
+
+    private void startDocumentCameraCalibration() {
+        if (!premiumManager.isPro()) {
+            toast(R.string.msg_document_pro_required);
+            return;
+        }
+        if (awaitingResult || saveInProgress) {
+            toast(R.string.err_save);
+            return;
+        }
+        Intent intent = new Intent(this, DocumentScanActivity.class)
+                .putExtra(DocumentScanActivity.EXTRA_CALIBRATION_ONLY, true);
+        awaitingResult = true;
+        sImageFlowActive = true;
+        documentCalibrationLauncher.launch(intent);
     }
 
     private void showRecoveredPreviousDialog() {
@@ -1064,6 +1212,10 @@ public final class MainActivity extends AppCompatActivity {
     // region Entry / details
 
     private void showDetails(VaultItem item) {
+        if (item.isDocument()) {
+            showDocumentDetails(item);
+            return;
+        }
         if (item.isImage()) {
             showImageDetails(item);
             return;
@@ -1178,6 +1330,92 @@ public final class MainActivity extends AppCompatActivity {
                 .create();
         dialog.show();
         loadImagePreview(item, image, dialog);
+    }
+
+    private void showDocumentDetails(VaultItem item) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_document_details, null);
+        ImageView image = view.findViewById(R.id.documentPagePreview);
+        TextView pageNumber = view.findViewById(R.id.documentPageNumber);
+        MaterialButton previous = view.findViewById(R.id.documentPreviousPage);
+        MaterialButton next = view.findViewById(R.id.documentNextPage);
+        int[] pageIndex = {0};
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(item.title)
+                .setView(view)
+                .setNegativeButton(R.string.action_delete, (d, which) -> {
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.remove(item);
+                    saveData(new VaultData(items));
+                })
+                .setPositiveButton(R.string.action_close, null)
+                .create();
+
+        Runnable showPage = () -> {
+            pageNumber.setText(getString(R.string.document_page_counter,
+                    pageIndex[0] + 1, item.documentPageIds.size()));
+            previous.setEnabled(pageIndex[0] > 0);
+            next.setEnabled(pageIndex[0] < item.documentPageIds.size() - 1);
+            loadDocumentPage(item, pageIndex[0], image, pageIndex, dialog);
+        };
+        previous.setOnClickListener(v -> {
+            if (pageIndex[0] > 0) {
+                pageIndex[0]--;
+                showPage.run();
+            }
+        });
+        next.setOnClickListener(v -> {
+            if (pageIndex[0] < item.documentPageIds.size() - 1) {
+                pageIndex[0]++;
+                showPage.run();
+            }
+        });
+        dialog.show();
+        showPage.run();
+    }
+
+    private void loadDocumentPage(VaultItem item, int page, ImageView target,
+                                 int[] selectedPage,
+                                 androidx.appcompat.app.AlertDialog dialog) {
+        if (sessionDek == null) {
+            toast(R.string.err_unlock);
+            return;
+        }
+        byte[] key = sessionDek.clone();
+        String pageId = item.documentPageIds.get(page);
+        ioExecutor.execute(() -> {
+            byte[] jpeg = null;
+            Bitmap bitmap = null;
+            try {
+                VaultV3Repository.ResourceResult resource = repository.readResource(key,
+                        pageId, item.entryId, VaultObjectRef.Type.DOCUMENT_PAGE);
+                jpeg = resource.plaintext;
+                bitmap = VaultImageProcessor.decodeForDisplay(jpeg,
+                        VaultImageProcessor.MAX_IMAGE_BYTES, 2048);
+                Bitmap decoded = bitmap;
+                runOnUiThread(() -> {
+                    if (unlocked && dialog.isShowing() && selectedPage[0] == page) {
+                        target.setImageBitmap(decoded);
+                        if (resource.recoveredPrevious) {
+                            notifyPreviousResourceRecovered();
+                        }
+                    } else {
+                        decoded.recycle();
+                    }
+                });
+            } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
+                runOnUiThread(() -> {
+                    if (dialog.isShowing() && selectedPage[0] == page) {
+                        toast(R.string.err_image);
+                    }
+                });
+                if (bitmap != null) {
+                    bitmap.recycle();
+                }
+            } finally {
+                Crypto.wipe(jpeg);
+                Crypto.wipe(key);
+            }
+        });
     }
 
     private void loadImagePreview(VaultItem item, ImageView target,
@@ -1726,6 +1964,9 @@ public final class MainActivity extends AppCompatActivity {
                 break;
             case SettingsActivity.ACTION_DELETE_VAULT:
                 confirmDeleteLocalVault();
+                break;
+            case SettingsActivity.ACTION_CALIBRATE_DOCUMENT_CAMERA:
+                startDocumentCameraCalibration();
                 break;
             default:
                 Log.w(IMAGE_LOG, "Unknown settings action: " + action);
@@ -2349,13 +2590,14 @@ public final class MainActivity extends AppCompatActivity {
         }
         boolean imageAdded = countImages(data) > countImages(currentData);
         boolean fileAdded = countFiles(data) > countFiles(currentData);
+        boolean documentAdded = countDocuments(data) > countDocuments(currentData);
         Log.d(IMAGE_LOG, "saveData imageEntries=" + countImages(data)
                 + ", biometric=" + biometricSession
                 + ", sessionActive=" + Session.isActive());
         saveInProgress = true;
         awaitingResult = true;
         if (biometricSession) {
-            authenticateBiometricForSave(data, pending, imageAdded, fileAdded);
+            authenticateBiometricForSave(data, pending, imageAdded, fileAdded, documentAdded);
         } else if (sessionTruePin == null || !PinPolicy.isValid(sessionTruePin)) {
             saveInProgress = false;
             awaitingResult = false;
@@ -2369,7 +2611,8 @@ public final class MainActivity extends AppCompatActivity {
                 ioExecutor.execute(() -> {
                     try {
                         repository.updateWithTruePin(pin, data, pending);
-                        runOnUiThread(() -> finishSave(data, imageAdded, fileAdded));
+                        runOnUiThread(() ->
+                                finishSave(data, imageAdded, fileAdded, documentAdded));
                     } catch (VaultSizeLimitException exception) {
                         Log.e(IMAGE_LOG, "vault size limit reached");
                         runOnUiThread(() -> failSave(R.string.err_vault_full));
@@ -2394,7 +2637,8 @@ public final class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void finishSave(VaultData data, boolean imageAdded, boolean fileAdded) {
+    private void finishSave(VaultData data, boolean imageAdded, boolean fileAdded,
+                            boolean documentAdded) {
         currentData = data;
         Session.updateData(currentData);
         renderList();
@@ -2406,6 +2650,8 @@ public final class MainActivity extends AppCompatActivity {
             toast(R.string.msg_image_saved);
         } else if (fileAdded) {
             toast(R.string.msg_file_saved);
+        } else if (documentAdded) {
+            toast(R.string.msg_document_saved);
         } else if (importSavePending) {
             importSavePending = false;
             toast(R.string.msg_import_saved);
@@ -2420,7 +2666,8 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void authenticateBiometricForSave(VaultData data, List<PendingVaultAsset> pending,
-                                              boolean imageAdded, boolean fileAdded) {
+                                              boolean imageAdded, boolean fileAdded,
+                                              boolean documentAdded) {
         try {
             Log.d(IMAGE_LOG, "preparing biometric authorization for vault save");
             Cipher cipher = repository.prepareBiometricCipher();
@@ -2447,7 +2694,7 @@ public final class MainActivity extends AppCompatActivity {
                                     repository.updateWithBiometric(
                                             result.getCryptoObject().getCipher(), data, pending);
                                     runOnUiThread(() ->
-                                            finishSave(data, imageAdded, fileAdded));
+                                            finishSave(data, imageAdded, fileAdded, documentAdded));
                                 } catch (VaultSizeLimitException exception) {
                                     Log.e(IMAGE_LOG, "vault size limit reached");
                                     runOnUiThread(() -> failSave(R.string.err_vault_full));
@@ -2486,6 +2733,16 @@ public final class MainActivity extends AppCompatActivity {
         int count = 0;
         for (VaultItem item : data.items) {
             if (item.isFile()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int countDocuments(VaultData data) {
+        int count = 0;
+        for (VaultItem item : data.items) {
+            if (item.isDocument()) {
                 count++;
             }
         }
@@ -2554,12 +2811,14 @@ public final class MainActivity extends AppCompatActivity {
         int[] titles = {
                 R.string.add_manual,
                 R.string.add_image_container,
-                R.string.add_file
+                R.string.add_file,
+                R.string.add_document
         };
         int[] icons = {
                 R.drawable.ic_key,
                 R.drawable.ic_image,
-                R.drawable.ic_folder
+                R.drawable.ic_folder,
+                R.drawable.ic_note
         };
         for (int index = 0; index < titles.length; index++) {
             View row = LayoutInflater.from(this)
@@ -2573,9 +2832,11 @@ public final class MainActivity extends AppCompatActivity {
                     showEntryDialog(null, null);
                 } else if (option == 1) {
                     showImageSourceChooser();
-                } else {
+                } else if (option == 2) {
                     awaitingResult = true;
                     pickFileLauncher.launch(new String[]{"*/*"});
+                } else {
+                    requestDocumentScan();
                 }
             });
             actions.addView(row);

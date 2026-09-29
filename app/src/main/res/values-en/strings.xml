@@ -20,6 +20,7 @@
     <string name="menu_images">Image container</string>
     <string name="add_image_container">Add image to list</string>
     <string name="add_file">Add file (Pro)</string>
+    <string name="add_document">Add document (Pro)</string>
     <string name="item_image_kind">JPG image</string>
     <string name="item_file_kind">File</string>
     <string name="action_password_history">Password history (Pro)</string>
@@ -69,6 +70,7 @@
     <string name="file_details_message">Type: %1$s\nSize: %2$s</string>
     <string name="msg_file_pro_required">File attachments are available in Pro.</string>
     <string name="msg_file_saved">File saved in the encrypted vault.</string>
+    <string name="msg_document_saved">Document saved in the encrypted vault.</string>
     <string name="msg_file_exported">File exported.</string>
     <string name="action_export">Export</string>
     <string name="action_preview_file">Preview</string>
@@ -80,6 +82,7 @@
     <string name="err_recovered_read_only">The vault is in recovery mode. Repair it before making changes.</string>
     <string name="err_file">The file could not be read or saved.</string>
     <string name="err_file_size">The file is too large. The maximum allowed size is 10 MiB.</string>
+    <string name="err_document_page_size">The scan exceeds 10 MiB per page or 60 MiB per document. Scan at lower quality.</string>
     <string name="err_vault_full">The vault size or entry limit was reached. The change was not saved.</string>
     <string name="image_container_title">Images</string>
     <string name="image_container_empty">No saved images</string>
@@ -89,6 +92,63 @@
     <string name="image_crop_select">Select an image fragment</string>
     <string name="msg_image_saved">Image saved in the encrypted vault</string>
     <string name="err_image">The image could not be prepared.</string>
+    <string name="msg_document_pro_required">Document scanning is available in Pro.</string>
+    <string name="document_scan_title">Scan document</string>
+    <string name="document_scan_hint">Place the document inside the frame. The camera will detect its edges and straighten the page.</string>
+    <string name="document_scan_capture">Scan page</string>
+    <string name="document_scan_add_page">Add another page</string>
+    <string name="document_scan_finish">Finish</string>
+    <string name="document_scan_page_count">Pages added: %1$d</string>
+    <string name="document_scan_max_reached">The 20-page limit for one document has been reached.</string>
+    <string name="document_scan_accept">Use page</string>
+    <string name="document_scan_retake">Retake</string>
+    <string name="document_review_hint">Review the straightened page. Accept it or take the photo again.</string>
+    <string name="document_review_description">Straightened document scan</string>
+    <string name="document_edge_not_found">The whole document was not detected. Place it inside the frame and try again.</string>
+    <string name="document_scan_failed">Could not start the camera or prepare the scan.</string>
+    <string name="document_flashlight">Flashlight</string>
+    <string name="document_calibrate_camera">Calibrate camera</string>
+    <string name="document_aspect_title">Page proportions</string>
+    <string name="document_aspect_prompt">Choose a document type. This proportion is used for every page in this entry.</string>
+    <string-array name="document_aspect_options">
+        <item>ID-1 card / ID / driving licence (85.60 × 53.98 mm)</item>
+        <item>Passport page (125 × 88 mm)</item>
+        <item>A4 page (210 × 297 mm)</item>
+        <item>Custom proportions</item>
+        <item>Unknown — use camera calibration</item>
+    </string-array>
+    <string name="document_aspect_custom_title">Custom proportions</string>
+    <string name="document_aspect_width">Width</string>
+    <string name="document_aspect_height">Height</string>
+    <string name="document_aspect_invalid">Enter finite, positive width and height values.</string>
+    <string name="document_aspect_choose_known">Choose a known format</string>
+    <string name="document_calibration_title">Camera calibration</string>
+    <string name="document_calibration_required">Camera calibration is needed to determine the proportions of an unknown document. Calibrate with an ID-1 card or choose a known format.</string>
+    <string name="document_calibration_unavailable">This camera does not provide the image data needed for calibration. Choose a known format or enter custom proportions.</string>
+    <string name="document_calibration_instructions">Use a standard ID-1 card (85.60 × 53.98 mm). Capture 8 views, gently tilting the card in a different direction each time. Keep its long edge horizontal and do not rotate the card in its plane. Avoid glare; keep the whole card visible and fill a substantial part of the frame. Calibration photos are discarded after the corners are extracted.</string>
+    <string name="document_calibration_start">Start</string>
+    <string name="document_calibration_capture">Capture card view</string>
+    <string name="document_calibration_finish">Calibrate camera</string>
+    <string name="document_calibration_count">Calibration views: %1$d of %2$d</string>
+    <string name="document_calibration_ready">Enough views collected. You can start calibration.</string>
+    <string name="document_calibration_view_failed">The card was not detected. Fit the whole card in the frame and try again.</string>
+    <string name="document_calibration_more_angles">The views are too similar. Tilt the card in at least three different directions.</string>
+    <string name="document_calibration_working">Calculating and validating calibration…</string>
+    <string name="document_calibration_success">Camera calibration saved. You can scan your document.</string>
+    <string name="document_calibration_saved">Camera calibration saved.</string>
+    <string name="document_calibration_failed">Calibration was not accurate enough. Add varied card views or choose a known format.</string>
+    <string name="document_flash_failed">Could not change the flashlight state.</string>
+    <string name="document_max_pages">A document must contain between 1 and 20 pages.</string>
+    <string name="document_name_title">Document name</string>
+    <string name="document_name_hint">Name</string>
+    <string name="document_name_required">Enter a document name.</string>
+    <string name="document_page_counter">%1$d of %2$d</string>
+    <string name="document_previous_page">Previous</string>
+    <string name="document_next_page">Next</string>
+    <plurals name="item_document_pages">
+        <item quantity="one">Document · %1$d page</item>
+        <item quantity="other">Document · %1$d pages</item>
+    </plurals>
     <string name="empty_title">No entries</string>
     <string name="empty_subtitle">Add your first entry using the button below.</string>
     <string name="menu_generator">Password generator</string>
@@ -167,6 +227,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_security">Security</string>
     <string name="settings_show_recovery">Show recovery code</string>
+    <string name="settings_document_calibration">Calibrate camera for document scans (Pro)</string>
     <string name="settings_change_pin">Change PIN</string>
     <string name="settings_autolock">Auto-lock</string>
     <string name="autolock_1">1 minute</string>
