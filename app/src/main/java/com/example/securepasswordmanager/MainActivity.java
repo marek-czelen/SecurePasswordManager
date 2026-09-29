@@ -310,8 +310,9 @@ public final class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> linkRemoteLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument(
                     "application/octet-stream"), uri -> {
-                awaitingResult = false;
-                if (uri != null) {
+                if (uri == null) {
+                    finishBackupWrite();
+                } else {
                     linkRemote(uri);
                 }
             });
@@ -319,8 +320,9 @@ public final class MainActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> backupLauncher =
             registerForActivityResult(new ActivityResultContracts.CreateDocument(
                     "application/octet-stream"), uri -> {
-                awaitingResult = false;
-                if (uri != null) {
+                if (uri == null) {
+                    finishBackupWrite();
+                } else {
                     exportBackup(uri);
                 }
             });
@@ -563,9 +565,9 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        awaitingResult = false;
         IntentResult scan = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (scan != null) {
+            awaitingResult = false;
             if (scan.getContents() != null && recoveryPayloadField != null) {
                 if (scanningPassphraseQr) {
                     try {
@@ -582,6 +584,9 @@ public final class MainActivity extends AppCompatActivity {
             }
             scanningPassphraseQr = false;
             return;
+        }
+        if (requestCode == REQUEST_VAULT_FILE) {
+            awaitingResult = false;
         }
         if (requestCode == REQUEST_VAULT_FILE && resultCode == RESULT_OK
                 && data != null && data.getData() != null) {
@@ -3123,44 +3128,81 @@ public final class MainActivity extends AppCompatActivity {
 
     // region External backup copy
 
+    private void finishBackupWrite() {
+        awaitingResult = false;
+        scheduleAutoLock();
+    }
+
     /** Sets (or replaces) the automatic backup target and writes the first copy. */
     private void linkRemote(Uri uri) {
         if (sessionDek == null) {
+            Log.w(RECOVERY_LOG, "backup link skipped: session key is unavailable");
+            finishBackupWrite();
             toast(R.string.err_unlock);
             return;
         }
         byte[] key = sessionDek.clone();
-        ioExecutor.execute(() -> {
-            try {
-                repository.linkRemote(uri, key);
-                runOnUiThread(() -> toast(R.string.msg_remote_linked));
-            } catch (java.io.IOException | GeneralSecurityException exception) {
-                String reason = exception.getMessage();
-                runOnUiThread(() -> showBackupError(getString(R.string.err_remote_link), reason));
-            } finally {
-                Crypto.wipe(key);
-            }
-        });
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    repository.linkRemote(uri, key);
+                    runOnUiThread(() -> {
+                        finishBackupWrite();
+                        toast(R.string.msg_remote_linked);
+                    });
+                } catch (java.io.IOException | GeneralSecurityException exception) {
+                    Log.e(RECOVERY_LOG, "backup link failed", exception);
+                    String reason = exception.getMessage();
+                    runOnUiThread(() -> {
+                        finishBackupWrite();
+                        showBackupError(getString(R.string.err_remote_link), reason);
+                    });
+                } finally {
+                    Crypto.wipe(key);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            Crypto.wipe(key);
+            Log.e(RECOVERY_LOG, "backup link could not be scheduled", exception);
+            finishBackupWrite();
+            showBackupError(getString(R.string.err_remote_link), exception.getMessage());
+        }
     }
 
     /** Writes a one-off encrypted backup copy to any chosen location. */
     private void exportBackup(Uri uri) {
         if (sessionDek == null) {
+            Log.w(RECOVERY_LOG, "backup export skipped: session key is unavailable");
+            finishBackupWrite();
             toast(R.string.err_unlock);
             return;
         }
         byte[] key = sessionDek.clone();
-        ioExecutor.execute(() -> {
-            try {
-                repository.exportCopy(uri, key);
-                runOnUiThread(() -> toast(R.string.msg_backup_done));
-            } catch (java.io.IOException | GeneralSecurityException exception) {
-                String reason = exception.getMessage();
-                runOnUiThread(() -> showBackupError(getString(R.string.err_backup), reason));
-            } finally {
-                Crypto.wipe(key);
-            }
-        });
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    repository.exportCopy(uri, key);
+                    runOnUiThread(() -> {
+                        finishBackupWrite();
+                        toast(R.string.msg_backup_done);
+                    });
+                } catch (java.io.IOException | GeneralSecurityException exception) {
+                    Log.e(RECOVERY_LOG, "backup export failed", exception);
+                    String reason = exception.getMessage();
+                    runOnUiThread(() -> {
+                        finishBackupWrite();
+                        showBackupError(getString(R.string.err_backup), reason);
+                    });
+                } finally {
+                    Crypto.wipe(key);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            Crypto.wipe(key);
+            Log.e(RECOVERY_LOG, "backup export could not be scheduled", exception);
+            finishBackupWrite();
+            showBackupError(getString(R.string.err_backup), exception.getMessage());
+        }
     }
 
     /** Immediately refreshes the copy at the configured automatic backup target. */
