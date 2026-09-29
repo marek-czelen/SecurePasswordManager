@@ -30,6 +30,7 @@ import java.util.List;
 /** Detects a document quadrilateral and rectifies approved captures into encrypted-ready JPGs. */
 final class DocumentEdgeDetector {
     private static final double MIN_DOCUMENT_AREA = 0.10;
+    private static final double FALLBACK_MIN_DOCUMENT_AREA = 0.06;
     private static final double MAX_DOCUMENT_AREA = 0.95;
     private static final int DETECTION_WIDTH = 640;
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
@@ -139,7 +140,7 @@ final class DocumentEdgeDetector {
 
     static byte[] rectify(Context context, File sourceFile, Double requestedAspect,
                           DocumentCameraCalibration calibration, int rotationDegrees,
-                          Rect activeArray) throws IOException {
+                          Rect activeArray, Quad previewQuad) throws IOException {
         Bitmap source = decodeCapture(context, sourceFile);
         if (source == null) {
             throw new IOException("Could not decode captured document");
@@ -160,6 +161,10 @@ final class DocumentEdgeDetector {
             int detectionHeight = Math.max(1, (int) Math.round(gray.rows() * detectionScale));
             Imgproc.resize(gray, detectionGray, new Size(detectionWidth, detectionHeight));
             Point[] detectedCorners = findCorners(detectionGray);
+            if (detectedCorners == null && previewQuad != null) {
+                detectedCorners = pointsFromNormalizedQuad(previewQuad,
+                        detectionGray.cols(), detectionGray.rows());
+            }
             if (detectedCorners == null) {
                 throw new EdgesNotFoundException();
             }
@@ -401,22 +406,89 @@ final class DocumentEdgeDetector {
     }
 
     private static Point[] findCorners(Mat gray) {
+        Point[] detected = findCannyCorners(gray, 45, 130, MIN_DOCUMENT_AREA,
+                new double[]{0.02}, false, false);
+        if (detected != null) {
+            return detected;
+        }
+        detected = findCannyCorners(gray, 18, 75, FALLBACK_MIN_DOCUMENT_AREA,
+                new double[]{0.02, 0.04, 0.06}, true, true);
+        if (detected != null) {
+            return detected;
+        }
+        return findAdaptiveCorners(gray);
+    }
+
+    private static Point[] findCannyCorners(Mat gray, double lowThreshold,
+                                            double highThreshold, double minAreaFraction,
+                                            double[] approximationFactors, boolean closeEdges,
+                                            boolean useBoundingRectangle) {
         Mat blurred = new Mat();
         Mat edges = new Mat();
+        Mat closedEdges = new Mat();
+        Mat kernel = null;
+        try {
+            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
+            Imgproc.Canny(blurred, edges, lowThreshold, highThreshold);
+            Mat contourImage = edges;
+            if (closeEdges) {
+                kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
+                Imgproc.morphologyEx(edges, closedEdges, Imgproc.MORPH_CLOSE, kernel);
+                contourImage = closedEdges;
+            }
+            return findCornersFromContours(contourImage, minAreaFraction,
+                    approximationFactors, Imgproc.RETR_LIST, useBoundingRectangle);
+        } finally {
+            blurred.release();
+            edges.release();
+            closedEdges.release();
+            if (kernel != null) {
+                kernel.release();
+            }
+        }
+    }
+
+    private static Point[] findAdaptiveCorners(Mat gray) {
+        Mat blurred = new Mat();
+        Mat thresholded = new Mat();
+        Mat closed = new Mat();
+        Mat kernel = null;
+        try {
+            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
+            Imgproc.adaptiveThreshold(blurred, thresholded, 255,
+                    Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 31, 7);
+            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
+            Imgproc.morphologyEx(thresholded, closed, Imgproc.MORPH_CLOSE, kernel);
+            return findCornersFromContours(closed, FALLBACK_MIN_DOCUMENT_AREA,
+                    new double[]{0.03, 0.05, 0.07}, Imgproc.RETR_EXTERNAL, true);
+        } finally {
+            blurred.release();
+            thresholded.release();
+            closed.release();
+            if (kernel != null) {
+                kernel.release();
+            }
+        }
+    }
+
+    private static Point[] findCornersFromContours(Mat contourImage,
+                                                    double minAreaFraction,
+                                                    double[] approximationFactors,
+                                                    int retrievalMode,
+                                                    boolean useBoundingRectangle) {
+        Mat input = contourImage.clone();
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
         Point[] best = null;
         double largestArea = 0;
         try {
-            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
-            Imgproc.Canny(blurred, edges, 45, 130);
-            Imgproc.findContours(edges, contours, hierarchy,
-                    Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-            double imageArea = gray.cols() * (double) gray.rows();
+            Imgproc.findContours(input, contours, hierarchy,
+                    retrievalMode, Imgproc.CHAIN_APPROX_SIMPLE);
+            double imageArea = contourImage.cols() * (double) contourImage.rows();
             for (MatOfPoint contour : contours) {
                 double area = Math.abs(Imgproc.contourArea(contour));
                 double fraction = area / imageArea;
-                if (fraction < MIN_DOCUMENT_AREA || fraction > MAX_DOCUMENT_AREA
+                if (fraction < minAreaFraction || fraction > MAX_DOCUMENT_AREA
                         || area <= largestArea) {
                     continue;
                 }
@@ -424,21 +496,34 @@ final class DocumentEdgeDetector {
                 MatOfPoint2f approximation = new MatOfPoint2f();
                 try {
                     double perimeter = Imgproc.arcLength(curve, true);
-                    Imgproc.approxPolyDP(curve, approximation, perimeter * 0.02, true);
-                    if (approximation.total() != 4) {
-                        continue;
-                    }
-                    Point[] ordered = order(approximation.toArray());
-                    MatOfPoint polygon = new MatOfPoint(ordered);
-                    try {
-                        if (!Imgproc.isContourConvex(polygon)
-                                || touchesFrame(ordered, gray.cols(), gray.rows())) {
+                    boolean accepted = false;
+                    for (double factor : approximationFactors) {
+                        Imgproc.approxPolyDP(curve, approximation, perimeter * factor, true);
+                        if (approximation.total() != 4) {
                             continue;
                         }
-                        best = ordered;
-                        largestArea = area;
-                    } finally {
-                        polygon.release();
+                        Point[] ordered = order(approximation.toArray());
+                        if (isValidDocumentQuad(ordered, contourImage.cols(),
+                                contourImage.rows())) {
+                            best = ordered;
+                            largestArea = area;
+                            accepted = true;
+                            break;
+                        }
+                    }
+                    if (!accepted && useBoundingRectangle) {
+                        org.opencv.core.RotatedRect bounds = Imgproc.minAreaRect(curve);
+                        double rectangleArea = bounds.size.width * bounds.size.height;
+                        if (rectangleArea > 0 && area / rectangleArea >= 0.55) {
+                            Point[] rectangle = new Point[4];
+                            bounds.points(rectangle);
+                            Point[] ordered = order(rectangle);
+                            if (isValidDocumentQuad(ordered, contourImage.cols(),
+                                    contourImage.rows())) {
+                                best = ordered;
+                                largestArea = area;
+                            }
+                        }
                     }
                 } finally {
                     curve.release();
@@ -450,10 +535,35 @@ final class DocumentEdgeDetector {
             for (MatOfPoint contour : contours) {
                 contour.release();
             }
-            blurred.release();
-            edges.release();
+            input.release();
             hierarchy.release();
         }
+    }
+
+    private static boolean isValidDocumentQuad(Point[] points, int width, int height) {
+        MatOfPoint polygon = new MatOfPoint(points);
+        try {
+            return Imgproc.isContourConvex(polygon) && !touchesFrame(points, width, height);
+        } finally {
+            polygon.release();
+        }
+    }
+
+    private static Point[] pointsFromNormalizedQuad(Quad quad, int width, int height) {
+        if (quad.points == null || quad.points.length != 8 || width <= 0 || height <= 0) {
+            return null;
+        }
+        Point[] points = new Point[4];
+        for (int index = 0; index < points.length; index++) {
+            float x = quad.points[index * 2];
+            float y = quad.points[index * 2 + 1];
+            if (!Float.isFinite(x) || !Float.isFinite(y)
+                    || x < 0 || x > 1 || y < 0 || y > 1) {
+                return null;
+            }
+            points[index] = new Point(x * width, y * height);
+        }
+        return points;
     }
 
     private static boolean touchesFrame(Point[] points, int width, int height) {

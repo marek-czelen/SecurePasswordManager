@@ -669,6 +669,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
             return;
         }
 
+        DocumentEdgeDetector.Quad captureQuad = displayedQuad;
         capturingFile = captured;
         captureInProgress = true;
         captureButton.setEnabled(false);
@@ -680,7 +681,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                     @Override
                     public void onImageSaved(ImageCapture.OutputFileResults output) {
                         capturingFile = null;
-                        prepareReview(captured);
+                        prepareReview(captured, captureQuad);
                     }
 
                     @Override
@@ -695,13 +696,13 @@ public final class DocumentScanActivity extends AppCompatActivity {
                 });
     }
 
-    private void prepareReview(File captured) {
+    private void prepareReview(File captured, DocumentEdgeDetector.Quad previewQuad) {
         try {
             processingExecutor.execute(() -> {
                 File rectified = null;
                 try {
                     byte[] jpeg = DocumentEdgeDetector.rectify(this, captured, requestedAspect,
-                            calibration, captureRotationDegrees, activeArray);
+                            calibration, captureRotationDegrees, activeArray, previewQuad);
                     try {
                         rectified = File.createTempFile("page-", ".jpg",
                                 new File(getCacheDir(), "documents"));

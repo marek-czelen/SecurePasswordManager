@@ -112,6 +112,7 @@
     <string name="document_cancel_scan">Dokumentenscan abbrechen</string>
     <string name="document_page_count_compact">Seiten %1$d/20</string>
     <string name="document_review_page">Vorschau, Seite %1$d</string>
+    <string name="fullscreen_image_description">Bildvorschau im Vollbild</string>
     <string name="document_aspect_title">Seitenverhältnis</string>
     <string name="document_aspect_prompt">Wähle den Dokumenttyp. Dieses Verhältnis gilt für alle Seiten dieses Eintrags.</string>
     <string-array name="document_aspect_options">

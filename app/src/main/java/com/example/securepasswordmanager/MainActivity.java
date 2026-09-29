@@ -1,6 +1,7 @@
 package com.example.securepasswordmanager;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipDescription;
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.biometrics.BiometricPrompt;
 import android.net.Uri;
 import android.os.Build;
@@ -25,6 +27,8 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
@@ -1318,6 +1322,7 @@ public final class MainActivity extends AppCompatActivity {
     private void showImageDetails(VaultItem item) {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_image_details, null);
         ImageView image = view.findViewById(R.id.imagePreview);
+        enableDoubleTapFullscreen(image);
         androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(item.title)
                 .setView(view)
@@ -1332,9 +1337,53 @@ public final class MainActivity extends AppCompatActivity {
         loadImagePreview(item, image, dialog);
     }
 
+    private void enableDoubleTapFullscreen(ImageView preview) {
+        GestureDetector gestureDetector = new GestureDetector(this,
+                new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDown(MotionEvent event) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onDoubleTap(MotionEvent event) {
+                        if (preview.getDrawable() instanceof BitmapDrawable) {
+                            showFullscreenImage(
+                                    ((BitmapDrawable) preview.getDrawable()).getBitmap());
+                        }
+                        return true;
+                    }
+                });
+        preview.setClickable(true);
+        preview.setOnTouchListener((view, event) -> {
+            gestureDetector.onTouchEvent(event);
+            return true;
+        });
+    }
+
+    private void showFullscreenImage(Bitmap bitmap) {
+        Dialog dialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_image_fullscreen, null);
+        ZoomableImageView image = content.findViewById(R.id.fullscreenImage);
+        image.setImageBitmap(bitmap);
+        content.findViewById(R.id.closeFullscreenImage).setOnClickListener(view -> dialog.dismiss());
+        dialog.setContentView(content);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT);
+            window.setBackgroundDrawableResource(android.R.color.black);
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            WindowCompat.setDecorFitsSystemWindows(window, true);
+        }
+    }
+
     private void showDocumentDetails(VaultItem item) {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_document_details, null);
         ImageView image = view.findViewById(R.id.documentPagePreview);
+        enableDoubleTapFullscreen(image);
         TextView pageNumber = view.findViewById(R.id.documentPageNumber);
         MaterialButton previous = view.findViewById(R.id.documentPreviousPage);
         MaterialButton next = view.findViewById(R.id.documentNextPage);

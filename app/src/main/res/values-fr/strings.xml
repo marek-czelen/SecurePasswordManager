@@ -112,6 +112,7 @@
     <string name="document_cancel_scan">Annuler le scan du document</string>
     <string name="document_page_count_compact">Pages %1$d/20</string>
     <string name="document_review_page">Aperçu, page %1$d</string>
+    <string name="fullscreen_image_description">Aperçu de l’image en plein écran</string>
     <string name="document_aspect_title">Proportions de la page</string>
     <string name="document_aspect_prompt">Choisissez le type de document. Ces proportions seront utilisées pour chaque page de cette entrée.</string>
     <string-array name="document_aspect_options">

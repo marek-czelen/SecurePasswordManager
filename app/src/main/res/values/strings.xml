@@ -118,6 +118,7 @@
     <string name="document_cancel_scan">Anuluj skan dokumentu</string>
     <string name="document_page_count_compact">Strony %1$d/20</string>
     <string name="document_review_page">Podgląd strony %1$d</string>
+    <string name="fullscreen_image_description">Powiększony podgląd obrazu</string>
     <string name="document_aspect_title">Proporcje strony</string>
     <string name="document_aspect_prompt">Wybierz typ dokumentu. Proporcje będą używane na wszystkich stronach tego wpisu.</string>
     <string-array name="document_aspect_options">
