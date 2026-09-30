@@ -53,6 +53,18 @@ Biometric authentication is handled by Android `BiometricPrompt` and Android Key
 KeyMint. The app does not receive a fingerprint, face image or identity of the specific
 biometric used. It receives only authorization to use the device-bound key.
 
+## Android Autofill and Credential Manager
+
+If the user enables SecurePasswordManager as an Android Autofill or Credential Manager
+provider, Android may send the provider a form structure or credential request. The
+provider processes it and the encrypted vault locally. Verified browser origins are
+matched against saved entry URLs by exact host. Requests without a verified web origin
+require biometric authentication and explicit entry selection. After the user selects a
+credential, Android supplies its username and password to the requesting app, which
+receives that plaintext and handles it under its own privacy policy. The provider does
+not save newly entered credentials or send vault data to the publisher. Provider
+selection can be changed in Android settings.
+
 ## Sharing and retention
 
 The app does not operate a publisher-controlled account, analytics service, advertising

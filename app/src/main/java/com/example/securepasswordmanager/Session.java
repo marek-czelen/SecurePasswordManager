@@ -62,6 +62,7 @@ final class Session {
     static synchronized void updateData(VaultData vaultData) {
         if (active) {
             data = vaultData;
+            CredentialProviderSession.clearAll();
         }
     }
 

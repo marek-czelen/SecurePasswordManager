@@ -19,6 +19,7 @@ recovery are never paywalled.
 | Password generator | Implemented | Yes | Yes |
 | TOTP codes | Implemented | Yes | Yes |
 | Local weak/reused password health | Implemented | Yes | Yes |
+| Android Autofill and Credential Manager password provider | Implemented | Yes | Yes |
 | Named JPG image entries in the common list | Implemented | Yes, with safe local limits | Yes, expanded limits |
 | Manual encrypted export/import | Implemented | Yes | Yes |
 | User-selected automatic encrypted backup | Implemented | Basic | Advanced scheduling |
@@ -36,12 +37,32 @@ recovery are never paywalled.
 | Image storage limits                            | Not gated | Higher count/size limits                            |
 | Scheduled backups                               | Backup after update exists | WorkManager schedules and retry policy              |
 | Passkeys                                        | Not implemented | Android Credential Provider/WebAuthn                |
-| Advanced Autofill                               | Not implemented | Credential Manager provider and domain matching     |
+| Advanced Autofill                               | Not implemented | Advanced save/update workflows; basic password retrieval remains Free |
 | Multiple vaults                                 | Not implemented | Separate VLT2 vaults and device bindings            |
 | Encrypted sharing                               | Not implemented | Recipient-key encrypted item packages               |
 | Emergency access                                | Not implemented | Requires a backend, recipients and approval workflow |
 | Breach intelligence                             | Not implemented | Optional privacy-reviewed k-anonymity service       |
 | Advanced reports                                | Basic local health exists | History, age and actionable health dashboard        |
+
+## Autofill implementation and constraints
+
+The classic Android `AutofillService` is available from API 26; this app requires API 31
+or newer. Android Credential Manager password-provider support is added on API 34 and
+newer. Both paths use the local encrypted vault and keep plaintext out of persistent
+provider storage. A locked vault returns an authentication action that opens the
+hardware-backed biometric unlock flow. Verified browser origins are matched by exact
+host against saved entry URLs; subdomains are not treated as matches. Requests without
+a verified web origin require biometric authentication and an explicit login choice.
+Saving new credentials from forms is not implemented.
+
+The user must enable SecurePasswordManager under Android's additional credential
+providers and choose it as the preferred service. On older Android versions, the user
+selects it as the classic autofill service. The app cannot silently replace Google
+Password Manager or guarantee a suggestion in every password field: Android and each
+target app control whether and how credential suggestions appear. After selection,
+Android supplies the username and password to the requesting app.
+
+Implementation reference: [Android Autofill services](https://developer.android.com/identity/autofill/autofill-services).
 
 ## Features that stay Free
 
@@ -55,6 +76,7 @@ The following are core trust and safety features and must not depend on Pro:
 - vault deletion;
 - clipboard protection;
 - screenshot protection;
+- Android Autofill and Credential Manager password retrieval, including safe site matching;
 - accessibility and localization;
 - access to existing user data.
 

@@ -80,6 +80,7 @@ public final class SettingsActivity extends AppCompatActivity {
 
         findViewById(R.id.rowRecovery).setOnClickListener(view ->
                 returnAction(ACTION_SHOW_RECOVERY));
+        findViewById(R.id.rowAutofill).setOnClickListener(view -> requestAutofillService());
         findViewById(R.id.rowPassphraseQr).setOnClickListener(view ->
                 returnAction(ACTION_SHOW_PASSPHRASE_QR));
         findViewById(R.id.rowChangePin).setOnClickListener(view ->
@@ -121,6 +122,34 @@ public final class SettingsActivity extends AppCompatActivity {
         lockBackgroundSwitch.setChecked(AppSettings.lockOnBackground(this));
         lockBackgroundSwitch.setOnCheckedChangeListener((button, checked) ->
                 AppSettings.setLockOnBackground(this, checked));
+        updateAutofillStatus();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateAutofillStatus();
+    }
+
+    private void requestAutofillService() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.autofill_setup_title)
+                .setMessage(R.string.autofill_setup_message)
+                .setPositiveButton(R.string.action_enable_autofill,
+                        (dialog, which) -> startActivity(AutofillSetup.settingsIntent(this)))
+                .setNegativeButton(R.string.action_later, null)
+                .show();
+    }
+
+    private void updateAutofillStatus() {
+        TextView status = findViewById(R.id.autofillStatus);
+        if (AutofillSetup.supportsCredentialProvider(this)) {
+            status.setText(R.string.settings_autofill_provider_managed);
+        } else {
+            status.setText(AutofillSetup.isEnabled(this)
+                    ? R.string.settings_autofill_enabled
+                    : R.string.settings_autofill_not_enabled);
+        }
     }
 
     private void updatePremiumStatus(TextView status, boolean isPro) {

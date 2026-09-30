@@ -15,10 +15,19 @@ notes or vault plaintext.
 
 The app processes authentication information, user-created password-manager content
 (including encrypted password history), separately encrypted file attachments,
-user-selected images and user-selected password export files locally. These values are
-not sent to the publisher.
+user-selected images and user-selected password export files locally. When the user
+enables Android Autofill or Credential Manager, the provider handles form/credential
+requests locally and accesses vault entries only from an already-unlocked session or
+after biometric authentication. These values are not sent to the publisher.
 
 ### User-initiated external transfer
+
+When the user selects a saved login in an Autofill or Credential Manager suggestion,
+Android supplies its username and password to the requesting app. This transfers the
+selected plaintext credential to that app on the device; it is not sent to the
+publisher by SecurePasswordManager. Requests without a verified web origin require
+biometric authentication and explicit user selection; verified web origins are filtered
+by exact host.
 
 The user can explicitly export or automatically copy one complete encrypted `vault.vlt3`
 container to a document provider. This is user-initiated transfer to the provider
@@ -54,8 +63,9 @@ Review current privacy/data practices for:
 - Google ML Kit Text Recognition;
 - ZXing Embedded and its transitive dependencies;
 - AndroidX and Material libraries;
+- AndroidX Credential Manager;
 - Bouncy Castle;
-- any future Credential Manager, passkey or cloud SDK.
+- any future passkey or cloud SDK.
 
 Keep a dated export/screenshot of the completed Data Safety form with the release
 artifacts.

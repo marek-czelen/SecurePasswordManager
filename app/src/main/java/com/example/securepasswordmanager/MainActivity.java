@@ -338,6 +338,14 @@ public final class MainActivity extends AppCompatActivity {
                         }
                     });
 
+    private final ActivityResultLauncher<Intent> autofillSetupLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        toast(R.string.msg_autofill_setup_returned);
+                    });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -739,7 +747,26 @@ public final class MainActivity extends AppCompatActivity {
             showRecoveredPreviousDialog();
         } else {
             scheduleOrphanCollection();
+            maybePromptAutofillSetup();
         }
+    }
+
+    private void maybePromptAutofillSetup() {
+        if (!AutofillSetup.claimFirstPrompt(this)) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.autofill_setup_title)
+                .setMessage(R.string.autofill_setup_message)
+                .setPositiveButton(R.string.action_enable_autofill,
+                        (dialog, which) -> launchAutofillSetup())
+                .setNegativeButton(R.string.action_later, null)
+                .show();
+    }
+
+    private void launchAutofillSetup() {
+        awaitingResult = true;
+        autofillSetupLauncher.launch(AutofillSetup.settingsIntent(this));
     }
 
     private void showListMenu() {
@@ -2067,6 +2094,7 @@ public final class MainActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.action_delete, (dialog, which) -> {
                     try {
                         repository.deleteLocalVault();
+                        CredentialProviderSession.clearAll();
                         clearSession();
                         deleteCacheContents();
                         showFirstRun();
@@ -2561,6 +2589,7 @@ public final class MainActivity extends AppCompatActivity {
                         recoveryPinField.setText("");
                         recoveryDialog.dismiss();
                         awaitingResult = true;
+                        CredentialProviderSession.clearAll();
                         clearSession();
                         showUnlock();
                         try {

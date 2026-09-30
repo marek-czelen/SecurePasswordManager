@@ -8,6 +8,14 @@
         android:name="android.hardware.camera"
         android:required="false" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SecureApp"
         android:allowBackup="false"
@@ -34,6 +42,18 @@
             android:theme="@style/Theme.SecurePasswordManager" />
 
         <activity
+            android:name=".AutofillAuthActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.SecurePasswordManager" />
+
+        <activity
+            android:name=".CredentialProviderActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.SecurePasswordManager" />
+
+        <activity
             android:name=".OcrReviewActivity"
             android:exported="false"
             android:theme="@style/Theme.SecurePasswordManager" />
@@ -56,6 +76,35 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SecurePasswordManager" />
+
+        <service
+            android:name=".PasswordAutofillService"
+            android:exported="true"
+            android:label="@string/autofill_service_label"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_service" />
+        </service>
+
+        <service
+            android:name=".VaultCredentialProviderService"
+            android:enabled="@bool/credential_provider_service_enabled"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/credential_provider_label"
+            android:permission="android.permission.BIND_CREDENTIAL_PROVIDER_SERVICE"
+            tools:targetApi="u">
+            <intent-filter>
+                <action android:name="android.service.credentials.CredentialProviderService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.credentials.provider"
+                android:resource="@xml/credential_provider" />
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

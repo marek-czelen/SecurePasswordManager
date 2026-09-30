@@ -20,6 +20,9 @@ before submitting the app.
 - [ ] Run release lint, unit tests, instrumentation tests and a clean release build.
 - [ ] Test Android 12–latest on physical devices, including a StrongBox device and a
   device without StrongBox.
+- [ ] Test classic Autofill on Android 12–13 and Credential Manager password retrieval
+  on Android 14+, including provider selection, verified browser origins, biometric
+  unlock, cancellation and native-app credential selection.
 - [ ] Verify 64-bit ARM packaging and any native libraries.
 - [ ] Verify the app does not request unnecessary permissions.
 - [ ] Verify Android backup, device transfer and app data extraction rules.
@@ -45,6 +48,8 @@ before submitting the app.
 - [ ] Declare camera access for user-triggered OCR.
 - [ ] Declare local processing of authentication information, passwords, notes and
   user-selected images as applicable to the Play taxonomy.
+- [ ] Disclose that a user-selected Autofill/Credential Manager login is passed to the
+  requesting app on the device.
 - [ ] Explain that user-selected exports to Google Drive/Dropbox/OneDrive are initiated
   by the user and contain encrypted vault bytes.
 - [ ] Declare ML Kit and other SDK behavior based on their current documentation.
