@@ -44,10 +44,16 @@ final class AutofillSetup {
 
     static Intent settingsIntent(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            return new Intent(Settings.ACTION_CREDENTIAL_PROVIDER);
+            Intent credentialProvider = new Intent(Settings.ACTION_CREDENTIAL_PROVIDER);
+            if (credentialProvider.resolveActivity(context.getPackageManager()) != null) {
+                return credentialProvider;
+            }
         }
         Intent intent = new Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE);
         intent.setData(Uri.parse("package:" + context.getPackageName()));
-        return intent;
+        if (intent.resolveActivity(context.getPackageManager()) != null) {
+            return intent;
+        }
+        return new Intent(Settings.ACTION_SETTINGS);
     }
 }
