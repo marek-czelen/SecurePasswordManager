@@ -24,6 +24,7 @@ import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -965,13 +966,13 @@ public final class MainActivity extends AppCompatActivity {
         try {
             ioExecutor.execute(() -> {
                 byte[] bytes = null;
+                String filename = getDisplayName(uri);
                 try {
                     long declaredSize = declaredFileSize(uri);
                     if (declaredSize > AdvancedImportExport.MAX_IMPORT_BYTES) {
                         throw new AdvancedImportExport.ImportSizeException(
                                 "Import file exceeds the configured size limit");
                     }
-                    String filename = getDisplayName(uri);
                     bytes = AdvancedImportExport.readBounded(
                             getContentResolver().openInputStream(uri));
                     AdvancedImportExport.ParsedImport parsed =
@@ -980,11 +981,21 @@ public final class MainActivity extends AppCompatActivity {
                         awaitingResult = false;
                         handleAdvancedImport(parsed);
                     });
+                } catch (AdvancedImportExport.PasswordRequiredException exception) {
+                    byte[] encryptedBytes = bytes;
+                    bytes = null;
+                    runOnUiThread(() -> requestXlsxPassword(filename, encryptedBytes));
                 } catch (AdvancedImportExport.ImportSizeException exception) {
                     Log.w(IMAGE_LOG, "advanced import exceeded its size limit");
                     runOnUiThread(() -> {
                         awaitingResult = false;
                         toast(R.string.err_import_size);
+                    });
+                } catch (AdvancedImportExport.XlsxRowWidthException exception) {
+                    Log.w(IMAGE_LOG, "advanced import spreadsheet has data beyond its headers");
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_import_xlsx_row_width);
                     });
                 } catch (IOException | SecurityException | IllegalArgumentException exception) {
                     Log.w(IMAGE_LOG, "advanced import failed: "
@@ -999,6 +1010,87 @@ public final class MainActivity extends AppCompatActivity {
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
             awaitingResult = false;
+            Log.w(IMAGE_LOG, "advanced import executor is unavailable");
+            toast(R.string.err_advanced_import);
+        }
+    }
+
+    private void requestXlsxPassword(String filename, byte[] encryptedBytes) {
+        TextInputEditText passwordInput = new TextInputEditText(this);
+        passwordInput.setSingleLine(true);
+        passwordInput.setInputType(InputType.TYPE_CLASS_TEXT
+                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordInput.setHint(R.string.import_xlsx_password_hint);
+        float density = getResources().getDisplayMetrics().density;
+        LinearLayout container = new LinearLayout(this);
+        container.setPadding((int) (24 * density), (int) (8 * density),
+                (int) (24 * density), 0);
+        container.addView(passwordInput);
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.import_xlsx_password_title)
+                .setView(container)
+                .setNegativeButton(R.string.action_cancel, (ignored, which) -> {
+                    awaitingResult = false;
+                    Arrays.fill(encryptedBytes, (byte) 0);
+                })
+                .setPositiveButton(R.string.action_continue, null)
+                .setOnCancelListener(ignored -> {
+                    awaitingResult = false;
+                    Arrays.fill(encryptedBytes, (byte) 0);
+                })
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(
+                androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+            String password = passwordInput.getText() == null
+                    ? "" : passwordInput.getText().toString();
+            passwordInput.setText(null);
+            dialog.dismiss();
+            parseEncryptedXlsx(filename, encryptedBytes, password);
+        }));
+        dialog.show();
+    }
+
+    private void parseEncryptedXlsx(String filename, byte[] encryptedBytes, String password) {
+        awaitingResult = true;
+        try {
+            ioExecutor.execute(() -> {
+                boolean[] keepEncryptedBytes = {false};
+                try {
+                    AdvancedImportExport.ParsedImport parsed =
+                            AdvancedImportExport.parse(filename, encryptedBytes, password);
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        handleAdvancedImport(parsed);
+                    });
+                } catch (AdvancedImportExport.InvalidPasswordException exception) {
+                    keepEncryptedBytes[0] = true;
+                    runOnUiThread(() -> {
+                        toast(R.string.import_xlsx_password_incorrect);
+                        requestXlsxPassword(filename, encryptedBytes);
+                    });
+                } catch (AdvancedImportExport.XlsxRowWidthException exception) {
+                    Log.w(IMAGE_LOG, "password-protected spreadsheet has data beyond its headers");
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_import_xlsx_row_width);
+                    });
+                } catch (IOException | SecurityException | IllegalArgumentException exception) {
+                    Log.w(IMAGE_LOG, "password-protected Excel import failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        awaitingResult = false;
+                        toast(R.string.err_advanced_import);
+                    });
+                } finally {
+                    if (!keepEncryptedBytes[0]) {
+                        Arrays.fill(encryptedBytes, (byte) 0);
+                    }
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            awaitingResult = false;
+            Arrays.fill(encryptedBytes, (byte) 0);
             Log.w(IMAGE_LOG, "advanced import executor is unavailable");
             toast(R.string.err_advanced_import);
         }

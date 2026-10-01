@@ -4,6 +4,9 @@ import android.util.Xml;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.poifs.crypt.Decryptor;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -12,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.GeneralSecurityException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
@@ -28,7 +32,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** Bounded, local-only parsers for plaintext password-manager exports. */
+/** Bounded, local-only parsers for password-manager exports and spreadsheets. */
 public final class AdvancedImportExport {
     public static final int MAX_IMPORT_BYTES = 20 * 1024 * 1024;
     public static final String WARNING_1PASSWORD_ATTACHMENTS_IGNORED = "onepassword-attachments";
@@ -86,6 +90,24 @@ public final class AdvancedImportExport {
     public static final class ImportSizeException extends IOException {
         public ImportSizeException(String message) {
             super(message);
+        }
+    }
+
+    public static final class PasswordRequiredException extends IOException {
+        public PasswordRequiredException() {
+            super("The Excel workbook requires a password");
+        }
+    }
+
+    public static final class InvalidPasswordException extends IOException {
+        public InvalidPasswordException() {
+            super("The Excel workbook password is incorrect");
+        }
+    }
+
+    public static final class XlsxRowWidthException extends IOException {
+        public XlsxRowWidthException() {
+            super("XLSX data row exceeds header width");
         }
     }
 
@@ -383,6 +405,11 @@ public final class AdvancedImportExport {
     }
 
     public static ParsedImport parse(String filename, byte[] bytes) throws IOException {
+        return parse(filename, bytes, null);
+    }
+
+    public static ParsedImport parse(String filename, byte[] bytes, String password)
+            throws IOException {
         if (bytes == null || bytes.length == 0 || bytes.length > MAX_IMPORT_BYTES) {
             throw new IOException("Import file is empty or too large");
         }
@@ -391,6 +418,14 @@ public final class AdvancedImportExport {
             return tables(Collections.singletonList(parseCsv(bytes)));
         }
         if (lower.endsWith(".xlsx")) {
+            if (isOleCompoundFile(bytes)) {
+                byte[] decrypted = decryptXlsx(bytes, password);
+                try {
+                    return tables(parseXlsx(decrypted));
+                } finally {
+                    Arrays.fill(decrypted, (byte) 0);
+                }
+            }
             return tables(parseXlsx(bytes));
         }
         if (lower.endsWith(".json")) {
@@ -905,6 +940,38 @@ public final class AdvancedImportExport {
         }
     }
 
+    private static byte[] decryptXlsx(byte[] bytes, String password) throws IOException {
+        if (password == null) {
+            throw new PasswordRequiredException();
+        }
+        try (POIFSFileSystem filesystem = new POIFSFileSystem(new ByteArrayInputStream(bytes))) {
+            EncryptionInfo encryptionInfo = new EncryptionInfo(filesystem);
+            Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
+            if (!decryptor.verifyPassword(password)) {
+                throw new InvalidPasswordException();
+            }
+            try (InputStream decrypted = decryptor.getDataStream(filesystem)) {
+                return readBounded(decrypted);
+            }
+        } catch (GeneralSecurityException | org.apache.poi.EncryptedDocumentException exception) {
+            throw new IOException("Could not decrypt the Excel workbook", exception);
+        }
+    }
+
+    private static boolean isOleCompoundFile(byte[] bytes) {
+        byte[] signature = {(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0,
+                (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1};
+        if (bytes.length < signature.length) {
+            return false;
+        }
+        for (int i = 0; i < signature.length; i++) {
+            if (bytes[i] != signature[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static List<Table> parseXlsxEntries(Map<String, byte[]> entries) throws IOException {
         byte[] workbook = entries.get("xl/workbook.xml");
         byte[] relData = entries.get("xl/_rels/workbook.xml.rels");
@@ -1123,7 +1190,7 @@ public final class AdvancedImportExport {
                     row.add("");
                 }
                 if (row.size() > headers.size()) {
-                    throw new IOException("XLSX data row exceeds header width");
+                    throw new XlsxRowWidthException();
                 }
                 dataRows.add(row);
             }

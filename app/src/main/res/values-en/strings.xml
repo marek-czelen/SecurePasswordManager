@@ -39,7 +39,11 @@
     <string name="msg_csv_nothing_to_export">There are no password entries to export.</string>
     <string name="msg_csv_exported">CSV file exported.</string>
     <string name="err_csv_export">Could not export the CSV file.</string>
-    <string name="err_advanced_import">Could not read the file. Check its format; encrypted exports are not supported.</string>
+    <string name="err_advanced_import">Could not read the file. Check its format.</string>
+    <string name="import_xlsx_password_title">Excel file password</string>
+    <string name="import_xlsx_password_hint">Enter the password required to open the file</string>
+    <string name="import_xlsx_password_incorrect">The Excel password is incorrect. Try again.</string>
+    <string name="err_import_xlsx_row_width">A data row contains more columns than the header row. Add the missing column headers in the first row of the sheet, or remove the extra data columns, then try again.</string>
     <string name="err_import_size">The import file is too large. The maximum size is 20 MiB.</string>
     <string name="import_select_sheet">Choose a sheet</string>
     <string name="import_map_columns">Map columns: %1$s</string>

@@ -8,7 +8,13 @@ import org.junit.runner.RunWith;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.crypt.EncryptionMode;
+import org.apache.poi.poifs.crypt.Encryptor;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -123,6 +129,92 @@ public final class AdvancedImportExportInstrumentedTest {
         assertEquals("Logins", table.name);
         int[] mapping = AdvancedImportExport.suggestMapping(table);
         assertEquals(1, AdvancedImportExport.map(table, mapping).items.size());
+    }
+
+    @Test
+    public void identifiesXlsxRowsWithMoreColumnsThanHeaders() throws Exception {
+        String workbook = "<workbook xmlns:r=\"http://schemas.openxmlformats.org/"
+                + "officeDocument/2006/relationships\"><sheets>"
+                + "<sheet name=\"Logins\" sheetId=\"1\" r:id=\"rId1\"/>"
+                + "</sheets></workbook>";
+        String relationships = "<Relationships xmlns=\"http://schemas.openxmlformats.org/"
+                + "package/2006/relationships\"><Relationship Id=\"rId1\" "
+                + "Target=\"worksheets/sheet1.xml\" Type=\"http://schemas.openxmlformats.org/"
+                + "officeDocument/2006/relationships/worksheet\"/></Relationships>";
+        String sheet = "<worksheet><sheetData><row r=\"1\">"
+                + "<c r=\"A1\" t=\"inlineStr\"><is><t>Name</t></is></c>"
+                + "<c r=\"B1\" t=\"inlineStr\"><is><t>Password</t></is></c></row>"
+                + "<row r=\"2\"><c r=\"A2\" t=\"inlineStr\"><is><t>Site</t></is></c>"
+                + "<c r=\"B2\" t=\"inlineStr\"><is><t>secret</t></is></c>"
+                + "<c r=\"C2\" t=\"inlineStr\"><is><t>extra</t></is></c>"
+                + "</row></sheetData></worksheet>";
+
+        assertThrows(AdvancedImportExport.XlsxRowWidthException.class,
+                () -> AdvancedImportExport.parse("source.xlsx", zip(new String[][]{
+                        {"xl/workbook.xml", workbook},
+                        {"xl/_rels/workbook.xml.rels", relationships},
+                        {"xl/worksheets/sheet1.xml", sheet}
+                })));
+    }
+
+    @Test
+    public void importsPasswordProtectedXlsxLikePlainXlsx() throws Exception {
+        byte[] plainXlsx = xlsx();
+        byte[] encryptedXlsx = encrypt(plainXlsx, "correct horse");
+        AdvancedImportExport.PasswordRequiredException required = assertThrows(
+                AdvancedImportExport.PasswordRequiredException.class,
+                () -> AdvancedImportExport.parse("source.xlsx", encryptedXlsx));
+        assertTrue(required.getMessage().contains("requires a password"));
+        assertThrows(AdvancedImportExport.InvalidPasswordException.class,
+                () -> AdvancedImportExport.parse("source.xlsx", encryptedXlsx, "wrong"));
+
+        AdvancedImportExport.ParsedImport plain =
+                AdvancedImportExport.parse("source.xlsx", plainXlsx);
+        AdvancedImportExport.ParsedImport protectedImport =
+                AdvancedImportExport.parse("source.xlsx", encryptedXlsx, "correct horse");
+        assertEquals(plain.tables.size(), protectedImport.tables.size());
+        assertEquals(plain.tables.get(0).name, protectedImport.tables.get(0).name);
+        assertEquals(plain.tables.get(0).columns, protectedImport.tables.get(0).columns);
+        assertEquals(plain.tables.get(0).rows, protectedImport.tables.get(0).rows);
+    }
+
+    private static byte[] xlsx() throws Exception {
+        String workbook = "<workbook xmlns:r=\"http://schemas.openxmlformats.org/"
+                + "officeDocument/2006/relationships\"><sheets>"
+                + "<sheet name=\"Logins\" sheetId=\"1\" r:id=\"rId1\"/>"
+                + "</sheets></workbook>";
+        String relationships = "<Relationships xmlns=\"http://schemas.openxmlformats.org/"
+                + "package/2006/relationships\"><Relationship Id=\"rId1\" "
+                + "Target=\"worksheets/sheet1.xml\" Type=\"http://schemas.openxmlformats.org/"
+                + "officeDocument/2006/relationships/worksheet\"/></Relationships>";
+        String shared = "<sst><si><t>Name</t></si><si><t>Username</t></si>"
+                + "<si><t>Password</t></si><si><t>Site</t></si>"
+                + "<si><t>alice</t></si><si><t>secret</t></si></sst>";
+        String sheet = "<worksheet><sheetData><row r=\"1\">"
+                + "<c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"B1\" t=\"s\"><v>1</v></c>"
+                + "<c r=\"C1\" t=\"s\"><v>2</v></c></row><row r=\"2\">"
+                + "<c r=\"A2\" t=\"s\"><v>3</v></c><c r=\"B2\" t=\"s\"><v>4</v></c>"
+                + "<c r=\"C2\" t=\"s\"><v>5</v></c></row></sheetData></worksheet>";
+        return zip(new String[][]{
+                {"xl/workbook.xml", workbook},
+                {"xl/_rels/workbook.xml.rels", relationships},
+                {"xl/sharedStrings.xml", shared},
+                {"xl/worksheets/sheet1.xml", sheet}
+        });
+    }
+
+    private static byte[] encrypt(byte[] bytes, String password) throws Exception {
+        try (POIFSFileSystem filesystem = new POIFSFileSystem()) {
+            EncryptionInfo encryptionInfo = new EncryptionInfo(EncryptionMode.agile);
+            Encryptor encryptor = encryptionInfo.getEncryptor();
+            encryptor.confirmPassword(password);
+            try (OutputStream encrypted = encryptor.getDataStream(filesystem)) {
+                encrypted.write(bytes);
+            }
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            filesystem.writeFilesystem(output);
+            return output.toByteArray();
+        }
     }
 
     private static byte[] zip(String[][] files) throws Exception {

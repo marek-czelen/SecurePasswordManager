@@ -45,7 +45,11 @@
     <string name="msg_csv_nothing_to_export">Brak wpisów haseł do eksportu.</string>
     <string name="msg_csv_exported">Wyeksportowano plik CSV.</string>
     <string name="err_csv_export">Nie udało się wyeksportować pliku CSV.</string>
-    <string name="err_advanced_import">Nie udało się odczytać pliku. Sprawdź format; zaszyfrowane eksporty nie są obsługiwane.</string>
+    <string name="err_advanced_import">Nie udało się odczytać pliku. Sprawdź jego format.</string>
+    <string name="import_xlsx_password_title">Hasło do pliku Excel</string>
+    <string name="import_xlsx_password_hint">Wpisz hasło wymagane do otwarcia pliku</string>
+    <string name="import_xlsx_password_incorrect">Nieprawidłowe hasło do pliku Excel. Spróbuj ponownie.</string>
+    <string name="err_import_xlsx_row_width">Plik zawiera wiersz danych z większą liczbą kolumn niż wiersz nagłówków. Dodaj brakujące nagłówki w pierwszym wierszu arkusza albo usuń nadmiarowe kolumny z danych i spróbuj ponownie.</string>
     <string name="err_import_size">Plik importu jest za duży. Maksymalny rozmiar to 20 MiB.</string>
     <string name="import_select_sheet">Wybierz arkusz</string>
     <string name="import_map_columns">Przypisz kolumny: %1$s</string>

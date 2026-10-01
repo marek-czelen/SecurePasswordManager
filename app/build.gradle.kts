@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.mlkit.text)
     implementation(libs.bouncycastle)
+    implementation(libs.apache.poi)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
