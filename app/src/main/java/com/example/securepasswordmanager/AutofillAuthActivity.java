@@ -2,6 +2,7 @@ package com.example.securepasswordmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.service.autofill.Dataset;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -127,12 +128,6 @@ public final class AutofillAuthActivity extends AppCompatActivity {
             finishCanceled();
             return;
         }
-        if (!form.requirePicker
-                && AutofillMatcher.hostFromUrl(form.webDomain) != null
-                && matches.size() <= AutofillDatasetFactory.MAX_SYSTEM_DATASETS) {
-            returnResponse(AutofillDatasetFactory.response(this, form, matches));
-            return;
-        }
         showCredentialPicker(matches);
     }
 
@@ -164,8 +159,7 @@ public final class AutofillAuthActivity extends AppCompatActivity {
         list.setOnItemClickListener((parent, view, position, id) -> {
             CredentialChoice choice = adapter.getItem(position);
             if (choice != null) {
-                returnResponse(AutofillDatasetFactory.response(this, form,
-                        java.util.Collections.singletonList(choice.item)));
+                returnDataset(AutofillDatasetFactory.dataset(this, form, choice.item));
             }
         });
         EditText search = findViewById(R.id.autofillCredentialSearch);
@@ -185,15 +179,10 @@ public final class AutofillAuthActivity extends AppCompatActivity {
         });
     }
 
-    private void returnResponse(android.service.autofill.FillResponse response) {
-        if (response == null) {
-            showMessage(R.string.autofill_no_matching_credentials);
-            finishCanceled();
-            return;
-        }
+    private void returnDataset(Dataset dataset) {
         Intent result = new Intent();
         result.putExtra(android.view.autofill.AutofillManager.EXTRA_AUTHENTICATION_RESULT,
-                response);
+                dataset);
         setResult(RESULT_OK, result);
         finishCompleted();
     }

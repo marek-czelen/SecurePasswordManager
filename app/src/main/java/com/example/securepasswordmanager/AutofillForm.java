@@ -5,10 +5,12 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Build;
 import android.view.View;
+import android.view.ViewStructure;
 import android.view.autofill.AutofillId;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillContext;
 import android.text.InputType;
+import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -152,13 +154,12 @@ final class AutofillForm {
         AutofillId id = node.getAutofillId();
         if (id != null) {
             String[] hints = node.getAutofillHints();
-            boolean newPassword = hasHint(hints, "newPassword");
-            boolean password = !newPassword
-                    && (hasHint(hints, View.AUTOFILL_HINT_PASSWORD)
-                    || isPasswordInputType(node.getInputType()));
-            boolean username = !hasHint(hints, "newUsername")
-                    && (hasHint(hints, View.AUTOFILL_HINT_USERNAME)
-                    || hasHint(hints, View.AUTOFILL_HINT_EMAIL_ADDRESS));
+            ViewStructure.HtmlInfo htmlInfo = node.getHtmlInfo();
+            String htmlType = htmlAttribute(htmlInfo, "type");
+            String autocomplete = htmlAttribute(htmlInfo, "autocomplete");
+            boolean password = isPasswordField(hints, node.getInputType(),
+                    htmlType, autocomplete);
+            boolean username = isUsernameField(hints, autocomplete);
             if (password || username) {
                 fields.add(new Field(id, webDomain, password, username,
                         new ArrayList<>(path), fields.size()));
@@ -184,6 +185,27 @@ final class AutofillForm {
         return false;
     }
 
+    static boolean isPasswordField(String[] hints, int inputType, String htmlType,
+                                   String autocomplete) {
+        if (hasHint(hints, "newPassword")
+                || hasAutocompleteToken(autocomplete, "new-password")) {
+            return false;
+        }
+        return hasHint(hints, View.AUTOFILL_HINT_PASSWORD)
+                || isPasswordInputType(inputType)
+                || "password".equalsIgnoreCase(htmlType)
+                || hasAutocompleteToken(autocomplete, "current-password");
+    }
+
+    static boolean isUsernameField(String[] hints, String autocomplete) {
+        return !hasHint(hints, "newUsername")
+                && !hasAutocompleteToken(autocomplete, "new-username")
+                && (hasHint(hints, View.AUTOFILL_HINT_USERNAME)
+                || hasHint(hints, View.AUTOFILL_HINT_EMAIL_ADDRESS)
+                || hasAutocompleteToken(autocomplete, "username")
+                || hasAutocompleteToken(autocomplete, "email"));
+    }
+
     private static boolean isPasswordInputType(int inputType) {
         int inputClass = inputType & InputType.TYPE_MASK_CLASS;
         int variation = inputType & InputType.TYPE_MASK_VARIATION;
@@ -194,6 +216,30 @@ final class AutofillForm {
         }
         return inputClass == InputType.TYPE_CLASS_NUMBER
                 && variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD;
+    }
+
+    private static String htmlAttribute(ViewStructure.HtmlInfo htmlInfo, String name) {
+        if (htmlInfo == null) {
+            return null;
+        }
+        for (Pair<String, String> attribute : htmlInfo.getAttributes()) {
+            if (attribute.first != null && name.equalsIgnoreCase(attribute.first)) {
+                return attribute.second;
+            }
+        }
+        return null;
+    }
+
+    private static boolean hasAutocompleteToken(String autocomplete, String expected) {
+        if (autocomplete == null) {
+            return false;
+        }
+        for (String token : autocomplete.trim().split("\\s+")) {
+            if (expected.equalsIgnoreCase(token)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean compatibleDomains(String left, String right) {

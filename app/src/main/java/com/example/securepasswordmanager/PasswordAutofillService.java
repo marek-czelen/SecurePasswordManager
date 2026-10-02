@@ -77,11 +77,11 @@ public final class PasswordAutofillService extends AutofillService {
 
     private FillResponse authenticationResponse(AutofillForm form) {
         Intent intent = new Intent(this, AutofillAuthActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         form.addToIntent(intent);
         PendingIntent authentication = PendingIntent.getActivity(this,
                 REQUEST_CODES.getAndIncrement(), intent,
-                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE);
         return AutofillDatasetFactory.authenticationResponse(this, form, authentication);
     }
 }
