@@ -70,11 +70,12 @@ public final class DocumentScanActivity extends AppCompatActivity {
     public static final String EXTRA_CALIBRATION_ONLY = "calibration_only";
     private static final int CALIBRATION_TARGET_VIEWS = 8;
     private static final int MAX_CALIBRATION_VIEWS = 12;
-    private static final int MAX_MISSED_EDGE_FRAMES = 7;
-    private static final float EDGE_SMOOTHING = 0.3f;
+    private static final long EDGE_ANALYSIS_INTERVAL_MS = 160;
+    private static final long EDGE_FALLBACK_INTERVAL_MS = 800;
 
     private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService processingExecutor = Executors.newSingleThreadExecutor();
+    private final DocumentEdgeStabilizer edgeStabilizer = new DocumentEdgeStabilizer();
     private final List<File> acceptedPages = new ArrayList<>();
     private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -121,8 +122,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private boolean aspectChooserShown;
     private boolean calibrating;
     private boolean calibrationOnly;
-    private int missedEdgeFrames;
     private long lastAnalysisAt;
+    private long lastFallbackAnalysisAt;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -601,15 +602,20 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private void analyzeFrame(ImageProxy frame) {
         try {
             long now = android.os.SystemClock.elapsedRealtime();
-            if (!cameraMode || now - lastAnalysisAt < 120) {
+            if (!cameraMode || now - lastAnalysisAt < EDGE_ANALYSIS_INTERVAL_MS) {
                 return;
             }
             lastAnalysisAt = now;
+            boolean allowFallback = now - lastFallbackAnalysisAt
+                    >= EDGE_FALLBACK_INTERVAL_MS;
+            if (allowFallback) {
+                lastFallbackAnalysisAt = now;
+            }
             ImageProxy.PlaneProxy luminance = frame.getPlanes()[0];
             DocumentEdgeDetector.Quad quad = DocumentEdgeDetector.detectLuminance(
                     luminance.getBuffer(), frame.getWidth(), frame.getHeight(),
                     luminance.getRowStride(), luminance.getPixelStride(),
-                    frame.getImageInfo().getRotationDegrees());
+                    frame.getImageInfo().getRotationDegrees(), allowFallback);
             runOnUiThread(() -> {
                 if (cameraMode && !isFinishing()) {
                     updateStableEdge(quad);
@@ -624,26 +630,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
     }
 
     private void updateStableEdge(DocumentEdgeDetector.Quad candidate) {
-        if (candidate == null) {
-            if (displayedQuad == null || ++missedEdgeFrames > MAX_MISSED_EDGE_FRAMES) {
-                displayedQuad = null;
-                missedEdgeFrames = 0;
-                edgeOverlay.setQuad(null);
-            }
-            return;
-        }
-
-        missedEdgeFrames = 0;
-        if (displayedQuad == null) {
-            displayedQuad = candidate;
-        } else {
-            float[] points = new float[candidate.points.length];
-            for (int index = 0; index < points.length; index++) {
-                points[index] = displayedQuad.points[index] * (1f - EDGE_SMOOTHING)
-                        + candidate.points[index] * EDGE_SMOOTHING;
-            }
-            displayedQuad = new DocumentEdgeDetector.Quad(points, candidate.aspectRatio);
-        }
+        displayedQuad = edgeStabilizer.update(candidate);
         edgeOverlay.setQuad(displayedQuad);
     }
 
@@ -933,7 +920,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
         previewView.setVisibility(View.VISIBLE);
         edgeOverlay.setVisibility(View.VISIBLE);
         displayedQuad = null;
-        missedEdgeFrames = 0;
+        edgeStabilizer.reset();
         edgeOverlay.setQuad(null);
         reviewControls.setVisibility(View.GONE);
         cameraControls.setVisibility(View.VISIBLE);

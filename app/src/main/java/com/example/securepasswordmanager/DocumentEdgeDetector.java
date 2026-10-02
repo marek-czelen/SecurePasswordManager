@@ -32,7 +32,7 @@ final class DocumentEdgeDetector {
     private static final double MIN_DOCUMENT_AREA = 0.10;
     private static final double FALLBACK_MIN_DOCUMENT_AREA = 0.06;
     private static final double MAX_DOCUMENT_AREA = 0.95;
-    private static final int DETECTION_WIDTH = 640;
+    private static final int MAX_DETECTION_DIMENSION = 640;
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private static final double DOCUMENT_EDGE_PADDING_RATIO = 0.02;
 
@@ -74,7 +74,8 @@ final class DocumentEdgeDetector {
     }
 
     static Quad detectLuminance(ByteBuffer source, int width, int height,
-                               int rowStride, int pixelStride, int rotationDegrees) {
+                               int rowStride, int pixelStride, int rotationDegrees,
+                               boolean allowFallback) {
         byte[] pixels = new byte[width * height];
         ByteBuffer luminance = source.duplicate();
         int bufferStart = luminance.position();
@@ -92,9 +93,8 @@ final class DocumentEdgeDetector {
         try {
             image.put(0, 0, pixels);
             rotate(image, rotated, rotationDegrees);
-            Imgproc.resize(rotated, gray, new Size(640,
-                    Math.max(1, Math.round(rotated.rows() * 640f / rotated.cols()))));
-            Point[] corners = findCorners(gray);
+            resizeForDetection(rotated, gray);
+            Point[] corners = findCorners(gray, allowFallback);
             return corners == null ? null : normalized(corners, gray.cols(), gray.rows());
         } finally {
             Arrays.fill(pixels, (byte) 0);
@@ -116,10 +116,7 @@ final class DocumentEdgeDetector {
         try {
             Utils.bitmapToMat(source, rgba);
             Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
-            double detectionScale = Math.min(1d, DETECTION_WIDTH / (double) gray.cols());
-            int detectionWidth = Math.max(1, (int) Math.round(gray.cols() * detectionScale));
-            int detectionHeight = Math.max(1, (int) Math.round(gray.rows() * detectionScale));
-            Imgproc.resize(gray, detectionGray, new Size(detectionWidth, detectionHeight));
+            resizeForDetection(gray, detectionGray);
             Point[] detected = findCorners(detectionGray);
             if (detected == null) {
                 throw new EdgesNotFoundException();
@@ -156,10 +153,7 @@ final class DocumentEdgeDetector {
         try {
             Utils.bitmapToMat(source, color);
             Imgproc.cvtColor(color, gray, Imgproc.COLOR_RGBA2GRAY);
-            double detectionScale = Math.min(1d, DETECTION_WIDTH / (double) gray.cols());
-            int detectionWidth = Math.max(1, (int) Math.round(gray.cols() * detectionScale));
-            int detectionHeight = Math.max(1, (int) Math.round(gray.rows() * detectionScale));
-            Imgproc.resize(gray, detectionGray, new Size(detectionWidth, detectionHeight));
+            resizeForDetection(gray, detectionGray);
             Point[] detectedCorners = findCorners(detectionGray);
             if (detectedCorners == null && previewQuad != null) {
                 detectedCorners = pointsFromNormalizedQuad(previewQuad,
@@ -406,13 +400,20 @@ final class DocumentEdgeDetector {
     }
 
     private static Point[] findCorners(Mat gray) {
+        return findCorners(gray, true);
+    }
+
+    private static Point[] findCorners(Mat gray, boolean allowFallback) {
         Point[] detected = findCannyCorners(gray, 45, 130, MIN_DOCUMENT_AREA,
-                new double[]{0.02}, false, false);
+                new double[]{0.02}, false, false, Imgproc.RETR_EXTERNAL);
         if (detected != null) {
             return detected;
         }
+        if (!allowFallback) {
+            return null;
+        }
         detected = findCannyCorners(gray, 18, 75, FALLBACK_MIN_DOCUMENT_AREA,
-                new double[]{0.02, 0.04, 0.06}, true, true);
+                new double[]{0.02, 0.04, 0.06}, true, true, Imgproc.RETR_EXTERNAL);
         if (detected != null) {
             return detected;
         }
@@ -422,7 +423,7 @@ final class DocumentEdgeDetector {
     private static Point[] findCannyCorners(Mat gray, double lowThreshold,
                                             double highThreshold, double minAreaFraction,
                                             double[] approximationFactors, boolean closeEdges,
-                                            boolean useBoundingRectangle) {
+                                            boolean useBoundingRectangle, int retrievalMode) {
         Mat blurred = new Mat();
         Mat edges = new Mat();
         Mat closedEdges = new Mat();
@@ -437,7 +438,7 @@ final class DocumentEdgeDetector {
                 contourImage = closedEdges;
             }
             return findCornersFromContours(contourImage, minAreaFraction,
-                    approximationFactors, Imgproc.RETR_LIST, useBoundingRectangle);
+                    approximationFactors, retrievalMode, useBoundingRectangle);
         } finally {
             blurred.release();
             edges.release();
@@ -611,6 +612,18 @@ final class DocumentEdgeDetector {
             values[index * 2 + 1] = (float) (points[index].y / height);
         }
         return new Quad(values, width / (float) height);
+    }
+
+    private static void resizeForDetection(Mat source, Mat destination) {
+        int largestDimension = Math.max(source.cols(), source.rows());
+        double scale = Math.min(1d, MAX_DETECTION_DIMENSION / (double) largestDimension);
+        int width = Math.max(1, (int) Math.round(source.cols() * scale));
+        int height = Math.max(1, (int) Math.round(source.rows() * scale));
+        if (width == source.cols() && height == source.rows()) {
+            source.copyTo(destination);
+        } else {
+            Imgproc.resize(source, destination, new Size(width, height));
+        }
     }
 
     private static double distance(Point first, Point second) {
