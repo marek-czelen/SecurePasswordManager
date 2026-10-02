@@ -8,6 +8,7 @@ import android.graphics.ImageDecoder;
 import android.graphics.Rect;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CaptureRequest;
+import android.media.MediaActionSound;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Size;
@@ -26,11 +27,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
+import androidx.camera.core.resolutionselector.AspectRatioStrategy;
+import androidx.camera.core.resolutionselector.ResolutionSelector;
+import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -70,12 +72,9 @@ public final class DocumentScanActivity extends AppCompatActivity {
     public static final String EXTRA_CALIBRATION_ONLY = "calibration_only";
     private static final int CALIBRATION_TARGET_VIEWS = 8;
     private static final int MAX_CALIBRATION_VIEWS = 12;
-    private static final long EDGE_ANALYSIS_INTERVAL_MS = 160;
-    private static final long EDGE_FALLBACK_INTERVAL_MS = 800;
-
-    private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
+    private static final int MAX_REVIEW_IMAGE_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private final ExecutorService processingExecutor = Executors.newSingleThreadExecutor();
-    private final DocumentEdgeStabilizer edgeStabilizer = new DocumentEdgeStabilizer();
+    private final MediaActionSound shutterSound = new MediaActionSound();
     private final List<File> acceptedPages = new ArrayList<>();
     private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -88,14 +87,17 @@ public final class DocumentScanActivity extends AppCompatActivity {
             });
 
     private PreviewView previewView;
-    private DocumentEdgeOverlay edgeOverlay;
-    private ImageView reviewImage;
+    private ZoomableImageView reviewImage;
+    private DocumentReviewOverlay reviewOverlay;
     private TextView status;
     private TextView pageCount;
     private AppCompatImageButton flashlightToggle;
     private AppCompatImageButton captureButton;
     private AppCompatImageButton finishButton;
     private AppCompatImageButton calibrateButton;
+    private AppCompatImageButton acceptButton;
+    private AppCompatImageButton retakeButton;
+    private AppCompatImageButton adjustEdgesButton;
     private View cameraControls;
     private View reviewControls;
     private ImageCapture imageCapture;
@@ -111,10 +113,12 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private final List<Point[]> calibrationImageViews = new ArrayList<>();
     private Double requestedAspect;
     private File reviewFile;
+    private File rectifiedReviewFile;
     private File capturingFile;
     private Bitmap reviewBitmap;
-    private DocumentEdgeDetector.Quad displayedQuad;
-    private volatile boolean cameraMode = true;
+    private Bitmap rectifiedReviewBitmap;
+    private boolean reviewHasDetectedEdges;
+    private boolean showingRectifiedReview;
     private boolean captureInProgress;
     private boolean resultDelivered;
     private boolean torchEnabled;
@@ -122,8 +126,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private boolean aspectChooserShown;
     private boolean calibrating;
     private boolean calibrationOnly;
-    private long lastAnalysisAt;
-    private long lastFallbackAnalysisAt;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -146,14 +148,20 @@ public final class DocumentScanActivity extends AppCompatActivity {
         ViewCompat.requestApplyInsets(root);
 
         previewView = findViewById(R.id.documentCameraPreview);
-        edgeOverlay = findViewById(R.id.documentEdgeOverlay);
         reviewImage = findViewById(R.id.documentReviewImage);
+        reviewOverlay = findViewById(R.id.documentReviewOverlay);
+        reviewImage.setDoubleTapZoomEnabled(false);
+        reviewImage.setOnImageMatrixChangedListener(reviewOverlay::setImageTransform);
+        reviewOverlay.setImageView(reviewImage);
         status = findViewById(R.id.documentScanStatus);
         pageCount = findViewById(R.id.documentPageCount);
         flashlightToggle = findViewById(R.id.documentFlashlight);
         captureButton = findViewById(R.id.documentCapture);
         finishButton = findViewById(R.id.documentFinish);
         calibrateButton = findViewById(R.id.documentCalibrate);
+        acceptButton = findViewById(R.id.documentAccept);
+        retakeButton = findViewById(R.id.documentRetake);
+        adjustEdgesButton = findViewById(R.id.documentAdjustEdges);
         cameraControls = findViewById(R.id.documentCameraControls);
         reviewControls = findViewById(R.id.documentReviewControls);
 
@@ -171,8 +179,18 @@ public final class DocumentScanActivity extends AppCompatActivity {
         });
         calibrateButton.setOnClickListener(view -> startCalibrationWizard(false));
         flashlightToggle.setOnClickListener(view -> setTorchEnabled(!torchEnabled));
-        findViewById(R.id.documentRetake).setOnClickListener(view -> discardReview());
-        findViewById(R.id.documentAccept).setOnClickListener(view -> acceptPage());
+        retakeButton.setOnClickListener(view -> discardReview());
+        acceptButton.setOnClickListener(view -> acceptPage());
+        adjustEdgesButton.setOnClickListener(view -> adjustEdges());
+        reviewOverlay.setOnCornersChangedListener(valid -> {
+            acceptButton.setEnabled(!captureInProgress
+                    && (showingRectifiedReview || valid));
+            if (reviewFile != null && !reviewHasDetectedEdges) {
+                status.setText(valid ? R.string.document_review_edges_hint
+                        : R.string.document_review_mark_hint);
+            }
+        });
+        shutterSound.load(MediaActionSound.SHUTTER_CLICK);
         updatePageCount();
 
         if (!OpenCVLoader.initLocal()) {
@@ -192,14 +210,18 @@ public final class DocumentScanActivity extends AppCompatActivity {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
         }
-        cameraExecutor.shutdownNow();
         processingExecutor.shutdownNow();
+        shutterSound.release();
+        if (reviewImage != null) {
+            reviewImage.clearImage();
+        }
         if (reviewBitmap != null) {
-            if (reviewImage != null) {
-                reviewImage.setImageDrawable(null);
-            }
             reviewBitmap.recycle();
             reviewBitmap = null;
+        }
+        if (rectifiedReviewBitmap != null) {
+            rectifiedReviewBitmap.recycle();
+            rectifiedReviewBitmap = null;
         }
         if (!resultDelivered) {
             clearScanCache();
@@ -343,25 +365,21 @@ public final class DocumentScanActivity extends AppCompatActivity {
 
                 ImageCapture.Builder captureBuilder = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                        .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                        .setResolutionSelector(new ResolutionSelector.Builder()
+                                .setAspectRatioStrategy(
+                                        AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                                .setResolutionStrategy(
+                                        ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+                                .build())
                         .setTargetRotation(rotation);
                 new Camera2Interop.Extender<>(captureBuilder).setCaptureRequestOption(
                         CaptureRequest.DISTORTION_CORRECTION_MODE,
                         CaptureRequest.DISTORTION_CORRECTION_MODE_OFF);
                 imageCapture = captureBuilder.build();
-                ImageAnalysis.Builder analysisBuilder = new ImageAnalysis.Builder()
-                        .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                        .setTargetRotation(rotation)
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST);
-                new Camera2Interop.Extender<>(analysisBuilder).setCaptureRequestOption(
-                        CaptureRequest.DISTORTION_CORRECTION_MODE,
-                        CaptureRequest.DISTORTION_CORRECTION_MODE_OFF);
-                ImageAnalysis analysis = analysisBuilder.build();
-                analysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
 
                 cameraProvider.unbindAll();
                 camera = cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview, imageCapture, analysis);
+                        preview, imageCapture);
                 captureRotationDegrees =
                         camera.getCameraInfo().getSensorRotationDegrees(rotation);
                 loadCameraCalibration();
@@ -599,41 +617,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
         return variedViews >= 3;
     }
 
-    private void analyzeFrame(ImageProxy frame) {
-        try {
-            long now = android.os.SystemClock.elapsedRealtime();
-            if (!cameraMode || now - lastAnalysisAt < EDGE_ANALYSIS_INTERVAL_MS) {
-                return;
-            }
-            lastAnalysisAt = now;
-            boolean allowFallback = now - lastFallbackAnalysisAt
-                    >= EDGE_FALLBACK_INTERVAL_MS;
-            if (allowFallback) {
-                lastFallbackAnalysisAt = now;
-            }
-            ImageProxy.PlaneProxy luminance = frame.getPlanes()[0];
-            DocumentEdgeDetector.Quad quad = DocumentEdgeDetector.detectLuminance(
-                    luminance.getBuffer(), frame.getWidth(), frame.getHeight(),
-                    luminance.getRowStride(), luminance.getPixelStride(),
-                    frame.getImageInfo().getRotationDegrees(), allowFallback);
-            runOnUiThread(() -> {
-                if (cameraMode && !isFinishing()) {
-                    updateStableEdge(quad);
-                }
-            });
-        } catch (RuntimeException exception) {
-            android.util.Log.w("SPM_DOCUMENT_SCAN", "edge analysis failed: "
-                    + exception.getClass().getSimpleName());
-        } finally {
-            frame.close();
-        }
-    }
-
-    private void updateStableEdge(DocumentEdgeDetector.Quad candidate) {
-        displayedQuad = edgeStabilizer.update(candidate);
-        edgeOverlay.setQuad(displayedQuad);
-    }
-
     private void capturePage() {
         if (calibrating) {
             captureCalibrationView();
@@ -656,11 +639,11 @@ public final class DocumentScanActivity extends AppCompatActivity {
             return;
         }
 
-        DocumentEdgeDetector.Quad captureQuad = displayedQuad;
         capturingFile = captured;
         captureInProgress = true;
-        captureButton.setEnabled(false);
-        finishButton.setEnabled(false);
+        status.setText(R.string.document_scan_processing);
+        shutterSound.play(MediaActionSound.SHUTTER_CLICK);
+        updateCameraActions();
         ImageCapture.OutputFileOptions options =
                 new ImageCapture.OutputFileOptions.Builder(captured).build();
         imageCapture.takePicture(options, ContextCompat.getMainExecutor(this),
@@ -668,7 +651,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                     @Override
                     public void onImageSaved(ImageCapture.OutputFileResults output) {
                         capturingFile = null;
-                        prepareReview(captured, captureQuad);
+                        prepareReview(captured);
                     }
 
                     @Override
@@ -677,68 +660,52 @@ public final class DocumentScanActivity extends AppCompatActivity {
                         deleteFile(captured);
                         captureInProgress = false;
                         updateCameraActions();
+                        status.setText(R.string.document_scan_failed);
                         Toast.makeText(DocumentScanActivity.this,
                                 R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
-    private void prepareReview(File captured, DocumentEdgeDetector.Quad previewQuad) {
+    private void prepareReview(File captured) {
         try {
             processingExecutor.execute(() -> {
-                File rectified = null;
                 try {
-                    byte[] jpeg = DocumentEdgeDetector.rectify(this, captured, requestedAspect,
-                            calibration, captureRotationDegrees, activeArray, previewQuad);
+                    DocumentEdgeDetector.CaptureCorners detected = null;
                     try {
-                        rectified = File.createTempFile("page-", ".jpg",
-                                new File(getCacheDir(), "documents"));
-                        try (FileOutputStream output = new FileOutputStream(rectified)) {
-                            output.write(jpeg);
-                            output.flush();
-                        }
-                    } finally {
-                        java.util.Arrays.fill(jpeg, (byte) 0);
+                        detected = DocumentEdgeDetector.detectCaptureCorners(this, captured);
+                    } catch (DocumentEdgeDetector.EdgesNotFoundException ignored) {
+                        // The review screen will let the user mark the document corners.
                     }
-                    Bitmap preview = decodeReview(rectified);
-                    File ready = rectified;
-                    rectified = null;
+                    Bitmap preview = decodeReview(captured);
+                    DocumentEdgeDetector.CaptureCorners detectedCorners = detected;
                     runOnUiThread(() -> {
-                        if (isFinishing()) {
+                        if (isFinishing() || isDestroyed()) {
                             preview.recycle();
-                            deleteFile(ready);
+                            deleteFile(captured);
                             return;
                         }
-                        reviewFile = ready;
+                        reviewFile = captured;
                         reviewBitmap = preview;
+                        reviewHasDetectedEdges = detectedCorners != null;
+                        reviewOverlay.setImageSize(preview.getWidth(), preview.getHeight());
+                        if (detectedCorners == null) {
+                            reviewOverlay.clearCorners();
+                        } else {
+                            reviewOverlay.setCorners(detectedCorners.points,
+                                    detectedCorners.width, detectedCorners.height);
+                        }
                         captureInProgress = false;
                         showReview();
-                    });
-                } catch (DocumentEdgeDetector.CalibrationRequiredException exception) {
-                    runOnUiThread(() -> {
-                        captureInProgress = false;
-                        status.setText(R.string.document_calibration_required);
-                        updateCameraActions();
-                        promptForRequiredCalibration();
-                    });
-                } catch (DocumentEdgeDetector.EdgesNotFoundException exception) {
-                    android.util.Log.w("SPM_DOCUMENT_SCAN", "page rectification failed: "
-                            + exception.getClass().getSimpleName());
-                    File failed = rectified;
-                    runOnUiThread(() -> {
-                        deleteFile(failed);
-                        captureInProgress = false;
-                        updateCameraActions();
-                        status.setText(R.string.document_edge_not_found);
-                        Toast.makeText(this, R.string.document_edge_not_found,
-                                Toast.LENGTH_LONG).show();
                     });
                 } catch (IOException | RuntimeException exception) {
                     android.util.Log.w("SPM_DOCUMENT_SCAN", "page processing failed: "
                             + exception.getClass().getSimpleName());
-                    File failed = rectified;
                     runOnUiThread(() -> {
-                        deleteFile(failed);
+                        deleteFile(captured);
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
                         captureInProgress = false;
                         updateCameraActions();
                         status.setText(R.string.document_scan_failed);
@@ -746,8 +713,9 @@ public final class DocumentScanActivity extends AppCompatActivity {
                                 Toast.LENGTH_LONG).show();
                     });
                 } finally {
-                    deleteFile(captured);
-                    deleteFile(rectified);
+                    if (isFinishing() || isDestroyed()) {
+                        deleteFile(captured);
+                    }
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
@@ -757,6 +725,14 @@ public final class DocumentScanActivity extends AppCompatActivity {
             finishButton.setEnabled(!acceptedPages.isEmpty());
             Toast.makeText(this, R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void updateReviewActions() {
+        boolean ready = !captureInProgress
+                && (showingRectifiedReview || reviewOverlay.isSelectionValid());
+        acceptButton.setEnabled(ready);
+        retakeButton.setEnabled(!captureInProgress);
+        adjustEdgesButton.setEnabled(ready && showingRectifiedReview);
     }
 
     private void captureCalibrationView() {
@@ -779,6 +755,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
         capturingFile = captured;
         captureInProgress = true;
         updateCameraActions();
+        shutterSound.play(MediaActionSound.SHUTTER_CLICK);
         imageCapture.takePicture(new ImageCapture.OutputFileOptions.Builder(captured).build(),
                 ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
                     @Override
@@ -870,7 +847,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                 decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
                 int largest = Math.max(info.getSize().getWidth(), info.getSize().getHeight());
                 int sample = 1;
-                while (largest / sample > 1600) {
+                while (largest / sample > MAX_REVIEW_IMAGE_EDGE) {
                     sample *= 2;
                 }
                 if (sample > 1) {
@@ -884,44 +861,187 @@ public final class DocumentScanActivity extends AppCompatActivity {
 
     private void showReview() {
         setTorchEnabled(false);
-        cameraMode = false;
+        showingRectifiedReview = false;
         pageCount.setText(getString(R.string.document_review_page, acceptedPages.size() + 1));
         previewView.setVisibility(View.GONE);
-        edgeOverlay.setVisibility(View.GONE);
         reviewImage.setImageBitmap(reviewBitmap);
         reviewImage.setVisibility(View.VISIBLE);
+        reviewOverlay.setVisibility(View.VISIBLE);
+        reviewOverlay.setEnabled(true);
+        adjustEdgesButton.setVisibility(View.GONE);
         cameraControls.setVisibility(View.GONE);
         reviewControls.setVisibility(View.VISIBLE);
-        status.setText(R.string.document_review_hint);
+        acceptButton.setContentDescription(getString(R.string.document_review_straighten));
+        acceptButton.setTooltipText(getString(R.string.document_review_straighten));
+        status.setText(reviewHasDetectedEdges
+                ? R.string.document_review_edges_hint : R.string.document_review_mark_hint);
+        updateReviewActions();
+    }
+
+    private void showRectifiedReview() {
+        showingRectifiedReview = true;
+        pageCount.setText(getString(R.string.document_review_page, acceptedPages.size() + 1));
+        reviewImage.setImageBitmap(rectifiedReviewBitmap);
+        reviewOverlay.setVisibility(View.GONE);
+        reviewOverlay.setEnabled(false);
+        adjustEdgesButton.setVisibility(View.VISIBLE);
+        cameraControls.setVisibility(View.GONE);
+        reviewControls.setVisibility(View.VISIBLE);
+        acceptButton.setContentDescription(getString(R.string.document_scan_accept));
+        acceptButton.setTooltipText(getString(R.string.document_scan_accept));
+        status.setText(R.string.document_review_rectified_hint);
+        updateReviewActions();
+    }
+
+    private void adjustEdges() {
+        if (!showingRectifiedReview || captureInProgress || reviewBitmap == null) {
+            return;
+        }
+        deleteFile(rectifiedReviewFile);
+        rectifiedReviewFile = null;
+        if (rectifiedReviewBitmap != null) {
+            rectifiedReviewBitmap.recycle();
+            rectifiedReviewBitmap = null;
+        }
+        showingRectifiedReview = false;
+        reviewImage.setImageBitmap(reviewBitmap);
+        reviewOverlay.setVisibility(View.VISIBLE);
+        reviewOverlay.setEnabled(true);
+        adjustEdgesButton.setVisibility(View.GONE);
+        acceptButton.setContentDescription(getString(R.string.document_review_straighten));
+        acceptButton.setTooltipText(getString(R.string.document_review_straighten));
+        status.setText(R.string.document_review_edges_hint);
+        updateReviewActions();
     }
 
     private void discardReview() {
+        if (captureInProgress) {
+            return;
+        }
         deleteFile(reviewFile);
+        deleteFile(rectifiedReviewFile);
         reviewFile = null;
+        rectifiedReviewFile = null;
+        showingRectifiedReview = false;
         clearReviewBitmap();
         showCamera();
     }
 
     private void acceptPage() {
-        if (reviewFile == null) {
+        if (reviewFile == null || captureInProgress) {
             return;
         }
-        acceptedPages.add(reviewFile);
+        if (showingRectifiedReview) {
+            commitReviewPage();
+            return;
+        }
+        float[] corners = reviewOverlay.getNormalizedCorners();
+        if (corners == null) {
+            return;
+        }
+
+        rectifyPage(corners);
+    }
+
+    private void rectifyPage(float[] corners) {
+        File source = reviewFile;
+        captureInProgress = true;
+        reviewOverlay.setEnabled(false);
+        status.setText(R.string.document_review_rectifying);
+        updateReviewActions();
+        try {
+            processingExecutor.execute(() -> {
+                File rectified = null;
+                try {
+                    byte[] jpeg = DocumentEdgeDetector.rectify(this, source, requestedAspect,
+                            calibration, captureRotationDegrees, activeArray, corners);
+                    try {
+                        rectified = File.createTempFile("page-", ".jpg",
+                                new File(getCacheDir(), "documents"));
+                        try (FileOutputStream output = new FileOutputStream(rectified)) {
+                            output.write(jpeg);
+                            output.flush();
+                        }
+                    } finally {
+                        java.util.Arrays.fill(jpeg, (byte) 0);
+                    }
+                    Bitmap preview = decodeReview(rectified);
+                    File ready = rectified;
+                    rectified = null;
+                    runOnUiThread(() -> {
+                        if (isFinishing() || isDestroyed()) {
+                            preview.recycle();
+                            deleteFile(ready);
+                            return;
+                        }
+                        rectifiedReviewFile = ready;
+                        rectifiedReviewBitmap = preview;
+                        captureInProgress = false;
+                        showRectifiedReview();
+                    });
+                } catch (DocumentEdgeDetector.CalibrationRequiredException exception) {
+                    runOnUiThread(() -> {
+                        if (isFinishing() || isDestroyed()) {
+                            deleteFile(source);
+                            return;
+                        }
+                        captureInProgress = false;
+                        reviewOverlay.setEnabled(true);
+                        status.setText(R.string.document_calibration_required);
+                        updateReviewActions();
+                        promptForRequiredCalibration();
+                    });
+                } catch (IOException | RuntimeException exception) {
+                    android.util.Log.w("SPM_DOCUMENT_SCAN", "page rectification failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        if (isFinishing() || isDestroyed()) {
+                            deleteFile(source);
+                            return;
+                        }
+                        captureInProgress = false;
+                        reviewOverlay.setEnabled(true);
+                        status.setText(R.string.document_scan_failed);
+                        updateReviewActions();
+                        Toast.makeText(this, R.string.document_scan_failed,
+                                Toast.LENGTH_LONG).show();
+                    });
+                } finally {
+                    deleteFile(rectified);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            captureInProgress = false;
+            reviewOverlay.setEnabled(true);
+            status.setText(R.string.document_scan_failed);
+            updateReviewActions();
+            Toast.makeText(this, R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void commitReviewPage() {
+        if (rectifiedReviewFile == null) {
+            return;
+        }
+        acceptedPages.add(rectifiedReviewFile);
+        rectifiedReviewFile = null;
+        deleteFile(reviewFile);
         reviewFile = null;
+        showingRectifiedReview = false;
         clearReviewBitmap();
         updatePageCount();
         showCamera();
     }
 
     private void showCamera() {
-        cameraMode = true;
         reviewImage.setVisibility(View.GONE);
-        reviewImage.setImageDrawable(null);
+        reviewImage.clearImage();
+        reviewOverlay.setVisibility(View.GONE);
+        reviewOverlay.clearCorners();
+        reviewHasDetectedEdges = false;
+        showingRectifiedReview = false;
+        adjustEdgesButton.setVisibility(View.GONE);
         previewView.setVisibility(View.VISIBLE);
-        edgeOverlay.setVisibility(View.VISIBLE);
-        displayedQuad = null;
-        edgeStabilizer.reset();
-        edgeOverlay.setQuad(null);
         reviewControls.setVisibility(View.GONE);
         cameraControls.setVisibility(View.VISIBLE);
         calibrateButton.setVisibility(View.VISIBLE);
@@ -1014,11 +1134,16 @@ public final class DocumentScanActivity extends AppCompatActivity {
     }
 
     private void clearReviewBitmap() {
-        reviewImage.setImageDrawable(null);
+        reviewImage.clearImage();
         if (reviewBitmap != null) {
             reviewBitmap.recycle();
             reviewBitmap = null;
         }
+        if (rectifiedReviewBitmap != null) {
+            rectifiedReviewBitmap.recycle();
+            rectifiedReviewBitmap = null;
+        }
+        reviewOverlay.setImageSize(0, 0);
     }
 
     private void showCameraError(Exception exception) {
@@ -1122,7 +1247,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
         flashlightToggle.setContentDescription(getString(description));
         flashlightToggle.setTooltipText(getString(description));
         flashlightToggle.setEnabled(camera != null
-                && camera.getCameraInfo().hasFlashUnit() && !torchRequestPending);
+                && camera.getCameraInfo().hasFlashUnit()
+                && !torchRequestPending && !captureInProgress);
         updateCameraActions();
     }
 
@@ -1131,6 +1257,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
             return;
         }
         boolean ready = !captureInProgress && !torchRequestPending;
+        flashlightToggle.setEnabled(ready && camera != null
+                && camera.getCameraInfo().hasFlashUnit());
         if (calibrating) {
             captureButton.setEnabled(ready
                     && calibrationImageViews.size() < MAX_CALIBRATION_VIEWS);
@@ -1142,6 +1270,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                     < VaultItem.MAX_DOCUMENT_PAGES);
             finishButton.setEnabled(ready && !acceptedPages.isEmpty());
             calibrateButton.setVisibility(View.VISIBLE);
+            calibrateButton.setEnabled(ready);
         }
     }
 

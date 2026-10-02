@@ -17,6 +17,10 @@ public final class ZoomableImageView extends AppCompatImageView {
     private static final float MAX_USER_SCALE = 6f;
     private static final float DOUBLE_TAP_SCALE = 2.5f;
 
+    interface OnImageMatrixChangedListener {
+        void onImageMatrixChanged(Matrix matrix);
+    }
+
     private final Matrix displayMatrix = new Matrix();
     private final ScaleGestureDetector scaleDetector;
     private final GestureDetector gestureDetector;
@@ -24,6 +28,8 @@ public final class ZoomableImageView extends AppCompatImageView {
     private float userScale = 1f;
     private float lastTouchX;
     private float lastTouchY;
+    private boolean doubleTapZoomEnabled = true;
+    private OnImageMatrixChangedListener imageMatrixChangedListener;
 
     public ZoomableImageView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -43,6 +49,9 @@ public final class ZoomableImageView extends AppCompatImageView {
 
             @Override
             public boolean onDoubleTap(MotionEvent event) {
+                if (!doubleTapZoomEnabled) {
+                    return true;
+                }
                 if (userScale > 1.05f) {
                     resetToFit();
                 } else {
@@ -58,6 +67,24 @@ public final class ZoomableImageView extends AppCompatImageView {
         bitmap = image;
         super.setImageBitmap(image);
         resetToFit();
+    }
+
+    void clearImage() {
+        bitmap = null;
+        super.setImageDrawable(null);
+        displayMatrix.reset();
+        userScale = 1f;
+        setImageMatrix(displayMatrix);
+        notifyImageMatrixChanged();
+    }
+
+    void setDoubleTapZoomEnabled(boolean enabled) {
+        doubleTapZoomEnabled = enabled;
+    }
+
+    void setOnImageMatrixChangedListener(OnImageMatrixChangedListener listener) {
+        imageMatrixChangedListener = listener;
+        notifyImageMatrixChanged();
     }
 
     @Override
@@ -82,10 +109,22 @@ public final class ZoomableImageView extends AppCompatImageView {
                     displayMatrix.postTranslate(deltaX, deltaY);
                     constrainTranslation();
                     setImageMatrix(displayMatrix);
+                    notifyImageMatrixChanged();
                 }
                 lastTouchX = event.getX();
                 lastTouchY = event.getY();
                 return true;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                lastTouchX = event.getX(0);
+                lastTouchY = event.getY(0);
+                return true;
+            case MotionEvent.ACTION_POINTER_UP: {
+                int liftedPointer = event.getActionIndex();
+                int remainingPointer = liftedPointer == 0 ? 1 : 0;
+                lastTouchX = event.getX(remainingPointer);
+                lastTouchY = event.getY(remainingPointer);
+                return true;
+            }
             case MotionEvent.ACTION_UP:
                 performClick();
                 return true;
@@ -111,6 +150,7 @@ public final class ZoomableImageView extends AppCompatImageView {
         displayMatrix.setRectToRect(source, target, Matrix.ScaleToFit.CENTER);
         userScale = 1f;
         setImageMatrix(displayMatrix);
+        notifyImageMatrixChanged();
     }
 
     private void scaleBy(float factor, float focusX, float focusY) {
@@ -120,6 +160,7 @@ public final class ZoomableImageView extends AppCompatImageView {
         userScale = nextScale;
         constrainTranslation();
         setImageMatrix(displayMatrix);
+        notifyImageMatrixChanged();
     }
 
     private void zoomTo(float scale, float focusX, float focusY) {
@@ -127,6 +168,7 @@ public final class ZoomableImageView extends AppCompatImageView {
         userScale = scale;
         constrainTranslation();
         setImageMatrix(displayMatrix);
+        notifyImageMatrixChanged();
     }
 
     private void constrainTranslation() {
@@ -144,5 +186,11 @@ public final class ZoomableImageView extends AppCompatImageView {
                 : image.top > 0 ? -image.top
                 : image.bottom < getHeight() ? getHeight() - image.bottom : 0;
         displayMatrix.postTranslate(deltaX, deltaY);
+    }
+
+    private void notifyImageMatrixChanged() {
+        if (imageMatrixChangedListener != null) {
+            imageMatrixChangedListener.onImageMatrixChanged(new Matrix(displayMatrix));
+        }
     }
 }

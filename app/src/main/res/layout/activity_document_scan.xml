@@ -12,18 +12,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.example.securepasswordmanager.DocumentEdgeOverlay
-        android:id="@+id/documentEdgeOverlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <ImageView
+    <com.example.securepasswordmanager.ZoomableImageView
         android:id="@+id/documentReviewImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?attr/colorSurface"
         android:contentDescription="@string/document_review_description"
-        android:scaleType="fitCenter"
+        android:scaleType="matrix"
+        android:visibility="gone" />
+
+    <com.example.securepasswordmanager.DocumentReviewOverlay
+        android:id="@+id/documentReviewOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="gone" />
 
     <androidx.appcompat.widget.AppCompatImageButton
@@ -176,10 +177,28 @@
             android:tint="@android:color/white" />
 
         <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/documentAdjustEdges"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="26dp"
+            android:background="@drawable/bg_document_scan_icon_button"
+            android:clickable="true"
+            android:contentDescription="@string/document_review_adjust_edges"
+            android:focusable="true"
+            android:padding="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_settings"
+            android:tooltipText="@string/document_review_adjust_edges"
+            android:tint="@android:color/white"
+            android:visibility="gone" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/documentAccept"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:layout_gravity="bottom|center_horizontal"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
             android:layout_marginBottom="18dp"
             android:background="@drawable/bg_document_scan_capture"
             android:clickable="true"

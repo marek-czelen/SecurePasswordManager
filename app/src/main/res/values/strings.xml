@@ -104,7 +104,8 @@
     <string name="err_image">Nie udało się przygotować obrazu.</string>
     <string name="msg_document_pro_required">Skanowanie dokumentów jest dostępne w wersji Pro.</string>
     <string name="document_scan_title">Skan dokumentu</string>
-    <string name="document_scan_hint">Umieść dokument w ramce. Aparat wykryje jego brzegi i wyprostuje stronę.</string>
+    <string name="document_scan_hint">Ustaw dokument w kadrze i zrób zdjęcie. Krawędzie wykryjemy po jego zrobieniu.</string>
+    <string name="document_scan_processing">Przetwarzanie zdjęcia i wykrywanie krawędzi…</string>
     <string name="document_scan_capture">Skanuj stronę</string>
     <string name="document_scan_add_page">Dodaj kolejną stronę</string>
     <string name="document_scan_finish">Zakończ dokument</string>
@@ -112,8 +113,14 @@
     <string name="document_scan_max_reached">Osiągnięto limit 20 stron w jednym dokumencie.</string>
     <string name="document_scan_accept">Użyj strony</string>
     <string name="document_scan_retake">Zeskanuj stronę ponownie</string>
-    <string name="document_review_hint">Przejrzyj wyprostowaną stronę. Zatwierdź ją lub zrób zdjęcie ponownie.</string>
-    <string name="document_review_description">Wyprostowany skan dokumentu</string>
+    <string name="document_review_hint">Sprawdź ramkę, popraw jej narożniki lub zaznacz je ręcznie, a następnie zatwierdź.</string>
+    <string name="document_review_edges_hint">Uszczypnij, aby powiększyć. Przeciągnij narożniki ramki i zatwierdź.</string>
+    <string name="document_review_mark_hint">Uszczypnij, aby powiększyć. Dotknij czterech narożników dokumentu.</string>
+    <string name="document_review_rectifying">Prostowanie strony…</string>
+    <string name="document_review_rectified_hint">Uszczypnij, aby powiększyć. Popraw krawędzie, ponów zdjęcie lub zatwierdź.</string>
+    <string name="document_review_straighten">Wyprostuj stronę</string>
+    <string name="document_review_adjust_edges">Popraw krawędzie</string>
+    <string name="document_review_description">Podgląd strony dokumentu</string>
     <string name="document_edge_not_found">Nie wykryto całego dokumentu. Ustaw go w ramce i spróbuj ponownie.</string>
     <string name="document_scan_failed">Nie udało się uruchomić aparatu ani przygotować skanu.</string>
     <string name="document_flashlight_turn_on">Włącz lampę</string>

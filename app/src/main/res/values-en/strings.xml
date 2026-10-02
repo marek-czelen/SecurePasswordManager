@@ -98,7 +98,8 @@
     <string name="err_image">The image could not be prepared.</string>
     <string name="msg_document_pro_required">Document scanning is available in Pro.</string>
     <string name="document_scan_title">Scan document</string>
-    <string name="document_scan_hint">Place the document inside the frame. The camera will detect its edges and straighten the page.</string>
+    <string name="document_scan_hint">Frame the document and take a photo. Its edges will be detected after capture.</string>
+    <string name="document_scan_processing">Processing photo and detecting edges…</string>
     <string name="document_scan_capture">Scan page</string>
     <string name="document_scan_add_page">Add another page</string>
     <string name="document_scan_finish">Finish document</string>
@@ -106,8 +107,14 @@
     <string name="document_scan_max_reached">The 20-page limit for one document has been reached.</string>
     <string name="document_scan_accept">Use page</string>
     <string name="document_scan_retake">Rescan page</string>
-    <string name="document_review_hint">Review the straightened page. Accept it or take the photo again.</string>
-    <string name="document_review_description">Straightened document scan</string>
+    <string name="document_review_hint">Check the frame, adjust its corners or mark them manually, then accept.</string>
+    <string name="document_review_edges_hint">Pinch to zoom. Drag the frame corners to adjust them, then accept.</string>
+    <string name="document_review_mark_hint">Pinch to zoom. Tap the document’s four corners to set the frame.</string>
+    <string name="document_review_rectifying">Straightening page…</string>
+    <string name="document_review_rectified_hint">Pinch to zoom. Adjust edges, retake the photo, or accept.</string>
+    <string name="document_review_straighten">Straighten page</string>
+    <string name="document_review_adjust_edges">Adjust edges</string>
+    <string name="document_review_description">Document page preview</string>
     <string name="document_edge_not_found">The whole document was not detected. Place it inside the frame and try again.</string>
     <string name="document_scan_failed">Could not start the camera or prepare the scan.</string>
     <string name="document_flashlight_turn_on">Turn flashlight on</string>

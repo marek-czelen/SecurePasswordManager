@@ -94,7 +94,8 @@
     <string name="err_image">Impossible de préparer l’image.</string>
     <string name="msg_document_pro_required">Le scan de documents est disponible dans Pro.</string>
     <string name="document_scan_title">Scanner un document</string>
-    <string name="document_scan_hint">Placez le document dans le cadre. L’appareil photo détectera ses bords et redressera la page.</string>
+    <string name="document_scan_hint">Cadrez le document et prenez une photo. Ses bords seront détectés après la capture.</string>
+    <string name="document_scan_processing">Traitement de la photo et détection des bords…</string>
     <string name="document_scan_capture">Scanner la page</string>
     <string name="document_scan_add_page">Ajouter une autre page</string>
     <string name="document_scan_finish">Terminer le document</string>
@@ -102,8 +103,14 @@
     <string name="document_scan_max_reached">La limite de 20 pages par document est atteinte.</string>
     <string name="document_scan_accept">Utiliser la page</string>
     <string name="document_scan_retake">Re-scanner la page</string>
-    <string name="document_review_hint">Vérifiez la page redressée. Validez-la ou reprenez la photo.</string>
-    <string name="document_review_description">Scan de document redressé</string>
+    <string name="document_review_hint">Vérifiez le cadre, ajustez ses coins ou marquez-les manuellement, puis validez.</string>
+    <string name="document_review_edges_hint">Pincez pour zoomer. Faites glisser les coins du cadre, puis validez.</string>
+    <string name="document_review_mark_hint">Pincez pour zoomer. Touchez les quatre coins du document.</string>
+    <string name="document_review_rectifying">Redressement de la page…</string>
+    <string name="document_review_rectified_hint">Pincez pour zoomer. Ajustez les bords, reprenez la photo ou validez.</string>
+    <string name="document_review_straighten">Redresser la page</string>
+    <string name="document_review_adjust_edges">Ajuster les bords</string>
+    <string name="document_review_description">Aperçu d’une page de document</string>
     <string name="document_edge_not_found">Le document entier n’a pas été détecté. Placez-le dans le cadre et réessayez.</string>
     <string name="document_scan_failed">Impossible de démarrer l’appareil photo ou de préparer le scan.</string>
     <string name="document_flashlight_turn_on">Allumer la lampe torche</string>

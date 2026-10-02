@@ -94,7 +94,8 @@
     <string name="err_image">Bild konnte nicht vorbereitet werden.</string>
     <string name="msg_document_pro_required">Das Scannen von Dokumenten ist in Pro verfügbar.</string>
     <string name="document_scan_title">Dokument scannen</string>
-    <string name="document_scan_hint">Lege das Dokument in den Rahmen. Die Kamera erkennt die Kanten und richtet die Seite gerade aus.</string>
+    <string name="document_scan_hint">Richte das Dokument im Bild aus und mache ein Foto. Die Kanten werden danach erkannt.</string>
+    <string name="document_scan_processing">Foto wird verarbeitet und Kanten werden erkannt…</string>
     <string name="document_scan_capture">Seite scannen</string>
     <string name="document_scan_add_page">Weitere Seite hinzufügen</string>
     <string name="document_scan_finish">Dokument fertigstellen</string>
@@ -102,8 +103,14 @@
     <string name="document_scan_max_reached">Das Limit von 20 Seiten pro Dokument ist erreicht.</string>
     <string name="document_scan_accept">Seite übernehmen</string>
     <string name="document_scan_retake">Seite erneut scannen</string>
-    <string name="document_review_hint">Prüfe die begradigte Seite. Übernimm sie oder nimm sie erneut auf.</string>
-    <string name="document_review_description">Begradigter Dokumentenscan</string>
+    <string name="document_review_hint">Prüfe den Rahmen, passe die Ecken an oder markiere sie manuell und bestätige.</string>
+    <string name="document_review_edges_hint">Zum Vergrößern auseinanderziehen. Ziehe die Rahmenecken und bestätige.</string>
+    <string name="document_review_mark_hint">Zum Vergrößern auseinanderziehen. Tippe auf die vier Dokumentecken.</string>
+    <string name="document_review_rectifying">Seite wird begradigt…</string>
+    <string name="document_review_rectified_hint">Zum Vergrößern auseinanderziehen. Kanten anpassen, neu aufnehmen oder bestätigen.</string>
+    <string name="document_review_straighten">Seite begradigen</string>
+    <string name="document_review_adjust_edges">Kanten anpassen</string>
+    <string name="document_review_description">Vorschau einer Dokumentseite</string>
     <string name="document_edge_not_found">Das ganze Dokument wurde nicht erkannt. Lege es in den Rahmen und versuche es erneut.</string>
     <string name="document_scan_failed">Kamera konnte nicht gestartet oder der Scan nicht vorbereitet werden.</string>
     <string name="document_flashlight_turn_on">Taschenlampe einschalten</string>

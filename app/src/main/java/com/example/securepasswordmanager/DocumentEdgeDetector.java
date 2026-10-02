@@ -22,17 +22,15 @@ import org.opencv.imgproc.Imgproc;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /** Detects a document quadrilateral and rectifies approved captures into encrypted-ready JPGs. */
 final class DocumentEdgeDetector {
-    private static final double MIN_DOCUMENT_AREA = 0.10;
-    private static final double FALLBACK_MIN_DOCUMENT_AREA = 0.06;
+    private static final double MIN_DOCUMENT_AREA = 0.06;
     private static final double MAX_DOCUMENT_AREA = 0.95;
-    private static final int MAX_DETECTION_DIMENSION = 640;
+    private static final int MAX_DETECTION_DIMENSION = 1600;
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private static final double DOCUMENT_EDGE_PADDING_RATIO = 0.02;
 
@@ -73,37 +71,6 @@ final class DocumentEdgeDetector {
     private DocumentEdgeDetector() {
     }
 
-    static Quad detectLuminance(ByteBuffer source, int width, int height,
-                               int rowStride, int pixelStride, int rotationDegrees,
-                               boolean allowFallback) {
-        byte[] pixels = new byte[width * height];
-        ByteBuffer luminance = source.duplicate();
-        int bufferStart = luminance.position();
-        for (int y = 0; y < height; y++) {
-            int rowStart = y * rowStride;
-            for (int x = 0; x < width; x++) {
-                pixels[y * width + x] = luminance.get(
-                        bufferStart + rowStart + x * pixelStride);
-            }
-        }
-
-        Mat image = new Mat(height, width, org.opencv.core.CvType.CV_8UC1);
-        Mat rotated = new Mat();
-        Mat gray = new Mat();
-        try {
-            image.put(0, 0, pixels);
-            rotate(image, rotated, rotationDegrees);
-            resizeForDetection(rotated, gray);
-            Point[] corners = findCorners(gray, allowFallback);
-            return corners == null ? null : normalized(corners, gray.cols(), gray.rows());
-        } finally {
-            Arrays.fill(pixels, (byte) 0);
-            image.release();
-            rotated.release();
-            gray.release();
-        }
-    }
-
     static CaptureCorners detectCaptureCorners(Context context, File sourceFile)
             throws IOException {
         Bitmap source = decodeCapture(context, sourceFile);
@@ -137,14 +104,12 @@ final class DocumentEdgeDetector {
 
     static byte[] rectify(Context context, File sourceFile, Double requestedAspect,
                           DocumentCameraCalibration calibration, int rotationDegrees,
-                          Rect activeArray, Quad previewQuad) throws IOException {
+                          Rect activeArray, float[] normalizedCorners) throws IOException {
         Bitmap source = decodeCapture(context, sourceFile);
         if (source == null) {
             throw new IOException("Could not decode captured document");
         }
         Mat color = new Mat();
-        Mat gray = new Mat();
-        Mat detectionGray = new Mat();
         MatOfPoint2f sourceCorners = null;
         MatOfPoint2f destinationCorners = null;
         Mat transform = null;
@@ -152,19 +117,11 @@ final class DocumentEdgeDetector {
         Bitmap result = null;
         try {
             Utils.bitmapToMat(source, color);
-            Imgproc.cvtColor(color, gray, Imgproc.COLOR_RGBA2GRAY);
-            resizeForDetection(gray, detectionGray);
-            Point[] detectedCorners = findCorners(detectionGray);
-            if (detectedCorners == null && previewQuad != null) {
-                detectedCorners = pointsFromNormalizedQuad(previewQuad,
-                        detectionGray.cols(), detectionGray.rows());
-            }
-            if (detectedCorners == null) {
+            Point[] corners = pointsFromNormalizedCorners(normalizedCorners,
+                    color.cols(), color.rows());
+            if (corners == null) {
                 throw new EdgesNotFoundException();
             }
-            Point[] corners = scaleCorners(detectedCorners,
-                    gray.cols() / (double) detectionGray.cols(),
-                    gray.rows() / (double) detectionGray.rows());
             double horizontalEdge = (distance(corners[0], corners[1])
                     + distance(corners[3], corners[2])) / 2d;
             double verticalEdge = (distance(corners[0], corners[3])
@@ -180,17 +137,19 @@ final class DocumentEdgeDetector {
             double aspectRatio;
             DocumentCameraCalibration.ImageTransform imageTransform = null;
             if (calibration != null) {
-                imageTransform = new DocumentCameraCalibration.ImageTransform(gray.cols(),
-                        gray.rows(), rotationDegrees, calibration.pixelWidth,
+                imageTransform = new DocumentCameraCalibration.ImageTransform(color.cols(),
+                        color.rows(), rotationDegrees, calibration.pixelWidth,
                         calibration.pixelHeight, activeArray);
-                Point[] normalizedCorners = new Point[corners.length];
+                Point[] calibrationNormalizedCorners = new Point[corners.length];
                 double[] normalizedCoordinates = new double[corners.length * 2];
                 for (int index = 0; index < corners.length; index++) {
                     Point sensorPoint = imageTransform.toSensor(corners[index]);
-                    normalizedCorners[index] =
+                    calibrationNormalizedCorners[index] =
                             calibration.undistortNormalized(sensorPoint);
-                    normalizedCoordinates[index * 2] = normalizedCorners[index].x;
-                    normalizedCoordinates[index * 2 + 1] = normalizedCorners[index].y;
+                    normalizedCoordinates[index * 2] =
+                            calibrationNormalizedCorners[index].x;
+                    normalizedCoordinates[index * 2 + 1] =
+                            calibrationNormalizedCorners[index].y;
                 }
                 double calibratedAspect =
                         DocumentGeometry.metricAspectRatio(normalizedCoordinates);
@@ -246,8 +205,6 @@ final class DocumentEdgeDetector {
                 result.recycle();
             }
             color.release();
-            gray.release();
-            detectionGray.release();
             if (sourceCorners != null) {
                 sourceCorners.release();
             }
@@ -400,83 +357,33 @@ final class DocumentEdgeDetector {
     }
 
     private static Point[] findCorners(Mat gray) {
-        return findCorners(gray, true);
-    }
-
-    private static Point[] findCorners(Mat gray, boolean allowFallback) {
-        Point[] detected = findCannyCorners(gray, 45, 130, MIN_DOCUMENT_AREA,
-                new double[]{0.02}, false, false, Imgproc.RETR_EXTERNAL);
-        if (detected != null) {
-            return detected;
-        }
-        if (!allowFallback) {
-            return null;
-        }
-        detected = findCannyCorners(gray, 18, 75, FALLBACK_MIN_DOCUMENT_AREA,
-                new double[]{0.02, 0.04, 0.06}, true, true, Imgproc.RETR_EXTERNAL);
-        if (detected != null) {
-            return detected;
-        }
-        return findAdaptiveCorners(gray);
+        return findCannyCorners(gray, 35, 105, MIN_DOCUMENT_AREA,
+                new double[]{0.015, 0.025, 0.04});
     }
 
     private static Point[] findCannyCorners(Mat gray, double lowThreshold,
                                             double highThreshold, double minAreaFraction,
-                                            double[] approximationFactors, boolean closeEdges,
-                                            boolean useBoundingRectangle, int retrievalMode) {
+                                            double[] approximationFactors) {
         Mat blurred = new Mat();
         Mat edges = new Mat();
         Mat closedEdges = new Mat();
-        Mat kernel = null;
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
         try {
             Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
             Imgproc.Canny(blurred, edges, lowThreshold, highThreshold);
-            Mat contourImage = edges;
-            if (closeEdges) {
-                kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
-                Imgproc.morphologyEx(edges, closedEdges, Imgproc.MORPH_CLOSE, kernel);
-                contourImage = closedEdges;
-            }
-            return findCornersFromContours(contourImage, minAreaFraction,
-                    approximationFactors, retrievalMode, useBoundingRectangle);
+            Imgproc.morphologyEx(edges, closedEdges, Imgproc.MORPH_CLOSE, kernel);
+            return findCornersFromContours(closedEdges, minAreaFraction, approximationFactors);
         } finally {
             blurred.release();
             edges.release();
             closedEdges.release();
-            if (kernel != null) {
-                kernel.release();
-            }
-        }
-    }
-
-    private static Point[] findAdaptiveCorners(Mat gray) {
-        Mat blurred = new Mat();
-        Mat thresholded = new Mat();
-        Mat closed = new Mat();
-        Mat kernel = null;
-        try {
-            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
-            Imgproc.adaptiveThreshold(blurred, thresholded, 255,
-                    Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 31, 7);
-            kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
-            Imgproc.morphologyEx(thresholded, closed, Imgproc.MORPH_CLOSE, kernel);
-            return findCornersFromContours(closed, FALLBACK_MIN_DOCUMENT_AREA,
-                    new double[]{0.03, 0.05, 0.07}, Imgproc.RETR_EXTERNAL, true);
-        } finally {
-            blurred.release();
-            thresholded.release();
-            closed.release();
-            if (kernel != null) {
-                kernel.release();
-            }
+            kernel.release();
         }
     }
 
     private static Point[] findCornersFromContours(Mat contourImage,
                                                     double minAreaFraction,
-                                                    double[] approximationFactors,
-                                                    int retrievalMode,
-                                                    boolean useBoundingRectangle) {
+                                                    double[] approximationFactors) {
         Mat input = contourImage.clone();
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
@@ -484,7 +391,7 @@ final class DocumentEdgeDetector {
         double largestArea = 0;
         try {
             Imgproc.findContours(input, contours, hierarchy,
-                    retrievalMode, Imgproc.CHAIN_APPROX_SIMPLE);
+                    Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
             double imageArea = contourImage.cols() * (double) contourImage.rows();
             for (MatOfPoint contour : contours) {
                 double area = Math.abs(Imgproc.contourArea(contour));
@@ -497,7 +404,6 @@ final class DocumentEdgeDetector {
                 MatOfPoint2f approximation = new MatOfPoint2f();
                 try {
                     double perimeter = Imgproc.arcLength(curve, true);
-                    boolean accepted = false;
                     for (double factor : approximationFactors) {
                         Imgproc.approxPolyDP(curve, approximation, perimeter * factor, true);
                         if (approximation.total() != 4) {
@@ -508,22 +414,7 @@ final class DocumentEdgeDetector {
                                 contourImage.rows())) {
                             best = ordered;
                             largestArea = area;
-                            accepted = true;
                             break;
-                        }
-                    }
-                    if (!accepted && useBoundingRectangle) {
-                        org.opencv.core.RotatedRect bounds = Imgproc.minAreaRect(curve);
-                        double rectangleArea = bounds.size.width * bounds.size.height;
-                        if (rectangleArea > 0 && area / rectangleArea >= 0.55) {
-                            Point[] rectangle = new Point[4];
-                            bounds.points(rectangle);
-                            Point[] ordered = order(rectangle);
-                            if (isValidDocumentQuad(ordered, contourImage.cols(),
-                                    contourImage.rows())) {
-                                best = ordered;
-                                largestArea = area;
-                            }
                         }
                     }
                 } finally {
@@ -550,14 +441,16 @@ final class DocumentEdgeDetector {
         }
     }
 
-    private static Point[] pointsFromNormalizedQuad(Quad quad, int width, int height) {
-        if (quad.points == null || quad.points.length != 8 || width <= 0 || height <= 0) {
+    private static Point[] pointsFromNormalizedCorners(float[] normalizedCorners,
+                                                       int width, int height) {
+        if (normalizedCorners == null || normalizedCorners.length != 8
+                || width <= 0 || height <= 0) {
             return null;
         }
         Point[] points = new Point[4];
         for (int index = 0; index < points.length; index++) {
-            float x = quad.points[index * 2];
-            float y = quad.points[index * 2 + 1];
+            float x = normalizedCorners[index * 2];
+            float y = normalizedCorners[index * 2 + 1];
             if (!Float.isFinite(x) || !Float.isFinite(y)
                     || x < 0 || x > 1 || y < 0 || y > 1) {
                 return null;
@@ -605,15 +498,6 @@ final class DocumentEdgeDetector {
                 ordered[(start + 2) % 4], ordered[(start + 3) % 4]};
     }
 
-    private static Quad normalized(Point[] points, int width, int height) {
-        float[] values = new float[8];
-        for (int index = 0; index < points.length; index++) {
-            values[index * 2] = (float) (points[index].x / width);
-            values[index * 2 + 1] = (float) (points[index].y / height);
-        }
-        return new Quad(values, width / (float) height);
-    }
-
     private static void resizeForDetection(Mat source, Mat destination) {
         int largestDimension = Math.max(source.cols(), source.rows());
         double scale = Math.min(1d, MAX_DETECTION_DIMENSION / (double) largestDimension);
@@ -637,22 +521,6 @@ final class DocumentEdgeDetector {
                     corners[index].y * scaleY);
         }
         return scaled;
-    }
-
-    private static void rotate(Mat source, Mat destination, int degrees) {
-        switch (degrees) {
-            case 90:
-                Core.rotate(source, destination, Core.ROTATE_90_CLOCKWISE);
-                break;
-            case 180:
-                Core.rotate(source, destination, Core.ROTATE_180);
-                break;
-            case 270:
-                Core.rotate(source, destination, Core.ROTATE_90_COUNTERCLOCKWISE);
-                break;
-            default:
-                source.copyTo(destination);
-        }
     }
 
     private static final class WipingByteArrayOutputStream extends ByteArrayOutputStream {
