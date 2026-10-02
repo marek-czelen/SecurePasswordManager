@@ -125,7 +125,6 @@
     <string name="document_scan_failed">Nie udało się uruchomić aparatu ani przygotować skanu.</string>
     <string name="document_flashlight_turn_on">Włącz lampę</string>
     <string name="document_flashlight_turn_off">Wyłącz lampę</string>
-    <string name="document_calibrate_camera">Kalibruj aparat</string>
     <string name="document_cancel_scan">Anuluj skan dokumentu</string>
     <string name="document_page_count_compact">Strony %1$d/20</string>
     <string name="document_review_page">Podgląd strony %1$d</string>
@@ -137,28 +136,11 @@
         <item>Strona paszportu (125 × 88 mm)</item>
         <item>Strona A4 (210 × 297 mm)</item>
         <item>Własne proporcje</item>
-        <item>Nieznane — użyj kalibracji aparatu</item>
     </string-array>
     <string name="document_aspect_custom_title">Własne proporcje</string>
     <string name="document_aspect_width">Szerokość</string>
     <string name="document_aspect_height">Wysokość</string>
     <string name="document_aspect_invalid">Podaj dodatnią, skończoną szerokość i wysokość.</string>
-    <string name="document_aspect_choose_known">Wybierz znany format</string>
-    <string name="document_calibration_title">Kalibracja aparatu</string>
-    <string name="document_calibration_required">Aby poprawnie ustalić proporcje nieznanego dokumentu, potrzebna jest kalibracja. Użyj karty ID-1 albo wybierz znany format.</string>
-    <string name="document_calibration_unavailable">Ten aparat nie udostępnia wymaganych danych obrazu do kalibracji. Wybierz znany format lub własne proporcje.</string>
-    <string name="document_calibration_instructions">Użyj standardowej karty ID-1 (85,60 × 53,98 mm). Zrób 8 zdjęć, za każdym razem delikatnie przechylając kartę w innym kierunku. Trzymaj dłuższą krawędź poziomo i nie obracaj karty w jej płaszczyźnie. Unikaj odblasków; cała karta ma być widoczna i wypełniać znaczną część ramki. Zdjęcia kalibracyjne są usuwane po odczytaniu narożników.</string>
-    <string name="document_calibration_start">Rozpocznij</string>
-    <string name="document_calibration_capture">Zrób zdjęcie karty</string>
-    <string name="document_calibration_finish">Kalibruj aparat</string>
-    <string name="document_calibration_count">Kalibracja %1$d/%2$d</string>
-    <string name="document_calibration_ready">Zebrano wystarczająco zdjęć. Możesz rozpocząć kalibrację.</string>
-    <string name="document_calibration_view_failed">Nie wykryto karty. Ustaw całą kartę w ramce i spróbuj ponownie.</string>
-    <string name="document_calibration_more_angles">Ujęcia są zbyt podobne. Przechyl kartę w co najmniej trzech różnych kierunkach.</string>
-    <string name="document_calibration_working">Obliczanie i sprawdzanie kalibracji…</string>
-    <string name="document_calibration_success">Kalibracja aparatu zapisana. Możesz skanować dokument.</string>
-    <string name="document_calibration_saved">Zapisano kalibrację aparatu.</string>
-    <string name="document_calibration_failed">Kalibracja jest niedokładna. Dodaj różne ujęcia karty lub wybierz znany format.</string>
     <string name="document_flash_failed">Nie udało się zmienić stanu lampy błyskowej.</string>
     <string name="document_max_pages">Dokument musi mieć od 1 do 20 stron.</string>
     <string name="document_name_title">Nazwa dokumentu</string>
@@ -261,7 +243,6 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_security">Bezpieczeństwo</string>
     <string name="settings_show_recovery">Pokaż kod odzyskiwania</string>
-    <string name="settings_document_calibration">Kalibracja aparatu do skanowania dokumentów (Pro)</string>
     <string name="settings_change_pin">Zmień PIN</string>
     <string name="settings_autolock">Auto-blokada</string>
     <string name="autolock_1">1 minuta</string>

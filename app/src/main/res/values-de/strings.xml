@@ -115,7 +115,6 @@
     <string name="document_scan_failed">Kamera konnte nicht gestartet oder der Scan nicht vorbereitet werden.</string>
     <string name="document_flashlight_turn_on">Taschenlampe einschalten</string>
     <string name="document_flashlight_turn_off">Taschenlampe ausschalten</string>
-    <string name="document_calibrate_camera">Kamera kalibrieren</string>
     <string name="document_cancel_scan">Dokumentenscan abbrechen</string>
     <string name="document_page_count_compact">Seiten %1$d/20</string>
     <string name="document_review_page">Vorschau, Seite %1$d</string>
@@ -127,28 +126,11 @@
         <item>Passseite (125 × 88 mm)</item>
         <item>A4-Seite (210 × 297 mm)</item>
         <item>Eigenes Verhältnis</item>
-        <item>Unbekannt — Kamerakalibrierung verwenden</item>
     </string-array>
     <string name="document_aspect_custom_title">Eigenes Seitenverhältnis</string>
     <string name="document_aspect_width">Breite</string>
     <string name="document_aspect_height">Höhe</string>
     <string name="document_aspect_invalid">Gib positive, endliche Werte für Breite und Höhe ein.</string>
-    <string name="document_aspect_choose_known">Bekanntes Format wählen</string>
-    <string name="document_calibration_title">Kamerakalibrierung</string>
-    <string name="document_calibration_required">Für das Seitenverhältnis eines unbekannten Dokuments ist eine Kamerakalibrierung nötig. Kalibriere mit einer ID-1-Karte oder wähle ein bekanntes Format.</string>
-    <string name="document_calibration_unavailable">Diese Kamera stellt die für eine Kalibrierung benötigten Bilddaten nicht bereit. Wähle ein bekanntes Format oder gib ein eigenes Verhältnis ein.</string>
-    <string name="document_calibration_instructions">Verwende eine Standard-ID-1-Karte (85,60 × 53,98 mm). Nimm 8 Bilder auf und neige die Karte jedes Mal leicht in eine andere Richtung. Halte die lange Kante waagerecht und drehe die Karte nicht in ihrer Ebene. Vermeide Spiegelungen; die ganze Karte muss sichtbar sein und einen großen Teil des Rahmens ausfüllen. Kalibrierungsfotos werden nach dem Auslesen der Ecken gelöscht.</string>
-    <string name="document_calibration_start">Starten</string>
-    <string name="document_calibration_capture">Kartenansicht aufnehmen</string>
-    <string name="document_calibration_finish">Kamera kalibrieren</string>
-    <string name="document_calibration_count">Kal. %1$d/%2$d</string>
-    <string name="document_calibration_ready">Genügend Ansichten gesammelt. Die Kalibrierung kann starten.</string>
-    <string name="document_calibration_view_failed">Karte nicht erkannt. Lege die ganze Karte in den Rahmen und versuche es erneut.</string>
-    <string name="document_calibration_more_angles">Die Ansichten sind zu ähnlich. Neige die Karte in mindestens drei verschiedene Richtungen.</string>
-    <string name="document_calibration_working">Kalibrierung wird berechnet und geprüft…</string>
-    <string name="document_calibration_success">Kamerakalibrierung gespeichert. Du kannst das Dokument scannen.</string>
-    <string name="document_calibration_saved">Kamerakalibrierung gespeichert.</string>
-    <string name="document_calibration_failed">Die Kalibrierung war nicht genau genug. Nimm weitere unterschiedliche Ansichten auf oder wähle ein bekanntes Format.</string>
     <string name="document_flash_failed">Die Taschenlampe konnte nicht umgeschaltet werden.</string>
     <string name="document_max_pages">Ein Dokument muss 1 bis 20 Seiten enthalten.</string>
     <string name="document_name_title">Dokumentname</string>
@@ -239,7 +221,6 @@
     <string name="settings_title">Einstellungen</string>
     <string name="settings_security">Sicherheit</string>
     <string name="settings_show_recovery">Wiederherstellungscode anzeigen</string>
-    <string name="settings_document_calibration">Kamera für Dokumentenscans kalibrieren (Pro)</string>
     <string name="settings_change_pin">PIN ändern</string>
     <string name="settings_autolock">Automatische Sperre</string>
     <string name="autolock_1">1 Minute</string>

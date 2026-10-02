@@ -5,13 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
-import android.graphics.Rect;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CaptureRequest;
 import android.media.MediaActionSound;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Size;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
@@ -33,8 +29,6 @@ import androidx.camera.core.Preview;
 import androidx.camera.core.resolutionselector.AspectRatioStrategy;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
-import androidx.camera.camera2.interop.Camera2Interop;
-import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.appcompat.widget.AppCompatImageButton;
@@ -54,7 +48,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Point;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -69,9 +62,7 @@ import java.util.concurrent.Executors;
 public final class DocumentScanActivity extends AppCompatActivity {
     public static final String EXTRA_PAGE_URIS = "document_page_uris";
     public static final String EXTRA_TITLE = "document_title";
-    public static final String EXTRA_CALIBRATION_ONLY = "calibration_only";
-    private static final int CALIBRATION_TARGET_VIEWS = 8;
-    private static final int MAX_CALIBRATION_VIEWS = 12;
+    private static final double ID1_CARD_ASPECT = 85.60d / 53.98d;
     private static final int MAX_REVIEW_IMAGE_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private final ExecutorService processingExecutor = Executors.newSingleThreadExecutor();
     private final MediaActionSound shutterSound = new MediaActionSound();
@@ -94,7 +85,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private AppCompatImageButton flashlightToggle;
     private AppCompatImageButton captureButton;
     private AppCompatImageButton finishButton;
-    private AppCompatImageButton calibrateButton;
     private AppCompatImageButton acceptButton;
     private AppCompatImageButton retakeButton;
     private AppCompatImageButton adjustEdgesButton;
@@ -103,14 +93,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private ImageCapture imageCapture;
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
-    private String cameraId;
-    private int sensorPixelWidth;
-    private int sensorPixelHeight;
-    private Rect activeArray;
-    private int captureRotationDegrees;
-    private DocumentCameraCalibration calibration;
-    private final List<Point[]> calibrationObjectViews = new ArrayList<>();
-    private final List<Point[]> calibrationImageViews = new ArrayList<>();
     private Double requestedAspect;
     private File reviewFile;
     private File rectifiedReviewFile;
@@ -124,13 +106,10 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private boolean torchEnabled;
     private boolean torchRequestPending;
     private boolean aspectChooserShown;
-    private boolean calibrating;
-    private boolean calibrationOnly;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        calibrationOnly = getIntent().getBooleanExtra(EXTRA_CALIBRATION_ONLY, false);
         if (savedInstanceState == null) {
             clearScanCache();
         }
@@ -158,7 +137,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
         flashlightToggle = findViewById(R.id.documentFlashlight);
         captureButton = findViewById(R.id.documentCapture);
         finishButton = findViewById(R.id.documentFinish);
-        calibrateButton = findViewById(R.id.documentCalibrate);
         acceptButton = findViewById(R.id.documentAccept);
         retakeButton = findViewById(R.id.documentRetake);
         adjustEdgesButton = findViewById(R.id.documentAdjustEdges);
@@ -170,14 +148,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
             finish();
         });
         captureButton.setOnClickListener(view -> capturePage());
-        finishButton.setOnClickListener(view -> {
-            if (calibrating) {
-                calibrateCamera();
-            } else {
-                requestDocumentName();
-            }
-        });
-        calibrateButton.setOnClickListener(view -> startCalibrationWizard(false));
+        finishButton.setOnClickListener(view -> requestDocumentName());
         flashlightToggle.setOnClickListener(view -> setTorchEnabled(!torchEnabled));
         retakeButton.setOnClickListener(view -> discardReview());
         acceptButton.setOnClickListener(view -> acceptPage());
@@ -198,11 +169,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
             finish();
             return;
         }
-        if (calibrationOnly) {
-            startCameraAfterAspectSelection();
-        } else {
-            showAspectChooser();
-        }
+        showAspectChooser();
     }
 
     @Override
@@ -245,8 +212,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                 R.drawable.ic_person,
                 R.drawable.ic_note,
                 R.drawable.ic_note,
-                R.drawable.ic_settings,
-                R.drawable.ic_camera
+                R.drawable.ic_settings
         };
         for (int index = 0; index < options.length; index++) {
             View row = getLayoutInflater()
@@ -271,13 +237,9 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private void selectDocumentAspect(int choice) {
         if (choice == 3) {
             showCustomAspectDialog();
-        } else if (choice == 4) {
-            requestedAspect = null;
-            startCameraAfterAspectSelection();
         } else {
             requestedAspect = choice == 0
-                    ? DocumentCameraCalibration.ID1_WIDTH_MM
-                    / DocumentCameraCalibration.ID1_HEIGHT_MM
+                    ? ID1_CARD_ASPECT
                     : choice == 1 ? 125d / 88d : 210d / 297d;
             startCameraAfterAspectSelection();
         }
@@ -357,9 +319,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
                 Preview.Builder previewBuilder = new Preview.Builder()
                         .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                         .setTargetRotation(rotation);
-                new Camera2Interop.Extender<>(previewBuilder).setCaptureRequestOption(
-                        CaptureRequest.DISTORTION_CORRECTION_MODE,
-                        CaptureRequest.DISTORTION_CORRECTION_MODE_OFF);
                 Preview preview = previewBuilder.build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
@@ -372,25 +331,14 @@ public final class DocumentScanActivity extends AppCompatActivity {
                                         ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
                                 .build())
                         .setTargetRotation(rotation);
-                new Camera2Interop.Extender<>(captureBuilder).setCaptureRequestOption(
-                        CaptureRequest.DISTORTION_CORRECTION_MODE,
-                        CaptureRequest.DISTORTION_CORRECTION_MODE_OFF);
                 imageCapture = captureBuilder.build();
 
                 cameraProvider.unbindAll();
                 camera = cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA,
                         preview, imageCapture);
-                captureRotationDegrees =
-                        camera.getCameraInfo().getSensorRotationDegrees(rotation);
-                loadCameraCalibration();
                 flashlightToggle.setVisibility(camera.getCameraInfo().hasFlashUnit()
                         ? View.VISIBLE : View.GONE);
                 syncFlashlightToggle();
-                if (calibrationOnly) {
-                    previewView.post(() -> startCalibrationWizard(true));
-                } else if (requestedAspect == null && calibration == null) {
-                    previewView.post(() -> promptForRequiredCalibration());
-                }
             } catch (ExecutionException exception) {
                 showCameraError(exception);
             } catch (InterruptedException exception) {
@@ -402,226 +350,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-    private void loadCameraCalibration() {
-        calibration = null;
-        cameraId = null;
-        sensorPixelWidth = 0;
-        sensorPixelHeight = 0;
-        activeArray = null;
-        try {
-            Camera2CameraInfo camera2Info = Camera2CameraInfo.from(camera.getCameraInfo());
-            cameraId = camera2Info.getCameraId();
-            Size pixelArray = camera2Info.getCameraCharacteristic(
-                    CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE);
-            Rect active = camera2Info.getCameraCharacteristic(
-                    CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE);
-            if (active == null) {
-                active = camera2Info.getCameraCharacteristic(
-                        CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-            }
-            float[] intrinsic = camera2Info.getCameraCharacteristic(
-                    CameraCharacteristics.LENS_INTRINSIC_CALIBRATION);
-            float[] lensDistortion = camera2Info.getCameraCharacteristic(
-                    CameraCharacteristics.LENS_DISTORTION);
-            if (pixelArray != null) {
-                sensorPixelWidth = pixelArray.getWidth();
-                sensorPixelHeight = pixelArray.getHeight();
-                activeArray = active == null ? null : new Rect(active);
-                calibration = DocumentCameraCalibration.load(this, cameraId,
-                        sensorPixelWidth, sensorPixelHeight);
-                if (calibration == null) {
-                    calibration = DocumentCameraCalibration.fromCamera2(cameraId,
-                            sensorPixelWidth, sensorPixelHeight, intrinsic, lensDistortion);
-                }
-            }
-        } catch (RuntimeException exception) {
-            android.util.Log.w("SPM_DOCUMENT_SCAN", "camera calibration metadata unavailable: "
-                    + exception.getClass().getSimpleName());
-            calibration = null;
-        }
-    }
-
-    private void promptForRequiredCalibration() {
-        if (isFinishing() || requestedAspect != null || calibration != null) {
-            return;
-        }
-        if (sensorPixelWidth <= 0 || sensorPixelHeight <= 0 || cameraId == null) {
-            showCalibrationUnavailable();
-            return;
-        }
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.document_calibration_title)
-                .setMessage(R.string.document_calibration_required)
-                .setPositiveButton(R.string.document_calibration_start,
-                        (dialog, which) -> startCalibrationWizard(true))
-                .setNeutralButton(R.string.document_aspect_choose_known, (dialog, which) -> {
-                    aspectChooserShown = false;
-                    previewView.post(this::showAspectChooser);
-                })
-                .setNegativeButton(R.string.action_cancel, (dialog, which) -> finish())
-                .setCancelable(false)
-                .show();
-    }
-
-    private void showCalibrationUnavailable() {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.document_calibration_title)
-                .setMessage(R.string.document_calibration_unavailable);
-        if (calibrationOnly) {
-            builder.setPositiveButton(R.string.action_close, (dialog, which) -> finish());
-        } else {
-            builder.setPositiveButton(R.string.document_aspect_choose_known, (dialog, which) -> {
-                    aspectChooserShown = false;
-                    previewView.post(this::showAspectChooser);
-            });
-        }
-        builder.setNegativeButton(R.string.action_cancel, (dialog, which) -> finish())
-                .setCancelable(false)
-                .show();
-    }
-
-    private void startCalibrationWizard(boolean required) {
-        if (cameraId == null || sensorPixelWidth <= 0 || sensorPixelHeight <= 0) {
-            if (required) {
-                showCalibrationUnavailable();
-            } else {
-                Toast.makeText(this, R.string.document_calibration_unavailable,
-                        Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.document_calibration_title)
-                .setMessage(R.string.document_calibration_instructions)
-                .setPositiveButton(R.string.document_calibration_start,
-                        (dialog, which) -> beginCalibration())
-                .setNegativeButton(calibrationOnly || !required
-                        ? R.string.action_cancel : R.string.document_aspect_choose_known,
-                        (dialog, which) -> {
-                    if (required && !calibrationOnly) {
-                        aspectChooserShown = false;
-                        previewView.post(this::showAspectChooser);
-                    } else if (calibrationOnly) {
-                        finish();
-                    }
-                })
-                .setCancelable(false)
-                .show();
-    }
-
-    private void beginCalibration() {
-        calibrationObjectViews.clear();
-        calibrationImageViews.clear();
-        calibrating = true;
-        captureInProgress = false;
-        setTorchEnabled(false);
-        calibrateButton.setVisibility(View.GONE);
-        captureButton.setImageResource(R.drawable.ic_camera);
-        captureButton.setContentDescription(getString(R.string.document_calibration_capture));
-        captureButton.setTooltipText(getString(R.string.document_calibration_capture));
-        finishButton.setImageResource(R.drawable.ic_settings);
-        finishButton.setContentDescription(getString(R.string.document_calibration_finish));
-        finishButton.setTooltipText(getString(R.string.document_calibration_finish));
-        status.setText(R.string.document_calibration_instructions);
-        updateCalibrationCount();
-        updateCameraActions();
-    }
-
-    private void updateCalibrationCount() {
-        pageCount.setText(getString(R.string.document_calibration_count,
-                calibrationImageViews.size(), CALIBRATION_TARGET_VIEWS));
-    }
-
-    private void calibrateCamera() {
-        if (captureInProgress || calibrationImageViews.size()
-                < DocumentCameraCalibration.REQUIRED_VIEWS) {
-            return;
-        }
-        if (!hasVariedCalibrationViews()) {
-            status.setText(R.string.document_calibration_more_angles);
-            return;
-        }
-        finishButton.setEnabled(false);
-        captureButton.setEnabled(false);
-        status.setText(R.string.document_calibration_working);
-        List<Point[]> objectViews = new ArrayList<>(calibrationObjectViews);
-        List<Point[]> imageViews = new ArrayList<>(calibrationImageViews);
-        try {
-            processingExecutor.execute(() -> {
-                try {
-                    DocumentCameraCalibration candidate = DocumentCameraCalibration.calibrate(
-                            cameraId, sensorPixelWidth, sensorPixelHeight, objectViews, imageViews);
-                    candidate.save(this);
-                    runOnUiThread(() -> {
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        calibration = candidate;
-                        calibrating = false;
-                        calibrateButton.setVisibility(View.VISIBLE);
-                        updateScannerButtonIcons();
-                        updatePageCount();
-                        status.setText(R.string.document_calibration_success);
-                        updateCameraActions();
-                        if (calibrationOnly) {
-                            setResult(RESULT_OK);
-                            finish();
-                        }
-                    });
-                } catch (RuntimeException exception) {
-                    android.util.Log.w("SPM_DOCUMENT_SCAN", "camera calibration failed: "
-                            + exception.getClass().getSimpleName());
-                    runOnUiThread(() -> {
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        status.setText(R.string.document_calibration_failed);
-                        updateCameraActions();
-                    });
-                }
-            });
-        } catch (java.util.concurrent.RejectedExecutionException exception) {
-            status.setText(R.string.document_calibration_failed);
-            updateCameraActions();
-        }
-    }
-
-    private boolean hasVariedCalibrationViews() {
-        int variedViews = 0;
-        List<double[]> signatures = new ArrayList<>();
-        for (Point[] points : calibrationImageViews) {
-            double first = distance(points[0], points[1]);
-            double second = distance(points[1], points[2]);
-            double oppositeFirst = distance(points[3], points[2]);
-            double oppositeSecond = distance(points[0], points[3]);
-            double cosine = ((points[1].x - points[0].x) * (points[3].x - points[0].x)
-                    + (points[1].y - points[0].y) * (points[3].y - points[0].y))
-                    / Math.max(1d, first * oppositeSecond);
-            double skew = Math.max(Math.abs(first - oppositeFirst)
-                            / Math.max(first, oppositeFirst),
-                    Math.abs(second - oppositeSecond) / Math.max(second, oppositeSecond));
-            double[] signature = {cosine, skew};
-            boolean distinct = true;
-            for (double[] previous : signatures) {
-                if (Math.hypot(signature[0] - previous[0],
-                        signature[1] - previous[1]) < 0.025) {
-                    distinct = false;
-                    break;
-                }
-            }
-            if (distinct && (Math.abs(cosine) > 0.05 || skew > 0.05)) {
-                signatures.add(signature);
-                variedViews++;
-            }
-        }
-        return variedViews >= 3;
-    }
-
     private void capturePage() {
-        if (calibrating) {
-            captureCalibrationView();
-            return;
-        }
         if (imageCapture == null || captureInProgress || torchRequestPending
                 || acceptedPages.size() >= VaultItem.MAX_DOCUMENT_PAGES) {
             return;
@@ -733,110 +462,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
         acceptButton.setEnabled(ready);
         retakeButton.setEnabled(!captureInProgress);
         adjustEdgesButton.setEnabled(ready && showingRectifiedReview);
-    }
-
-    private void captureCalibrationView() {
-        if (imageCapture == null || captureInProgress || torchRequestPending
-                || calibrationImageViews.size() >= MAX_CALIBRATION_VIEWS) {
-            return;
-        }
-        File directory = new File(getCacheDir(), "documents");
-        if (!directory.isDirectory() && !directory.mkdirs()) {
-            Toast.makeText(this, R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        File captured;
-        try {
-            captured = File.createTempFile("capture-", ".jpg", directory);
-        } catch (IOException exception) {
-            Toast.makeText(this, R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        capturingFile = captured;
-        captureInProgress = true;
-        updateCameraActions();
-        shutterSound.play(MediaActionSound.SHUTTER_CLICK);
-        imageCapture.takePicture(new ImageCapture.OutputFileOptions.Builder(captured).build(),
-                ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(ImageCapture.OutputFileResults output) {
-                        capturingFile = null;
-                        prepareCalibrationView(captured);
-                    }
-
-                    @Override
-                    public void onError(ImageCaptureException exception) {
-                        capturingFile = null;
-                        deleteFile(captured);
-                        captureInProgress = false;
-                        updateCameraActions();
-                        Toast.makeText(DocumentScanActivity.this,
-                                R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    private void prepareCalibrationView(File captured) {
-        try {
-            processingExecutor.execute(() -> {
-                try {
-                    DocumentEdgeDetector.CaptureCorners detected =
-                            DocumentEdgeDetector.detectCaptureCorners(this, captured);
-                    DocumentCameraCalibration.ImageTransform imageTransform =
-                            new DocumentCameraCalibration.ImageTransform(detected.width,
-                                    detected.height, captureRotationDegrees, sensorPixelWidth,
-                                    sensorPixelHeight, activeArray);
-                    Point[] sensorPoints = new Point[detected.points.length];
-                    for (int index = 0; index < detected.points.length; index++) {
-                        sensorPoints[index] = imageTransform.toSensor(detected.points[index]);
-                    }
-                    double firstPair = (distance(sensorPoints[0], sensorPoints[1])
-                            + distance(sensorPoints[3], sensorPoints[2])) / 2d;
-                    double secondPair = (distance(sensorPoints[0], sensorPoints[3])
-                            + distance(sensorPoints[1], sensorPoints[2])) / 2d;
-                    Point[] objectPoints = DocumentCameraCalibration.calibrationObjectCorners(
-                            firstPair >= secondPair);
-                    runOnUiThread(() -> {
-                        deleteFile(captured);
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        calibrationImageViews.add(sensorPoints);
-                        calibrationObjectViews.add(objectPoints);
-                        captureInProgress = false;
-                        updateCalibrationCount();
-                        status.setText(calibrationImageViews.size() >=
-                                DocumentCameraCalibration.REQUIRED_VIEWS
-                                ? R.string.document_calibration_ready
-                                : R.string.document_calibration_instructions);
-                        updateCameraActions();
-                    });
-                } catch (IOException | RuntimeException exception) {
-                    android.util.Log.w("SPM_DOCUMENT_SCAN", "calibration view failed: "
-                            + exception.getClass().getSimpleName());
-                    runOnUiThread(() -> {
-                        deleteFile(captured);
-                        if (isFinishing() || isDestroyed()) {
-                            return;
-                        }
-                        captureInProgress = false;
-                        status.setText(R.string.document_calibration_view_failed);
-                        updateCameraActions();
-                    });
-                } finally {
-                    deleteFile(captured);
-                }
-            });
-        } catch (java.util.concurrent.RejectedExecutionException exception) {
-            deleteFile(captured);
-            captureInProgress = false;
-            updateCameraActions();
-            Toast.makeText(this, R.string.document_scan_failed, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private static double distance(Point first, Point second) {
-        return Math.hypot(first.x - second.x, first.y - second.y);
     }
 
     private Bitmap decodeReview(File file) throws IOException {
@@ -953,8 +578,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
             processingExecutor.execute(() -> {
                 File rectified = null;
                 try {
-                    byte[] jpeg = DocumentEdgeDetector.rectify(this, source, requestedAspect,
-                            calibration, captureRotationDegrees, activeArray, corners);
+                    byte[] jpeg = DocumentEdgeDetector.rectify(this, source,
+                            requestedAspect, corners);
                     try {
                         rectified = File.createTempFile("page-", ".jpg",
                                 new File(getCacheDir(), "documents"));
@@ -978,18 +603,6 @@ public final class DocumentScanActivity extends AppCompatActivity {
                         rectifiedReviewBitmap = preview;
                         captureInProgress = false;
                         showRectifiedReview();
-                    });
-                } catch (DocumentEdgeDetector.CalibrationRequiredException exception) {
-                    runOnUiThread(() -> {
-                        if (isFinishing() || isDestroyed()) {
-                            deleteFile(source);
-                            return;
-                        }
-                        captureInProgress = false;
-                        reviewOverlay.setEnabled(true);
-                        status.setText(R.string.document_calibration_required);
-                        updateReviewActions();
-                        promptForRequiredCalibration();
                     });
                 } catch (IOException | RuntimeException exception) {
                     android.util.Log.w("SPM_DOCUMENT_SCAN", "page rectification failed: "
@@ -1044,10 +657,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
         previewView.setVisibility(View.VISIBLE);
         reviewControls.setVisibility(View.GONE);
         cameraControls.setVisibility(View.VISIBLE);
-        calibrateButton.setVisibility(View.VISIBLE);
-        if (!calibrating) {
-            updatePageCount();
-        }
+        updatePageCount();
         updateScannerButtonIcons();
         status.setText(acceptedPages.size() >= VaultItem.MAX_DOCUMENT_PAGES
                 ? R.string.document_scan_max_reached : R.string.document_scan_hint);
@@ -1060,23 +670,14 @@ public final class DocumentScanActivity extends AppCompatActivity {
     }
 
     private void updateScannerButtonIcons() {
-        int captureDescription;
-        if (calibrating) {
-            captureButton.setImageResource(R.drawable.ic_camera);
-            captureDescription = R.string.document_calibration_capture;
-            finishButton.setImageResource(R.drawable.ic_settings);
-            finishButton.setContentDescription(getString(R.string.document_calibration_finish));
-            finishButton.setTooltipText(getString(R.string.document_calibration_finish));
-        } else {
-            boolean addingPage = !acceptedPages.isEmpty();
-            captureButton.setImageResource(addingPage
-                    ? R.drawable.ic_document_add_page : R.drawable.ic_camera);
-            captureDescription = addingPage
-                    ? R.string.document_scan_add_page : R.string.document_scan_capture;
-            finishButton.setImageResource(R.drawable.ic_document_done);
-            finishButton.setContentDescription(getString(R.string.document_scan_finish));
-            finishButton.setTooltipText(getString(R.string.document_scan_finish));
-        }
+        boolean addingPage = !acceptedPages.isEmpty();
+        captureButton.setImageResource(addingPage
+                ? R.drawable.ic_document_add_page : R.drawable.ic_camera);
+        int captureDescription = addingPage
+                ? R.string.document_scan_add_page : R.string.document_scan_capture;
+        finishButton.setImageResource(R.drawable.ic_document_done);
+        finishButton.setContentDescription(getString(R.string.document_scan_finish));
+        finishButton.setTooltipText(getString(R.string.document_scan_finish));
         captureButton.setContentDescription(getString(captureDescription));
         captureButton.setTooltipText(getString(captureDescription));
     }
@@ -1259,19 +860,9 @@ public final class DocumentScanActivity extends AppCompatActivity {
         boolean ready = !captureInProgress && !torchRequestPending;
         flashlightToggle.setEnabled(ready && camera != null
                 && camera.getCameraInfo().hasFlashUnit());
-        if (calibrating) {
-            captureButton.setEnabled(ready
-                    && calibrationImageViews.size() < MAX_CALIBRATION_VIEWS);
-            finishButton.setEnabled(ready && calibrationImageViews.size()
-                    >= DocumentCameraCalibration.REQUIRED_VIEWS);
-            calibrateButton.setVisibility(View.GONE);
-        } else {
-            captureButton.setEnabled(ready && acceptedPages.size()
-                    < VaultItem.MAX_DOCUMENT_PAGES);
-            finishButton.setEnabled(ready && !acceptedPages.isEmpty());
-            calibrateButton.setVisibility(View.VISIBLE);
-            calibrateButton.setEnabled(ready);
-        }
+        captureButton.setEnabled(ready && acceptedPages.size()
+                < VaultItem.MAX_DOCUMENT_PAGES);
+        finishButton.setEnabled(ready && !acceptedPages.isEmpty());
     }
 
     private void showFlashlightError(Exception exception) {

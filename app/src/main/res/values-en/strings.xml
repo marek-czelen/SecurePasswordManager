@@ -119,7 +119,6 @@
     <string name="document_scan_failed">Could not start the camera or prepare the scan.</string>
     <string name="document_flashlight_turn_on">Turn flashlight on</string>
     <string name="document_flashlight_turn_off">Turn flashlight off</string>
-    <string name="document_calibrate_camera">Calibrate camera</string>
     <string name="document_cancel_scan">Cancel document scan</string>
     <string name="document_page_count_compact">Pages %1$d/20</string>
     <string name="document_review_page">Review page %1$d</string>
@@ -131,28 +130,11 @@
         <item>Passport page (125 × 88 mm)</item>
         <item>A4 page (210 × 297 mm)</item>
         <item>Custom proportions</item>
-        <item>Unknown — use camera calibration</item>
     </string-array>
     <string name="document_aspect_custom_title">Custom proportions</string>
     <string name="document_aspect_width">Width</string>
     <string name="document_aspect_height">Height</string>
     <string name="document_aspect_invalid">Enter finite, positive width and height values.</string>
-    <string name="document_aspect_choose_known">Choose a known format</string>
-    <string name="document_calibration_title">Camera calibration</string>
-    <string name="document_calibration_required">Camera calibration is needed to determine the proportions of an unknown document. Calibrate with an ID-1 card or choose a known format.</string>
-    <string name="document_calibration_unavailable">This camera does not provide the image data needed for calibration. Choose a known format or enter custom proportions.</string>
-    <string name="document_calibration_instructions">Use a standard ID-1 card (85.60 × 53.98 mm). Capture 8 views, gently tilting the card in a different direction each time. Keep its long edge horizontal and do not rotate the card in its plane. Avoid glare; keep the whole card visible and fill a substantial part of the frame. Calibration photos are discarded after the corners are extracted.</string>
-    <string name="document_calibration_start">Start</string>
-    <string name="document_calibration_capture">Capture card view</string>
-    <string name="document_calibration_finish">Calibrate camera</string>
-    <string name="document_calibration_count">Cal. %1$d/%2$d</string>
-    <string name="document_calibration_ready">Enough views collected. You can start calibration.</string>
-    <string name="document_calibration_view_failed">The card was not detected. Fit the whole card in the frame and try again.</string>
-    <string name="document_calibration_more_angles">The views are too similar. Tilt the card in at least three different directions.</string>
-    <string name="document_calibration_working">Calculating and validating calibration…</string>
-    <string name="document_calibration_success">Camera calibration saved. You can scan your document.</string>
-    <string name="document_calibration_saved">Camera calibration saved.</string>
-    <string name="document_calibration_failed">Calibration was not accurate enough. Add varied card views or choose a known format.</string>
     <string name="document_flash_failed">Could not change the flashlight state.</string>
     <string name="document_max_pages">A document must contain between 1 and 20 pages.</string>
     <string name="document_name_title">Document name</string>
@@ -243,7 +225,6 @@
     <string name="settings_title">Settings</string>
     <string name="settings_security">Security</string>
     <string name="settings_show_recovery">Show recovery code</string>
-    <string name="settings_document_calibration">Calibrate camera for document scans (Pro)</string>
     <string name="settings_change_pin">Change PIN</string>
     <string name="settings_autolock">Auto-lock</string>
     <string name="autolock_1">1 minute</string>

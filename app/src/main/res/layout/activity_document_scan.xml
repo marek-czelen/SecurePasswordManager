@@ -102,20 +102,6 @@
                 android:tint="@android:color/white"
                 android:visibility="gone" />
 
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/documentCalibrate"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_document_scan_icon_button"
-                android:clickable="true"
-                android:contentDescription="@string/document_calibrate_camera"
-                android:focusable="true"
-                android:padding="12dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_settings"
-                android:tooltipText="@string/document_calibrate_camera"
-                android:tint="@android:color/white" />
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatImageButton

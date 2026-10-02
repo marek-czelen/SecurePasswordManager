@@ -4,13 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
-import android.graphics.Rect;
 
 import com.example.securepasswordmanager.crypto.VaultImageProcessor;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -62,12 +60,6 @@ final class DocumentEdgeDetector {
         }
     }
 
-    static final class CalibrationRequiredException extends IOException {
-        CalibrationRequiredException() {
-            super("Camera calibration is required for an unknown document aspect");
-        }
-    }
-
     private DocumentEdgeDetector() {
     }
 
@@ -102,9 +94,8 @@ final class DocumentEdgeDetector {
         }
     }
 
-    static byte[] rectify(Context context, File sourceFile, Double requestedAspect,
-                          DocumentCameraCalibration calibration, int rotationDegrees,
-                          Rect activeArray, float[] normalizedCorners) throws IOException {
+    static byte[] rectify(Context context, File sourceFile, double requestedAspect,
+                          float[] normalizedCorners) throws IOException {
         Bitmap source = decodeCapture(context, sourceFile);
         if (source == null) {
             throw new IOException("Could not decode captured document");
@@ -133,67 +124,22 @@ final class DocumentEdgeDetector {
                     + distance(paddedCorners[3], paddedCorners[2])) / 2d;
             double paddedVerticalEdge = (distance(paddedCorners[0], paddedCorners[3])
                     + distance(paddedCorners[1], paddedCorners[2])) / 2d;
-            Point[] rectificationCorners = paddedCorners;
-            double aspectRatio;
-            DocumentCameraCalibration.ImageTransform imageTransform = null;
-            if (calibration != null) {
-                imageTransform = new DocumentCameraCalibration.ImageTransform(color.cols(),
-                        color.rows(), rotationDegrees, calibration.pixelWidth,
-                        calibration.pixelHeight, activeArray);
-                Point[] calibrationNormalizedCorners = new Point[corners.length];
-                double[] normalizedCoordinates = new double[corners.length * 2];
-                for (int index = 0; index < corners.length; index++) {
-                    Point sensorPoint = imageTransform.toSensor(corners[index]);
-                    calibrationNormalizedCorners[index] =
-                            calibration.undistortNormalized(sensorPoint);
-                    normalizedCoordinates[index * 2] =
-                            calibrationNormalizedCorners[index].x;
-                    normalizedCoordinates[index * 2 + 1] =
-                            calibrationNormalizedCorners[index].y;
-                }
-                double calibratedAspect =
-                        DocumentGeometry.metricAspectRatio(normalizedCoordinates);
-                if (requestedAspect != null) {
-                    double landscapeAspect = Math.max(requestedAspect, 1d / requestedAspect);
-                    aspectRatio = calibratedAspect >= 1d
-                            ? landscapeAspect : 1d / landscapeAspect;
-                } else {
-                    aspectRatio = calibratedAspect;
-                }
-                rectificationCorners = new Point[paddedCorners.length];
-                for (int index = 0; index < paddedCorners.length; index++) {
-                    Point sensorPoint = imageTransform.toSensor(paddedCorners[index]);
-                    Point normalized = calibration.undistortNormalized(sensorPoint);
-                    rectificationCorners[index] = imageTransform.toUpright(
-                            calibration.sensorPixelFromNormalized(normalized));
-                }
-            } else {
-                if (requestedAspect == null) {
-                    throw new CalibrationRequiredException();
-                }
-                aspectRatio = DocumentGeometry.orientAspectRatio(requestedAspect, corners);
-            }
+            double aspectRatio = DocumentGeometry.orientAspectRatio(requestedAspect, corners);
 
             int[] dimensions = DocumentGeometry.outputDimensions(
                     paddedHorizontalEdge, paddedVerticalEdge, aspectRatio);
             int outputWidth = dimensions[0];
             int outputHeight = dimensions[1];
-            sourceCorners = new MatOfPoint2f(rectificationCorners);
+            sourceCorners = new MatOfPoint2f(paddedCorners);
             destinationCorners = new MatOfPoint2f(
                     new Point(0, 0),
                     new Point(outputWidth - 1, 0),
                     new Point(outputWidth - 1, outputHeight - 1),
                     new Point(0, outputHeight - 1));
-            if (calibration == null) {
-                transform = Imgproc.getPerspectiveTransform(sourceCorners, destinationCorners);
-                Imgproc.warpPerspective(color, corrected, transform,
-                        new Size(outputWidth, outputHeight), Imgproc.INTER_CUBIC,
-                        Core.BORDER_REPLICATE, new Scalar(255, 255, 255, 255));
-            } else {
-                transform = Imgproc.getPerspectiveTransform(destinationCorners, sourceCorners);
-                remapUndistortedDocument(color, corrected, transform, outputWidth, outputHeight,
-                        calibration, imageTransform);
-            }
+            transform = Imgproc.getPerspectiveTransform(sourceCorners, destinationCorners);
+            Imgproc.warpPerspective(color, corrected, transform,
+                    new Size(outputWidth, outputHeight), Imgproc.INTER_CUBIC,
+                    Core.BORDER_REPLICATE, new Scalar(255, 255, 255, 255));
             result = Bitmap.createBitmap(outputWidth, outputHeight, Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(corrected, result);
             return encodeBoundedJpeg(result);
@@ -215,83 +161,6 @@ final class DocumentEdgeDetector {
                 transform.release();
             }
             corrected.release();
-        }
-    }
-
-    private static void remapUndistortedDocument(Mat source, Mat destination, Mat destinationToSource,
-                                                  int outputWidth, int outputHeight,
-                                                  DocumentCameraCalibration calibration,
-                                                  DocumentCameraCalibration.ImageTransform imageTransform) {
-        destination.create(outputHeight, outputWidth, source.type());
-        double[][] perspective = new double[3][3];
-        for (int row = 0; row < 3; row++) {
-            for (int column = 0; column < 3; column++) {
-                perspective[row][column] = destinationToSource.get(row, column)[0];
-            }
-        }
-        double inverseFx = 1d / calibration.fx;
-        double inverseFy = 1d / calibration.fy;
-        double[] d = calibration.distortion;
-        final int tileHeight = 96;
-        for (int top = 0; top < outputHeight; top += tileHeight) {
-            int rows = Math.min(tileHeight, outputHeight - top);
-            Mat mapX = new Mat(rows, outputWidth, CvType.CV_32FC1);
-            Mat mapY = new Mat(rows, outputWidth, CvType.CV_32FC1);
-            Mat tile = new Mat();
-            Mat target = destination.rowRange(top, top + rows);
-            try {
-                float[] xValues = new float[rows * outputWidth];
-                float[] yValues = new float[rows * outputWidth];
-                for (int y = 0; y < rows; y++) {
-                    double destinationY = top + y;
-                    for (int x = 0; x < outputWidth; x++) {
-                        double denominator = perspective[2][0] * x
-                                + perspective[2][1] * destinationY + perspective[2][2];
-                        double uprightX = (perspective[0][0] * x
-                                + perspective[0][1] * destinationY + perspective[0][2])
-                                / denominator;
-                        double uprightY = (perspective[1][0] * x
-                                + perspective[1][1] * destinationY + perspective[1][2])
-                                / denominator;
-                        double idealSensorX = imageTransform.sensorXFromUpright(
-                                uprightX, uprightY);
-                        double idealSensorY = imageTransform.sensorYFromUpright(
-                                uprightX, uprightY);
-                        double normalizedY = (idealSensorY - calibration.cy) * inverseFy;
-                        double normalizedX = (idealSensorX - calibration.cx
-                                - calibration.skew * normalizedY) * inverseFx;
-                        double radius2 = normalizedX * normalizedX
-                                + normalizedY * normalizedY;
-                        double radius4 = radius2 * radius2;
-                        double radial = 1d + d[0] * radius2 + d[1] * radius4
-                                + d[4] * radius4 * radius2;
-                        double distortedX = normalizedX * radial
-                                + 2d * d[2] * normalizedX * normalizedY
-                                + d[3] * (radius2 + 2d * normalizedX * normalizedX);
-                        double distortedY = normalizedY * radial
-                                + d[2] * (radius2 + 2d * normalizedY * normalizedY)
-                                + 2d * d[3] * normalizedX * normalizedY;
-                        double distortedSensorX = calibration.fx * distortedX
-                                + calibration.skew * distortedY + calibration.cx;
-                        double distortedSensorY = calibration.fy * distortedY + calibration.cy;
-                        int offset = y * outputWidth + x;
-                        xValues[offset] = (float) imageTransform.uprightXFromSensor(
-                                distortedSensorX, distortedSensorY);
-                        yValues[offset] = (float) imageTransform.uprightYFromSensor(
-                                distortedSensorX, distortedSensorY);
-                    }
-                }
-                mapX.put(0, 0, xValues);
-                mapY.put(0, 0, yValues);
-                Imgproc.remap(source, tile, mapX, mapY, Imgproc.INTER_CUBIC,
-                        Core.BORDER_REPLICATE, new Scalar(255, 255, 255, 255));
-                tile.copyTo(target);
-            } finally {
-                target.release();
-                mapX.release();
-                mapY.release();
-                tile.release();
-            }
         }
     }
 

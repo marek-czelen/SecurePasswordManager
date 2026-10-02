@@ -115,7 +115,6 @@
     <string name="document_scan_failed">Impossible de démarrer l’appareil photo ou de préparer le scan.</string>
     <string name="document_flashlight_turn_on">Allumer la lampe torche</string>
     <string name="document_flashlight_turn_off">Éteindre la lampe torche</string>
-    <string name="document_calibrate_camera">Calibrer l’appareil photo</string>
     <string name="document_cancel_scan">Annuler le scan du document</string>
     <string name="document_page_count_compact">Pages %1$d/20</string>
     <string name="document_review_page">Aperçu, page %1$d</string>
@@ -127,28 +126,11 @@
         <item>Page de passeport (125 × 88 mm)</item>
         <item>Page A4 (210 × 297 mm)</item>
         <item>Proportions personnalisées</item>
-        <item>Inconnu — utiliser l’étalonnage de l’appareil</item>
     </string-array>
     <string name="document_aspect_custom_title">Proportions personnalisées</string>
     <string name="document_aspect_width">Largeur</string>
     <string name="document_aspect_height">Hauteur</string>
     <string name="document_aspect_invalid">Saisissez une largeur et une hauteur positives et finies.</string>
-    <string name="document_aspect_choose_known">Choisir un format connu</string>
-    <string name="document_calibration_title">Étalonnage de l’appareil photo</string>
-    <string name="document_calibration_required">L’étalonnage de l’appareil est nécessaire pour déterminer les proportions d’un document inconnu. Étalonnez avec une carte ID-1 ou choisissez un format connu.</string>
-    <string name="document_calibration_unavailable">Cet appareil ne fournit pas les données d’image nécessaires à l’étalonnage. Choisissez un format connu ou saisissez des proportions personnalisées.</string>
-    <string name="document_calibration_instructions">Utilisez une carte ID-1 standard (85,60 × 53,98 mm). Prenez 8 vues en inclinant légèrement la carte dans une direction différente à chaque fois. Gardez le bord long à l’horizontale et ne faites pas pivoter la carte dans son plan. Évitez les reflets ; gardez la carte entière dans le cadre, en remplissant une grande partie de celui-ci. Les photos d’étalonnage sont supprimées après l’extraction des coins.</string>
-    <string name="document_calibration_start">Démarrer</string>
-    <string name="document_calibration_capture">Capturer la carte</string>
-    <string name="document_calibration_finish">Étalonner l’appareil</string>
-    <string name="document_calibration_count">Cal. %1$d/%2$d</string>
-    <string name="document_calibration_ready">Assez de vues ont été prises. Vous pouvez lancer l’étalonnage.</string>
-    <string name="document_calibration_view_failed">Carte non détectée. Placez-la entièrement dans le cadre et réessayez.</string>
-    <string name="document_calibration_more_angles">Les vues sont trop similaires. Inclinez la carte dans au moins trois directions différentes.</string>
-    <string name="document_calibration_working">Calcul et validation de l’étalonnage…</string>
-    <string name="document_calibration_success">Étalonnage enregistré. Vous pouvez scanner le document.</string>
-    <string name="document_calibration_saved">Étalonnage de l’appareil enregistré.</string>
-    <string name="document_calibration_failed">L’étalonnage n’est pas assez précis. Ajoutez des vues variées ou choisissez un format connu.</string>
     <string name="document_flash_failed">Impossible de modifier l’état de la lampe torche.</string>
     <string name="document_max_pages">Un document doit comporter entre 1 et 20 pages.</string>
     <string name="document_name_title">Nom du document</string>
@@ -239,7 +221,6 @@
     <string name="settings_title">Paramètres</string>
     <string name="settings_security">Sécurité</string>
     <string name="settings_show_recovery">Afficher le code de récupération</string>
-    <string name="settings_document_calibration">Calibrer l’appareil photo pour les scans (Pro)</string>
     <string name="settings_change_pin">Modifier le PIN</string>
     <string name="settings_autolock">Verrouillage automatique</string>
     <string name="autolock_1">1 minute</string>

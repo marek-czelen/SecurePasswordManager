@@ -162,15 +162,6 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
 
-    private final ActivityResultLauncher<Intent> documentCalibrationLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                awaitingResult = false;
-                sImageFlowActive = false;
-                if (result.getResultCode() == RESULT_OK) {
-                    toast(R.string.document_calibration_saved);
-                }
-            });
-
     private final ActivityResultLauncher<Intent> documentScanLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 awaitingResult = false;
@@ -821,22 +812,6 @@ public final class MainActivity extends AppCompatActivity {
         awaitingResult = true;
         sImageFlowActive = true;
         documentScanLauncher.launch(intent);
-    }
-
-    private void startDocumentCameraCalibration() {
-        if (!premiumManager.isPro()) {
-            toast(R.string.msg_document_pro_required);
-            return;
-        }
-        if (awaitingResult || saveInProgress) {
-            toast(R.string.err_save);
-            return;
-        }
-        Intent intent = new Intent(this, DocumentScanActivity.class)
-                .putExtra(DocumentScanActivity.EXTRA_CALIBRATION_ONLY, true);
-        awaitingResult = true;
-        sImageFlowActive = true;
-        documentCalibrationLauncher.launch(intent);
     }
 
     private void showRecoveredPreviousDialog() {
@@ -2137,9 +2112,6 @@ public final class MainActivity extends AppCompatActivity {
                 break;
             case SettingsActivity.ACTION_DELETE_VAULT:
                 confirmDeleteLocalVault();
-                break;
-            case SettingsActivity.ACTION_CALIBRATE_DOCUMENT_CAMERA:
-                startDocumentCameraCalibration();
                 break;
             default:
                 Log.w(IMAGE_LOG, "Unknown settings action: " + action);
