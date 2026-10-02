@@ -19,10 +19,10 @@ Recovery QR secrets, TOTP seeds, notes or vault plaintext.
 The app may process the following data locally at the user’s direction:
 
 - login names, passwords, URLs, notes, folders, tags and TOTP secrets;
-- user-selected file attachments and their display metadata;
+- user-selected image, multi-page document and file attachments and their display metadata;
 - a passphrase used to derive encryption material;
 - a Recovery QR containing a random recovery secret;
-- user-selected photos or camera images for OCR;
+- user-selected photos or camera images for OCR, image entries or document scans;
 - encrypted `vault.vlt3` containers selected for backup/export/import.
 
 This data is sensitive. It is stored in the encrypted local vault and is not used for
@@ -30,22 +30,28 @@ advertising, profiling or sale.
 
 ## Camera and OCR
 
-Camera access is requested only when the user chooses camera OCR. The OCR review and
-recognition are performed on the device. Temporary camera images are kept in app cache
-only for the review flow and are deleted after it completes. The app does not upload
-OCR images.
+Camera access is requested only after a user starts a camera-based flow: OCR/photo
+capture, document scanning, or camera calibration. OCR review and recognition are
+performed on the device. Temporary capture and calibration images are deleted after
+processing; confirmed document scans are stored as encrypted JPG page objects in the
+vault. Images selected for an image entry are cropped before being encrypted into the
+vault. The app does not upload camera, gallery or OCR images.
 
 ## External backups
 
 The user may explicitly select an external document provider such as Google Drive,
 Dropbox, OneDrive or local storage through Android’s Storage Access Framework. The app
-writes encrypted VLT3 containers for backup. If the user explicitly exports an
-individual attachment, the selected destination receives that file's plaintext. The
+writes encrypted VLT3 containers for backup. If the user configures an automatic backup
+location, it is refreshed after each successful vault save; the provider receives
+ciphertext, not the vault plaintext. If the user explicitly exports an individual
+attachment, the selected destination receives that file's plaintext. The
 selected provider processes stored files under its own terms and privacy policy. The
 publisher does not receive the vault key. Pro CSV export is a separate user-initiated
 action that writes login fields, including passwords and TOTP secrets, as plaintext to a
-user-selected destination. CSV imports and supported Bitwarden, KeePass and 1Password
-plaintext exports are parsed locally and are not transmitted by the app.
+user-selected destination. CSV, XLSX (including password-protected workbooks when the
+user supplies the password), Bitwarden JSON, KeePass XML and 1Password 1PUX imports are
+parsed locally and are not transmitted by the app. Imported 1Password attachments are
+not retained.
 
 ## Biometrics and Keystore
 

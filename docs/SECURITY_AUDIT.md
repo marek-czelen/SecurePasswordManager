@@ -1,6 +1,7 @@
 # Security audit status
 
 **Status:** engineering review; not an independent penetration test or certification.
+**Last documentation review:** 2026-10-02.
 
 ## VLT3 controls implemented
 
@@ -16,6 +17,9 @@
 - Copy-on-write preserves current/previous manifests. Restore stages and validates a
   complete backup before switching the vault directory.
 - Manual encrypted backup and Recovery QR+passphrase restore are not gated by Free/Pro.
+- A selected automatic-backup destination receives refreshed encrypted VLT3 copies after
+  successful saves; it is not a scheduled background backup service.
+- Multi-page document scans are stored as independent encrypted JPG page objects.
 
 ## Remaining limitations
 
@@ -28,9 +32,15 @@
   list display. AES-GCM tags are checked when an object is decrypted.
 - Full-zeroization of Java strings, UI objects and provider/bitmap buffers is not
   guaranteed.
-- Connected Android tests could not run in the current environment because no device is
-  connected. Keystore/biometric/AtomicFile/fsync behavior still needs physical-device
-  verification.
+- Keystore/biometric/AtomicFile/fsync behavior still needs physical-device verification;
+  no connected-device result is included in this audit.
+- Google Play Billing is absent. The Free/Pro switch is debug-only; release builds report
+  Free, so Pro-gated features are not available in a release build.
+- The latest local `lintDebug` run failed with 21 errors and 81 warnings. Reported errors
+  include CameraX experimental-API opt-in usage, an AppCompat tint attribute and missing
+  German/French translations. Resolve and rerun lint before release.
+- The privacy policy and Play listing still contain placeholders; the in-app privacy URL
+  is an example URL. Replace them and review actual SDK disclosures before submission.
 
 ## Release gates
 

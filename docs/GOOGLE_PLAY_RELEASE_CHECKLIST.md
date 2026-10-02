@@ -11,6 +11,8 @@ before submitting the app.
 - [ ] Build and upload an Android App Bundle (`.aab`), not a debug APK.
 - [ ] Increment `versionCode` and set a production `versionName`.
 - [ ] Confirm the release build is not debuggable and has release signing.
+- [ ] Implement and verify Google Play Billing before advertising Pro; otherwise keep
+  Pro-gated features unavailable and do not promise a purchase path.
 - [ ] Keep the Play upload key separate from vault/recovery secrets.
 
 ## Technical requirements
@@ -18,6 +20,8 @@ before submitting the app.
 - [ ] Confirm `targetSdk` satisfies the current Play target API requirement at submission
   time; this project currently targets API 37.
 - [ ] Run release lint, unit tests, instrumentation tests and a clean release build.
+- [ ] Resolve all current lint errors and warnings that affect the release; the latest
+  local `lintDebug` run reported 21 errors and 81 warnings.
 - [ ] Test Android 12–latest on physical devices, including a StrongBox device and a
   device without StrongBox.
 - [ ] Test classic Autofill on Android 12–13 and Credential Manager password retrieval
@@ -45,13 +49,15 @@ before submitting the app.
 ## App content and data declarations
 
 - [ ] Complete the Data safety form from the actual release build and SDK behavior.
-- [ ] Declare camera access for user-triggered OCR.
+- [ ] Declare camera access for user-triggered OCR, image capture, document scanning
+  and calibration.
 - [ ] Declare local processing of authentication information, passwords, notes and
   user-selected images as applicable to the Play taxonomy.
 - [ ] Disclose that a user-selected Autofill/Credential Manager login is passed to the
   requesting app on the device.
-- [ ] Explain that user-selected exports to Google Drive/Dropbox/OneDrive are initiated
-  by the user and contain encrypted vault bytes.
+- [ ] Explain that a user-selected automatic-backup destination is refreshed after
+  successful saves and receives encrypted vault bytes; individual attachment and CSV
+  exports instead write plaintext when the user explicitly requests them.
 - [ ] Declare ML Kit and other SDK behavior based on their current documentation.
 - [ ] Provide an in-app privacy policy link.
 - [ ] Provide a clear way to delete the local vault and all local app data.
@@ -60,8 +66,9 @@ before submitting the app.
 
 ## Permissions and disclosure
 
-The camera permission must be requested only immediately before user-triggered camera
-OCR, after an in-app explanation. The app must not request camera access at startup.
+The camera permission must be requested only immediately before a user-triggered camera
+flow (OCR, image capture, document scanning or calibration), after an in-app explanation.
+The app must not request camera access at startup.
 There is no location, contacts, microphone, advertising ID or background tracking.
 
 Official references:

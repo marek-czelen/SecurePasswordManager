@@ -14,9 +14,9 @@ notes or vault plaintext.
 ### Local processing
 
 The app processes authentication information, user-created password-manager content
-(including encrypted password history), separately encrypted file attachments,
-user-selected images and user-selected password export files locally. When the user
-enables Android Autofill or Credential Manager, the provider handles form/credential
+(including encrypted password history), separately encrypted image/document/file
+attachments, user-selected images and user-selected password export files locally. When
+the user enables Android Autofill or Credential Manager, the provider handles form/credential
 requests locally and accesses vault entries only from an already-unlocked session or
 after biometric authentication. These values are not sent to the publisher.
 
@@ -29,10 +29,10 @@ publisher by SecurePasswordManager. Requests without a verified web origin requi
 biometric authentication and explicit user selection; verified web origins are filtered
 by exact host.
 
-The user can explicitly export or automatically copy one complete encrypted `vault.vlt3`
-container to a document provider. This is user-initiated transfer to the provider
-selected by the user; the application writes the encrypted header, manifest and object
-ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
+The user can explicitly export one complete encrypted `vault.vlt3` container or configure
+a document-provider location that is refreshed after each successful vault save. The
+location is selected by the user; the application writes the encrypted header, manifest
+and object ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
 that file's plaintext to the user-selected destination. Pro CSV export writes login
 fields, including passwords and TOTP secrets, as unencrypted UTF-8 CSV to a destination
 explicitly selected by the user. CSV export excludes images and file attachments. The app
@@ -40,8 +40,10 @@ warns that spreadsheet programs may interpret formula-like cell values when open
 
 ### Camera
 
-Camera is optional and used only for the user-triggered OCR flow. Photos are temporary
-inputs and are deleted after review. There is no background camera access.
+Camera is optional and used only for user-triggered image capture, OCR, document scanning
+and camera calibration. OCR and calibration inputs are temporary and deleted after use;
+confirmed scanned-document pages are retained only as encrypted vault objects. There is
+no background camera access.
 
 ## Play Console answers to verify
 
@@ -61,6 +63,8 @@ inputs and are deleted after review. There is no background camera access.
 Review current privacy/data practices for:
 
 - Google ML Kit Text Recognition;
+- CameraX and OpenCV;
+- Apache POI (XLSX import);
 - ZXing Embedded and its transitive dependencies;
 - AndroidX and Material libraries;
 - AndroidX Credential Manager;

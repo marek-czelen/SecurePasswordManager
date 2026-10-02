@@ -31,7 +31,9 @@ Keystore-wrapped Recovery QR before the passphrase can be verified. Failed passp
 checks use the same local rate limit as vault recovery.
 
 `VaultTextDataCodec` serializes text entries and opaque media references only. Images,
-thumbnails and files use independent immutable AES-256-GCM objects. HKDF-SHA-256
+thumbnails, scanned-document pages and files use independent immutable AES-256-GCM objects.
+Scanned documents are groups of up to 20 JPG page objects, with limits of 10 MiB per
+page and 60 MiB per document. HKDF-SHA-256
 derives a domain-separated key from the DEK, vault ID, object ID, generation, type and
 schema. AAD authenticates that context; each object generation uses a fresh ID, key and
 96-bit nonce.
@@ -41,14 +43,22 @@ distinct previous passwords and updated only when a password changes while Pro i
 Text schema version 2 adds this field; schema version 1 remains readable and migrates with
 an empty history. History values are viewable and copyable but cannot be restored from the UI.
 
-`AdvancedImportExport` parses CSV and single-sheet-at-a-time XLSX tables for user-selected
-column mapping, plus unencrypted Bitwarden JSON, KeePass XML and 1Password 1PUX exports.
-Imports are size-bounded, previewed, and appended as new entries through `saveData`; encrypted
-source formats are rejected. Raw imports are limited to 20 MiB, archive expansion is capped,
-and imports cannot exceed the vault's 10,000-entry limit. CSV export uses the fixed
+`AdvancedImportExport` parses CSV and XLSX worksheets for user-selected column mapping,
+plus Bitwarden JSON, KeePass XML and 1Password 1PUX exports. Password-protected XLSX files
+are supported after the user enters the workbook password; encrypted password-manager
+database formats are not. Imports are size-bounded, previewed, and appended as new entries
+through `saveData`; 1Password attachments are not imported. Raw imports are limited to
+20 MiB, archive expansion is capped, and imports cannot exceed the vault's 10,000-entry
+limit. CSV export uses the fixed
 `name, username, password, url, notes, folder, tags, totp` column order and writes plaintext
 only to a user-selected SAF destination. Images and file attachments are not represented in
 this CSV schema.
+
+Pro entitlement is supplied by `PremiumManager`. Its Free/Pro override is debug-only;
+without Google Play Billing, release builds report Free and all Pro-gated flows are
+unavailable in production builds. Linking an automatic backup location is not Pro-gated:
+the app writes an encrypted copy after each successful vault save, without a scheduled
+background job.
 
 ## Persistence and failure handling
 

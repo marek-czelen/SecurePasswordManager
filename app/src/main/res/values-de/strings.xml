@@ -262,7 +262,7 @@
     <string name="delete_vault_title">Lokalen Tresor löschen?</string>
     <string name="delete_vault_message">Lokaler Tresor, Geräteschlüssel und Cache-Dateien werden gelöscht. Externe Backups bleiben bestehen.</string>
     <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
-    <string name="privacy_policy_text">SecurePasswordManager verarbeitet Passwörter, Notizen, Passphrasen, QR-Codes, TOTP und Bilder lokal. Der Tresor wird vor dem Speichern verschlüsselt. OCR läuft auf dem Gerät.</string>
+    <string name="privacy_policy_text">SecurePasswordManager verarbeitet Passwörter, Notizen, Passphrasen, QR-Codes, TOTP und Bilder lokal. Die automatische Sicherung am ausgewählten Speicherort wird nach jedem erfolgreichen Speichern des Tresors aktualisiert und ist verschlüsselt. OCR läuft auf dem Gerät. Ein ausdrücklich angeforderter Anhang- oder CSV-Export kann Klartext an den ausgewählten Anbieter schreiben.</string>
     <string name="recovery_qr_title">Wiederherstellungscode</string>
     <string name="recovery_qr_note">RQR2: zufälliges 256-Bit-Geheimnis und authentifizierte Metadaten, niemals der DEK. Getrennt von vault.vlt3 aufbewahren. Wiederherstellung benötigt zusätzlich PIN / Passphrase.</string>
     <string name="passphrase_qr_title">PIN-/Passphrase-QR</string>

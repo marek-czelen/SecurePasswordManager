@@ -262,7 +262,7 @@
     <string name="delete_vault_title">Supprimer le coffre local ?</string>
     <string name="delete_vault_message">Cette action supprime le coffre local, les clés de l’appareil et le cache. Les sauvegardes externes ne sont pas supprimées.</string>
     <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
-    <string name="privacy_policy_text">SecurePasswordManager traite localement les mots de passe, notes, phrases secrètes, QR, TOTP et images. Le coffre est chiffré avant l’enregistrement. L’OCR fonctionne sur l’appareil.</string>
+    <string name="privacy_policy_text">SecurePasswordManager traite localement les mots de passe, notes, phrases secrètes, QR, TOTP et images. La sauvegarde automatique dans l’emplacement choisi est actualisée après chaque enregistrement réussi du coffre et elle est chiffrée. L’OCR fonctionne sur l’appareil. Un export explicite de pièce jointe ou CSV peut écrire des données en clair chez le fournisseur choisi.</string>
     <string name="recovery_qr_title">Code de récupération</string>
     <string name="recovery_qr_note">RQR2 : secret aléatoire de 256 bits et métadonnées authentifiées, jamais la DEK. Conservez-le séparément de vault.vlt3. La récupération nécessite aussi le PIN / la phrase secrète.</string>
     <string name="passphrase_qr_title">QR du PIN / de la phrase secrète</string>

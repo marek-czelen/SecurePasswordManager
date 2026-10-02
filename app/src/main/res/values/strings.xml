@@ -284,7 +284,7 @@
     <string name="delete_vault_title">Usunąć lokalny magazyn?</string>
     <string name="delete_vault_message">Ta operacja usuwa lokalny vault, klucze urządzenia i pliki cache. Kopie zewnętrzne nie zostaną usunięte.</string>
     <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
-    <string name="privacy_policy_text">SecurePasswordManager przetwarza hasła, notatki, passphrase, kody QR, TOTP i obrazy lokalnie. Vault jest szyfrowany przed zapisem. OCR działa na urządzeniu. Eksport do zewnętrznego dostawcy jest inicjowany przez użytkownika i zawiera wyłącznie zaszyfrowany plik.</string>
+    <string name="privacy_policy_text">SecurePasswordManager przetwarza hasła, notatki, passphrase, kody QR, TOTP i obrazy lokalnie. Automatyczna kopia w wybranej lokalizacji jest odświeżana po każdym udanym zapisie vaultu i jest zaszyfrowana. OCR działa na urządzeniu. Jawny eksport załącznika lub CSV może zapisać dane w postaci jawnej u wybranego dostawcy.</string>
 
     <!-- Recovery -->
     <string name="recovery_qr_title">Kod odzyskiwania</string>

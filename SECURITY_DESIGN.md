@@ -52,10 +52,12 @@ SHA-256 digests of ciphertext. Entry names, MIME types and references are inside
 encrypted data. Filesystem object names contain no user names or plaintext metadata.
 
 The single encrypted text block contains up to 10,000 entries, stable entry IDs, titles,
-logins, passwords, URLs, notes, TOTP, folders, tags, favorites and attachment references.
-It is padded to 4 KiB boundaries and capped at 32 MiB. It never contains image or file
-bytes. Images are separate objects up to 10 MiB, thumbnails up to 256 KiB, and files up
-to 10 MiB. The active vault is capped at 100 MiB. The first version does not chunk
+logins, passwords, URLs, notes, TOTP, folders, tags, favorites, up to five distinct
+previous passwords per login, and attachment references. It is padded to 4 KiB
+boundaries and capped at 32 MiB. It never contains image or file bytes. Images and
+document pages are separate JPG objects up to 10 MiB each; thumbnails are up to 256 KiB,
+and files are up to 10 MiB. A scanned document may contain up to 20 pages and 60 MiB
+total. The active vault is capped at 100 MiB. The first version does not chunk
 attachments.
 
 Each immutable object generation has a fresh random 256-bit object ID and generation ID,

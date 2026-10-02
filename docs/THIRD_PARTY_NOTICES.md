@@ -11,7 +11,12 @@ The dependency set currently includes:
 | ZXing Android Embedded | 4.3.0 | Apache License 2.0 |
 | Google ML Kit Text Recognition | 16.0.1 | Google terms/license; review current SDK terms |
 | Bouncy Castle | 1.79 | Bouncy Castle license |
+| CameraX (camera2/lifecycle/view) | 1.4.2 | Apache License 2.0 |
+| OpenCV | 4.12.0 | Apache License 2.0; verify the resolved artifact notice |
+| Apache POI | 5.4.1 | Apache License 2.0 |
 
-Generate a release dependency report and verify the final transitive dependency tree.
+The versions above are pinned in `gradle/libs.versions.toml`. Generate a release
+dependency report and verify the final transitive dependency tree, including native
+libraries and the ML Kit model artifacts.
 Do not copy this table blindly into a legal notice without checking the exact resolved
 artifacts and notices.
