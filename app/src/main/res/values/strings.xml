@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Secure password Store</string>
-    <string name="app_tagline">Bezpieczny menedżer haseł</string>
+    <string name="app_name">SecureVault: Passwords &amp; Docs</string>
+    <string name="app_tagline">Szyfrowany sejf na hasła i dokumenty</string>
 
     <!-- First run -->
     <string name="first_run_title">Utwórz magazyn</string>
@@ -272,7 +272,7 @@
     <string name="delete_vault_title">Usunąć lokalny magazyn?</string>
     <string name="delete_vault_message">Ta operacja usuwa lokalny vault, klucze urządzenia i pliki cache. Kopie zewnętrzne nie zostaną usunięte.</string>
     <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
-    <string name="privacy_policy_text">SecurePasswordManager przetwarza hasła, notatki, passphrase, kody QR, TOTP i obrazy lokalnie. Automatyczna kopia w wybranej lokalizacji jest odświeżana po każdym udanym zapisie vaultu i jest zaszyfrowana. OCR działa na urządzeniu. Jawny eksport załącznika lub CSV może zapisać dane w postaci jawnej u wybranego dostawcy.</string>
+    <string name="privacy_policy_text">SecureVault przetwarza hasła, notatki, passphrase, kody QR, TOTP i obrazy lokalnie. Automatyczna kopia w wybranej lokalizacji jest odświeżana po każdym udanym zapisie vaultu i jest zaszyfrowana. OCR działa na urządzeniu. Jawny eksport załącznika lub CSV może zapisać dane w postaci jawnej u wybranego dostawcy.</string>
 
     <!-- Recovery -->
     <string name="recovery_qr_title">Kod odzyskiwania</string>
@@ -321,21 +321,34 @@
     <string name="cd_qr">Kod odzyskiwania QR</string>
     <string name="settings_tutorial">Instrukcja aplikacji</string>
     <string name="settings_premium_debug">Tryb testowy Free / Pro</string>
+    <string name="settings_premium_title">SecureVault Pro</string>
+    <string name="settings_premium_desc">Jednorazowy zakup. Po aktywacji Pro pozostaje dostępne offline na tym urządzeniu.</string>
+    <string name="premium_action_buy">Kup Pro</string>
+    <string name="premium_action_buy_price">Kup Pro — %1$s</string>
+    <string name="premium_action_restore">Przywróć zakup</string>
+    <string name="premium_status_free">Aktywny plan: Free</string>
+    <string name="premium_status_pro">Aktywny plan: Pro (dostęp offline)</string>
+    <string name="premium_status_connecting">Sprawdzanie Google Play…</string>
+    <string name="premium_status_pending">Zakup oczekuje na potwierdzenie Google Play.</string>
+    <string name="premium_status_restore_found">Zakup Pro został przywrócony.</string>
+    <string name="premium_status_restore_not_found">Nie znaleziono zakupu Pro na tym koncie Google Play.</string>
+    <string name="premium_status_product_unavailable">Produkt Pro jest obecnie niedostępny w Google Play.</string>
+    <string name="premium_status_billing_unavailable">Google Play Billing jest niedostępny. Zapisany wcześniej dostęp Pro pozostaje dostępny offline.</string>
     <string name="settings_autofill">Autouzupełnianie haseł i Credential Manager</string>
-    <string name="settings_autofill_desc">Otwórz ustawienia Androida, włącz SecurePasswordManager jako dostawcę i wybierz go jako preferowany.</string>
+    <string name="settings_autofill_desc">Otwórz ustawienia Androida, włącz SecureVault jako dostawcę i wybierz go jako preferowany.</string>
     <string name="settings_autofill_enabled">Klasyczna usługa Autofill jest aktywna</string>
     <string name="settings_autofill_not_enabled">Nieaktywne - dotknij, aby skonfigurować</string>
     <string name="settings_autofill_provider_managed">Zarządzaj dostawcami i preferowaną usługą w ustawieniach Androida.</string>
-    <string name="credential_provider_label">SecurePasswordManager - hasła</string>
+    <string name="credential_provider_label">SecureVault - hasła</string>
     <string name="credential_save_not_supported">Zapisywanie nowych haseł z formularzy nie jest jeszcze obsługiwane.</string>
     <string name="autofill_setup_title">Włącz podpowiadanie haseł</string>
-    <string name="autofill_setup_message">Aby używać haseł z SecurePasswordManager w Androidzie 14 lub nowszym, włącz go na ekranie systemowym w sekcji „Dodatkowi dostawcy” i wybierz jako preferowaną usługę. Na starszym Androidzie ustaw go jako usługę autouzupełniania. Android wymaga potwierdzenia wyboru; nie ma osobnego uprawnienia runtime.</string>
+    <string name="autofill_setup_message">Aby używać haseł z SecureVault w Androidzie 14 lub nowszym, włącz go na ekranie systemowym w sekcji „Dodatkowi dostawcy” i wybierz jako preferowaną usługę. Na starszym Androidzie ustaw go jako usługę autouzupełniania. Android wymaga potwierdzenia wyboru; nie ma osobnego uprawnienia runtime.</string>
     <string name="action_enable_autofill">Otwórz ustawienia</string>
     <string name="action_later">Później</string>
-    <string name="msg_autofill_setup_returned">Wybierz SecurePasswordManager jako preferowaną usługę i włącz go w „Dodatkowych dostawcach”, jeśli jest wyłączony.</string>
+    <string name="msg_autofill_setup_returned">Wybierz SecureVault jako preferowaną usługę i włącz go w „Dodatkowych dostawcach”, jeśli jest wyłączony.</string>
 
-    <string name="autofill_service_label">SecurePasswordManager - magazyn haseł</string>
-    <string name="autofill_unlock">Odblokuj SecurePasswordManager</string>
+    <string name="autofill_service_label">SecureVault - magazyn haseł</string>
+    <string name="autofill_unlock">Odblokuj SecureVault</string>
     <string name="autofill_unlock_title">Odblokuj magazyn haseł</string>
     <string name="autofill_unlock_subtitle">Uwierzytelnij się, aby użyć zapisanego loginu.</string>
     <string name="autofill_auth_failed">Nie udało się uwierzytelnić magazynu.</string>

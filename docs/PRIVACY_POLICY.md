@@ -10,9 +10,10 @@ submission. Replace placeholders and adapt it to the final release and legal ent
 
 ## What the app does
 
-SecurePasswordManager is a local-first password manager. It encrypts the user’s vault
-on the device. The publisher does not receive the user’s passwords, passphrases,
-Recovery QR secrets, TOTP seeds, notes or vault plaintext.
+SecureVault: Passwords & Docs is a local-first encrypted vault for passwords, documents
+and files. It encrypts the user’s vault on the device. The publisher does not receive
+the user’s passwords, passphrases, Recovery QR secrets, TOTP seeds, notes or vault
+plaintext.
 
 ## Data processed
 
@@ -59,9 +60,18 @@ Biometric authentication is handled by Android `BiometricPrompt` and Android Key
 KeyMint. The app does not receive a fingerprint, face image or identity of the specific
 biometric used. It receives only authorization to use the device-bound key.
 
+## Google Play purchases
+
+The optional Pro entitlement is sold as a one-time purchase through Google Play Billing.
+Google Play handles payment processing; the app does not receive payment card details.
+The app processes the purchased product ID, purchase state and purchase token on-device
+to acknowledge and restore the purchase. It stores only a device-local Pro entitlement
+flag for offline access; the token is not sent to a publisher-controlled server. When
+Settings is opened, the app queries Google Play to reconcile the cached entitlement.
+
 ## Android Autofill and Credential Manager
 
-If the user enables SecurePasswordManager as an Android Autofill or Credential Manager
+If the user enables SecureVault as an Android Autofill or Credential Manager
 provider, Android may send the provider a form structure or credential request. The
 provider processes it and the encrypted vault locally. Verified browser origins are
 matched against saved entry URLs by exact host. Requests without a verified web origin

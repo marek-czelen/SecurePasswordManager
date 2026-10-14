@@ -54,11 +54,13 @@ limit. CSV export uses the fixed
 only to a user-selected SAF destination. Images and file attachments are not represented in
 this CSV schema.
 
-Pro entitlement is supplied by `PremiumManager`. Its Free/Pro override is debug-only;
-without Google Play Billing, release builds report Free and all Pro-gated flows are
-unavailable in production builds. Linking an automatic backup location is not Pro-gated:
-the app writes an encrypted copy after each successful vault save, without a scheduled
-background job.
+Pro entitlement is supplied by `PremiumManager`. `GooglePlayBillingManager` handles the
+one-time `pro_unlock` Play product, purchase acknowledgement and restore queries from
+Settings. The last known Play entitlement is cached locally so Pro-gated flows continue
+to work offline; a successful query with no purchased or pending Pro item clears the
+cache. The Free/Pro override remains debug-only. Linking an automatic backup location is
+not Pro-gated: the app writes an encrypted copy after each successful vault save, without
+a scheduled background job.
 
 ## Persistence and failure handling
 

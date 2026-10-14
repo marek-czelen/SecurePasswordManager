@@ -3,9 +3,10 @@
 This document is the product scope for the first monetization version. Security and
 recovery are never paywalled.
 
-**Release entitlement note:** Google Play Billing is not implemented. The Free/Pro
-switch exists only in debug builds; release builds report Free, so Pro-gated features
-listed below are not currently purchasable or available in release builds.
+**Release entitlement note:** Google Play Billing is integrated for a one-time Pro
+purchase with product ID `pro_unlock`. The product must be configured in Play Console.
+Release access comes from an owned Play purchase and is cached locally for offline use;
+the debug Free/Pro switch remains limited to debug builds.
 
 ## Implemented today
 
@@ -16,6 +17,8 @@ listed below are not currently purchasable or available in release builds.
 | Strong biometric hardware unlock | Implemented | Yes | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes | Yes |
 | Password entries | Implemented | Yes | Yes |
+| Google Play Billing purchase and restore | Implemented; Play Console product setup required | No | One-time `pro_unlock` purchase |
+| Offline Pro entitlement cache | Implemented | No | Cached on this device; reconciled with Play when Settings opens |
 | Password history (up to 5 previous distinct passwords) | Implemented | No | Yes; automatic capture on change, view and copy |
 | File attachments up to 10 MiB | Implemented | No | Yes |
 | Advanced import/export | Implemented | No | CSV/XLSX mapping (including password-protected XLSX), Bitwarden JSON, KeePass XML and 1Password 1PUX import, standard CSV export |
@@ -37,8 +40,6 @@ listed below are not currently purchasable or available in release builds.
 
 | Feature                                         | Current status | Proposed Pro behavior                               |
 |-------------------------------------------------|---|-----------------------------------------------------|
-| Google Play Billing entitlement                 | Not implemented | One-time `pro_upgrade` purchase                     |
-| Offline Pro entitlement cache                   | Not implemented | Use the last verified Play purchase locally         |
 | Scheduled backup retries                        | Not implemented | Background scheduling and retry policy |
 | Passkeys                                        | Not implemented | Android Credential Provider/WebAuthn                |
 | Advanced Autofill                               | Not implemented | Advanced save/update workflows; basic password retrieval remains Free |
@@ -90,5 +91,7 @@ Debug builds expose a **Free / Pro test mode** in Settings. It is guarded by
 `BuildConfig.DEBUG` and is absent from release builds. It only changes the entitlement
 reported by `PremiumManager`; it never changes cryptographic keys or vault access.
 
-The release entitlement must later be provided by Google Play Billing. A local cached
-entitlement is required so already-purchased local features continue to work offline.
+Release builds use the Play Billing purchase entitlement, not the debug switch. The
+device-local cache preserves an owned Pro entitlement while offline; a successful Play
+purchase query clears it if there is neither a purchased nor a pending Pro item. The
+cache is not transferred on reinstall, so the purchase must be queried from Play again.

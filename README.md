@@ -1,6 +1,7 @@
-# SecurePasswordManager
+# SecureVault: Passwords & Docs
 
-Local-first Android password manager using the VLT3 hybrid encrypted vault.
+Local-first Android encrypted vault for passwords, documents and files using the VLT3
+hybrid encrypted vault.
 
 > **Security status:** this is an engineering prototype, not a security certification.
 > Do not use it for irreplaceable production secrets until an independent mobile and
@@ -26,8 +27,9 @@ Local-first Android password manager using the VLT3 hybrid encrypted vault.
 - On-device OCR review, document scanning, clipboard timeout and `FLAG_SECURE`.
 - Polish, English, German and French UI resources.
 
-Pro entitlement is currently a debug-only test switch. Google Play Billing is not
-implemented, so release builds report Free and Pro-gated features are unavailable there.
+Pro entitlement uses a one-time Google Play Billing product (`pro_unlock`) and a
+device-local offline cache. Configure the matching product in Play Console before
+testing purchases. The Free/Pro override remains debug-only.
 
 VLT2 is not supported or migrated. If an old `vault.vlt` exists, use the previous app
 version to export its data before creating a VLT3 vault.

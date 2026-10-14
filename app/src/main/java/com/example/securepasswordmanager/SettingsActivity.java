@@ -13,6 +13,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
@@ -38,12 +39,19 @@ public final class SettingsActivity extends AppCompatActivity {
 
     private TextView autoLockValue;
     private MaterialSwitch autoLockSwitch;
+    private PremiumManager premiumManager;
+    private GooglePlayBillingManager billingManager;
+    private TextView playPremiumStatus;
+    private MaterialButton buyProButton;
+    private boolean proProductAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE);
+        if (!BuildConfig.DEBUG) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
+                    WindowManager.LayoutParams.FLAG_SECURE);
+        }
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_settings);
         View content = findViewById(android.R.id.content);
@@ -60,12 +68,12 @@ public final class SettingsActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(view ->
                 getOnBackPressedDispatcher().onBackPressed());
 
+        premiumManager = new PremiumManager(this);
         View premiumRow = findViewById(R.id.rowPremiumDebug);
         boolean debugOverrideAvailable =
                 getIntent().getBooleanExtra(EXTRA_DEBUG_OVERRIDE, false);
         premiumRow.setVisibility(debugOverrideAvailable ? View.VISIBLE : View.GONE);
         if (debugOverrideAvailable) {
-            PremiumManager premiumManager = new PremiumManager(this);
             MaterialSwitch premiumSwitch = findViewById(R.id.switchPremiumDebug);
             TextView premiumStatus = findViewById(R.id.premiumDebugStatus);
             boolean isPro = getIntent().getBooleanExtra(EXTRA_DEBUG_PRO, false);
@@ -76,6 +84,7 @@ public final class SettingsActivity extends AppCompatActivity {
                 updatePremiumStatus(premiumStatus, checked);
             });
         }
+        initializePlayBilling();
 
         findViewById(R.id.rowRecovery).setOnClickListener(view ->
                 returnAction(ACTION_SHOW_RECOVERY));
@@ -126,6 +135,84 @@ public final class SettingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateAutofillStatus();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (billingManager != null) {
+            billingManager.close();
+        }
+        super.onDestroy();
+    }
+
+    private void initializePlayBilling() {
+        playPremiumStatus = findViewById(R.id.premiumPlayStatus);
+        buyProButton = findViewById(R.id.buttonBuyPro);
+        MaterialButton restoreButton = findViewById(R.id.buttonRestorePro);
+        updatePlayPremiumStatus();
+        if (!premiumManager.isPlayPro()) {
+            playPremiumStatus.setText(R.string.premium_status_connecting);
+        }
+
+        buyProButton.setOnClickListener(view -> billingManager.launchPurchase(this));
+        restoreButton.setOnClickListener(view -> {
+            playPremiumStatus.setText(R.string.premium_status_connecting);
+            billingManager.restorePurchases();
+        });
+
+        billingManager = new GooglePlayBillingManager(this, premiumManager,
+                new GooglePlayBillingManager.Listener() {
+                    @Override
+                    public void onProductAvailable(String formattedPrice) {
+                        proProductAvailable = true;
+                        buyProButton.setText(getString(
+                                R.string.premium_action_buy_price, formattedPrice));
+                        updatePlayPremiumStatus();
+                    }
+
+                    @Override
+                    public void onProductUnavailable() {
+                        proProductAvailable = false;
+                        buyProButton.setEnabled(false);
+                        if (!premiumManager.isPlayPro()) {
+                            playPremiumStatus.setText(R.string.premium_status_product_unavailable);
+                        }
+                    }
+
+                    @Override
+                    public void onEntitlementChanged() {
+                        updatePlayPremiumStatus();
+                    }
+
+                    @Override
+                    public void onRestoreCompleted(boolean hasPro) {
+                        playPremiumStatus.setText(hasPro
+                                ? R.string.premium_status_restore_found
+                                : R.string.premium_status_restore_not_found);
+                    }
+
+                    @Override
+                    public void onPurchasePending() {
+                        playPremiumStatus.setText(R.string.premium_status_pending);
+                    }
+
+                    @Override
+                    public void onPurchaseCanceled() {
+                        updatePlayPremiumStatus();
+                    }
+
+                    @Override
+                    public void onBillingUnavailable() {
+                        playPremiumStatus.setText(R.string.premium_status_billing_unavailable);
+                    }
+                });
+        billingManager.start();
+    }
+
+    private void updatePlayPremiumStatus() {
+        playPremiumStatus.setText(premiumManager.isPlayPro()
+                ? R.string.premium_status_pro : R.string.premium_status_free);
+        buyProButton.setEnabled(proProductAvailable && !premiumManager.isPlayPro());
     }
 
     private void requestAutofillService() {

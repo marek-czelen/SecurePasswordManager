@@ -344,8 +344,10 @@ public final class MainActivity extends AppCompatActivity {
         // We handle edge-to-edge insets ourselves so no control is ever hidden behind the
         // status bar or the navigation bar.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE);
+        if (!BuildConfig.DEBUG) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
+                    WindowManager.LayoutParams.FLAG_SECURE);
+        }
         if (savedInstanceState != null) {
             // Restore in-flight capture state so a camera-triggered Activity recreation does
             // not lose the photo URI or wrongly auto-lock during the OCR flow.
@@ -2064,7 +2066,7 @@ public final class MainActivity extends AppCompatActivity {
                         : getString(R.string.remote_status_none))
                 .putExtra(SettingsActivity.EXTRA_DEBUG_OVERRIDE,
                         premiumManager.isDebugOverrideAvailable())
-                .putExtra(SettingsActivity.EXTRA_DEBUG_PRO, premiumManager.isPro());
+                .putExtra(SettingsActivity.EXTRA_DEBUG_PRO, premiumManager.isDebugPro());
         awaitingResult = true;
         settingsLauncher.launch(intent);
     }

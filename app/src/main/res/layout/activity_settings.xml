@@ -56,6 +56,47 @@
         android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/rowPremiumPlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_premium_title"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/settings_premium_desc"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+        <TextView
+            android:id="@+id/premiumPlayStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorPrimary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonBuyPro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="@string/premium_action_buy" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonRestorePro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/premium_action_restore" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/rowPremiumDebug"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

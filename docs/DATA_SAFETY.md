@@ -11,6 +11,12 @@ The current build has no publisher-controlled backend, analytics, advertising or
 telemetry service. It does not collect passwords, passphrases, QR secrets, TOTP seeds,
 notes or vault plaintext.
 
+Google Play Billing handles the optional one-time Pro purchase. The app receives the
+product ID, purchase state and purchase token for acknowledgement/restore; it stores only
+a boolean Pro entitlement in private local preferences and does not send purchase tokens
+to a publisher backend. Payment card details are handled by Google Play, not the app.
+Review the current Play Billing SDK disclosures when completing the final Data Safety form.
+
 ### Local processing
 
 The app processes authentication information, user-created password-manager content
@@ -25,7 +31,7 @@ after biometric authentication. These values are not sent to the publisher.
 When the user selects a saved login in an Autofill or Credential Manager suggestion,
 Android supplies its username and password to the requesting app. This transfers the
 selected plaintext credential to that app on the device; it is not sent to the
-publisher by SecurePasswordManager. Requests without a verified web origin require
+publisher by SecureVault. Requests without a verified web origin require
 biometric authentication and explicit user selection; verified web origins are filtered
 by exact host.
 

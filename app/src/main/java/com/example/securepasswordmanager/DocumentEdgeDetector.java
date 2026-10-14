@@ -10,6 +10,7 @@ import com.example.securepasswordmanager.crypto.VaultImageProcessor;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
@@ -26,8 +27,6 @@ import java.util.List;
 
 /** Detects a document quadrilateral and rectifies approved captures into encrypted-ready JPGs. */
 final class DocumentEdgeDetector {
-    private static final double MIN_DOCUMENT_AREA = 0.06;
-    private static final double MAX_DOCUMENT_AREA = 0.95;
     private static final int MAX_DETECTION_DIMENSION = 1600;
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private static final double DOCUMENT_EDGE_PADDING_RATIO = 0.02;
@@ -226,87 +225,82 @@ final class DocumentEdgeDetector {
     }
 
     private static Point[] findCorners(Mat gray) {
-        return findCannyCorners(gray, 35, 105, MIN_DOCUMENT_AREA,
-                new double[]{0.015, 0.025, 0.04});
-    }
-
-    private static Point[] findCannyCorners(Mat gray, double lowThreshold,
-                                            double highThreshold, double minAreaFraction,
-                                            double[] approximationFactors) {
         Mat blurred = new Mat();
         Mat edges = new Mat();
-        Mat closedEdges = new Mat();
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
+        Mat dilated = new Mat();
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Mat hierarchy = new Mat();
+        Mat input = null;
+        List<MatOfPoint> contours = new ArrayList<>();
+        MatOfInt hullIndices = new MatOfInt();
         try {
-            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
-            Imgproc.Canny(blurred, edges, lowThreshold, highThreshold);
-            Imgproc.morphologyEx(edges, closedEdges, Imgproc.MORPH_CLOSE, kernel);
-            return findCornersFromContours(closedEdges, minAreaFraction, approximationFactors);
+            Imgproc.GaussianBlur(gray, blurred, new Size(7, 7), 0);
+            Imgproc.Canny(blurred, edges, 40, 150);
+            Imgproc.dilate(edges, dilated, kernel, new Point(-1, -1), 2);
+            input = dilated.clone();
+            Imgproc.findContours(input, contours, hierarchy,
+                    Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            if (contours.isEmpty()) {
+                return null;
+            }
+            contours.sort((first, second) -> Double.compare(
+                    Imgproc.contourArea(second), Imgproc.contourArea(first)));
+
+            MatOfPoint largestContour = contours.get(0);
+            Imgproc.convexHull(largestContour, hullIndices);
+            Point[] contourPoints = largestContour.toArray();
+            int[] hullPointIndices = hullIndices.toArray();
+            if (hullPointIndices.length == 0) {
+                return null;
+            }
+
+            Point topLeft = null;
+            Point topRight = null;
+            Point bottomRight = null;
+            Point bottomLeft = null;
+            double minSum = Double.POSITIVE_INFINITY;
+            double maxSum = Double.NEGATIVE_INFINITY;
+            double minDifference = Double.POSITIVE_INFINITY;
+            double maxDifference = Double.NEGATIVE_INFINITY;
+            for (int pointIndex : hullPointIndices) {
+                Point point = contourPoints[pointIndex];
+                double sum = point.x + point.y;
+                double difference = point.y - point.x;
+                if (sum < minSum) {
+                    minSum = sum;
+                    topLeft = point;
+                }
+                if (sum > maxSum) {
+                    maxSum = sum;
+                    bottomRight = point;
+                }
+                if (difference < minDifference) {
+                    minDifference = difference;
+                    topRight = point;
+                }
+                if (difference > maxDifference) {
+                    maxDifference = difference;
+                    bottomLeft = point;
+                }
+            }
+            if (topLeft == null || topRight == null
+                    || bottomRight == null || bottomLeft == null) {
+                return null;
+            }
+            return new Point[]{topLeft, topRight, bottomRight, bottomLeft};
         } finally {
             blurred.release();
             edges.release();
-            closedEdges.release();
+            dilated.release();
             kernel.release();
-        }
-    }
-
-    private static Point[] findCornersFromContours(Mat contourImage,
-                                                    double minAreaFraction,
-                                                    double[] approximationFactors) {
-        Mat input = contourImage.clone();
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contours = new ArrayList<>();
-        Point[] best = null;
-        double largestArea = 0;
-        try {
-            Imgproc.findContours(input, contours, hierarchy,
-                    Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-            double imageArea = contourImage.cols() * (double) contourImage.rows();
-            for (MatOfPoint contour : contours) {
-                double area = Math.abs(Imgproc.contourArea(contour));
-                double fraction = area / imageArea;
-                if (fraction < minAreaFraction || fraction > MAX_DOCUMENT_AREA
-                        || area <= largestArea) {
-                    continue;
-                }
-                MatOfPoint2f curve = new MatOfPoint2f(contour.toArray());
-                MatOfPoint2f approximation = new MatOfPoint2f();
-                try {
-                    double perimeter = Imgproc.arcLength(curve, true);
-                    for (double factor : approximationFactors) {
-                        Imgproc.approxPolyDP(curve, approximation, perimeter * factor, true);
-                        if (approximation.total() != 4) {
-                            continue;
-                        }
-                        Point[] ordered = order(approximation.toArray());
-                        if (isValidDocumentQuad(ordered, contourImage.cols(),
-                                contourImage.rows())) {
-                            best = ordered;
-                            largestArea = area;
-                            break;
-                        }
-                    }
-                } finally {
-                    curve.release();
-                    approximation.release();
-                }
+            hierarchy.release();
+            if (input != null) {
+                input.release();
             }
-            return best;
-        } finally {
             for (MatOfPoint contour : contours) {
                 contour.release();
             }
-            input.release();
-            hierarchy.release();
-        }
-    }
-
-    private static boolean isValidDocumentQuad(Point[] points, int width, int height) {
-        MatOfPoint polygon = new MatOfPoint(points);
-        try {
-            return Imgproc.isContourConvex(polygon) && !touchesFrame(points, width, height);
-        } finally {
-            polygon.release();
+            hullIndices.release();
         }
     }
 
@@ -327,44 +321,6 @@ final class DocumentEdgeDetector {
             points[index] = new Point(x * width, y * height);
         }
         return points;
-    }
-
-    private static boolean touchesFrame(Point[] points, int width, int height) {
-        double marginX = width * 0.01;
-        double marginY = height * 0.01;
-        for (Point point : points) {
-            if (point.x <= marginX || point.y <= marginY
-                    || point.x >= width - marginX || point.y >= height - marginY) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static Point[] order(Point[] points) {
-        double sumX = 0;
-        double sumY = 0;
-        for (Point point : points) {
-            sumX += point.x;
-            sumY += point.y;
-        }
-        double centerX = sumX / points.length;
-        double centerY = sumY / points.length;
-        Point[] ordered = points.clone();
-        Arrays.sort(ordered, (first, second) -> Double.compare(
-                Math.atan2(first.y - centerY, first.x - centerX),
-                Math.atan2(second.y - centerY, second.x - centerX)));
-        int start = 0;
-        double minSum = Double.MAX_VALUE;
-        for (int index = 0; index < ordered.length; index++) {
-            double sum = ordered[index].x + ordered[index].y;
-            if (sum < minSum) {
-                minSum = sum;
-                start = index;
-            }
-        }
-        return new Point[]{ordered[start], ordered[(start + 1) % 4],
-                ordered[(start + 2) % 4], ordered[(start + 3) % 4]};
     }
 
     private static void resizeForDetection(Mat source, Mat destination) {

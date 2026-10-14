@@ -13,6 +13,16 @@ before submitting the app.
 - [ ] Confirm the release build is not debuggable and has release signing.
 - [ ] Implement and verify Google Play Billing before advertising Pro; otherwise keep
   Pro-gated features unavailable and do not promise a purchase path.
+- [ ] Create the one-time in-app product `pro_unlock` in Play Console. Product IDs are
+  scoped to an app: the same ID may be used by another app, but its purchase does not
+  automatically unlock Pro in that other app.
+- [ ] Add Google accounts as license testers, publish an internal testing release, and
+  install it from the Play Store opt-in link. Test purchase, acknowledgement, restore,
+  pending purchase and offline cached access with a Play test payment method; test
+  purchases do not charge the tester.
+- [ ] Confirm restored purchases are queried from Play after reinstall/device transfer;
+  the local offline cache is device-local and is cleared after a successful query reports
+  neither a purchased nor pending Pro item.
 - [ ] Keep the Play upload key separate from vault/recovery secrets.
 
 ## Technical requirements
@@ -34,6 +44,8 @@ before submitting the app.
 
 ## Store listing
 
+- [ ] Set the app title to `SecureVault: Passwords & Docs` and keep it consistent with
+  the in-app name.
 - [ ] App name, short description, full description and screenshots are truthful.
 - [ ] Do not claim “unbreakable”, “anonymous”, or guaranteed plausible deniability.
 - [ ] Explain that the app is local-first and that a Recovery QR is a secret.
