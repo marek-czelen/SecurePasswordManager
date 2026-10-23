@@ -10,8 +10,11 @@
     <string name="unlock_subtitle">Unlock vault</string>
     <string name="hint_pin">PIN / passphrase</string>
     <string name="action_unlock">PIN + QR (recovery)</string>
-    <string name="action_biometric">Unlock with strong biometrics</string>
+    <string name="action_biometric">Unlock with biometrics or device lock</string>
     <string name="action_recovery">Recover on a new device</string>
+    <string name="device_lock_required_title">Android screen lock required</string>
+    <string name="device_lock_required_message">To protect the vault key, set a device PIN, pattern or password in Android settings. Biometrics are optional.</string>
+    <string name="action_open_security_settings">Open security settings</string>
     <string name="err_recovery_passphrase_policy">The recovery passphrase must be 12–24 characters and cannot be digits only.</string>
     <string name="err_recovery_decryption">Could not decrypt the backup. Check that the passphrase, Recovery QR and backup file belong to the same vault.</string>
     <string name="list_title">Passwords</string>
@@ -279,9 +282,9 @@
     <string name="err_legacy_vault">A VLT2 vault was detected, but this version does not support it. Open it with the previous app version or create a new vault.</string>
     <string name="err_pin_mismatch">PIN / passphrase must be 12–24 characters, not digits only, and must match confirmation.</string>
     <string name="err_create">Could not create the vault.</string>
-    <string name="err_unlock">Unlock with strong biometrics. PIN / passphrase is used together with the QR during recovery.</string>
+    <string name="err_unlock">Unlock with biometrics or your Android screen-lock PIN, pattern or password. Recovery also requires the QR code.</string>
     <string name="err_open">Could not open the vault.</string>
-    <string name="err_biometric">Biometrics are unavailable on this device.</string>
+    <string name="err_biometric">Could not authenticate. Set an Android screen lock or enroll strong biometrics.</string>
     <string name="err_save">Could not save changes.</string>
     <string name="err_recovery_create">Could not create the recovery code.</string>
     <string name="err_recovery">Recovery failed.</string>
@@ -291,7 +294,7 @@
     <string name="err_change_pin_true">Change the PIN after unlocking with the correct PIN.</string>
     <string name="msg_copied">Copied to clipboard</string>
     <string name="cd_logo">Application logo</string>
-    <string name="cd_biometric">Unlock with biometrics</string>
+    <string name="cd_biometric">Unlock with biometrics or device lock</string>
     <string name="cd_copy">Copy</string>
     <string name="cd_qr">Recovery QR code</string>
     <string name="settings_tutorial">App tutorial</string>
@@ -363,7 +366,7 @@
     <string name="help_images_text">Choose the camera or gallery, crop the photo with zoom, name it and save it. Only the cropped JPG is encrypted in the vault.</string>
     <string name="help_images_action">Open image adding</string>
     <string name="help_security_title">3. Security</string>
-    <string name="help_security_text">Biometrics are the default on a configured device. Auto-lock is configurable. TOTP is optional and appears only after Show code.</string>
+    <string name="help_security_text">Unlock with strong biometrics or your Android screen-lock PIN, pattern or password. Auto-lock is configurable. TOTP appears only after Show code.</string>
     <string name="help_generator_action">Open password generator</string>
     <string name="help_settings_action">Open Settings</string>
     <string name="help_backup_title">4. Backups and recovery</string>

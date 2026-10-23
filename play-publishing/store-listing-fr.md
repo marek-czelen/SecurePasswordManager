@@ -16,8 +16,11 @@ aucun compte ni service cloud propre.
 - Recherchez les entrées, classez-les dans des dossiers et ajoutez des favoris.
 - Utilisez le générateur de mots de passe et les vérifications locales des mots de passe
   faibles ou réutilisés.
+- Déverrouillez avec une biométrie forte ou le PIN, le schéma ou le mot de passe de
+  verrouillage Android. La biométrie est facultative, mais un verrouillage sécurisé est
+  requis.
 - Activez Autofill Android ou Credential Manager pour sélectionner un identifiant
-  enregistré après authentification.
+  enregistré après authentification de l’appareil.
 
 **Coffre chiffré**
 - VLT3 chiffre les données du coffre localement.

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault: Passwords &amp; Docs</string>
+    <string name="app_name">SecureVault\nPasswords &amp; Docs</string>
     <string name="app_tagline">Coffre chiffré pour mots de passe et documents</string>
     <string name="first_run_title">Créer le coffre-fort</string>
     <string name="first_run_subtitle">Définissez un PIN ou une phrase secrète de 12 à 24 caractères (pas uniquement des chiffres). Enregistrez aussi le QR indépendant : les deux sont nécessaires à la récupération.</string>
@@ -10,8 +10,11 @@
     <string name="unlock_subtitle">Déverrouiller le coffre-fort</string>
     <string name="hint_pin">PIN / phrase secrète</string>
     <string name="action_unlock">PIN + QR (récupération)</string>
-    <string name="action_biometric">Déverrouiller avec la biométrie forte</string>
+    <string name="action_biometric">Déverrouiller par biométrie ou verrouillage écran</string>
     <string name="action_recovery">Récupérer sur un nouvel appareil</string>
+    <string name="device_lock_required_title">Verrouillage Android requis</string>
+    <string name="device_lock_required_message">Pour protéger la clé du coffre, définissez un code PIN, un schéma ou un mot de passe dans les paramètres Android. La biométrie est facultative.</string>
+    <string name="action_open_security_settings">Ouvrir les paramètres de sécurité</string>
     <string name="err_recovery_passphrase_policy">La phrase secrète de récupération doit comporter 12 à 24 caractères et ne peut pas contenir uniquement des chiffres.</string>
     <string name="err_recovery_decryption">Impossible de déchiffrer la sauvegarde. Vérifiez que la phrase secrète, le QR de récupération et le fichier de sauvegarde correspondent au même coffre.</string>
     <string name="list_title">Mots de passe</string>
@@ -275,9 +278,9 @@
     <string name="err_legacy_vault">Un coffre VLT2 a été détecté, mais cette version ne le prend pas en charge. Ouvrez-le avec la version précédente de l’application ou créez un nouveau coffre.</string>
     <string name="err_pin_mismatch">Le PIN / la phrase secrète doit comporter 12–24 caractères, pas uniquement des chiffres, et la confirmation doit correspondre.</string>
     <string name="err_create">Impossible de créer le coffre.</string>
-    <string name="err_unlock">Utilisez la biométrie forte pour déverrouiller. Le PIN / la phrase secrète est utilisé avec le QR lors de la récupération.</string>
+    <string name="err_unlock">Déverrouillez avec la biométrie ou le PIN, le schéma ou le mot de passe de verrouillage Android. La récupération nécessite aussi le QR.</string>
     <string name="err_open">Impossible d’ouvrir le coffre.</string>
-    <string name="err_biometric">La biométrie n’est pas disponible sur cet appareil.</string>
+    <string name="err_biometric">Authentification impossible. Définissez un verrouillage Android ou configurez une biométrie forte.</string>
     <string name="err_save">Impossible d’enregistrer les modifications.</string>
     <string name="err_recovery_create">Impossible de créer le code de récupération.</string>
     <string name="err_recovery">Échec de la récupération.</string>
@@ -287,7 +290,7 @@
     <string name="err_change_pin_true">Modifiez le PIN après un déverrouillage correct.</string>
     <string name="msg_copied">Copié dans le presse-papiers</string>
     <string name="cd_logo">Logo de l’application</string>
-    <string name="cd_biometric">Déverrouiller avec la biométrie</string>
+    <string name="cd_biometric">Déverrouiller par biométrie ou verrouillage écran</string>
     <string name="cd_copy">Copier</string>
     <string name="cd_qr">Code QR de récupération</string>
     <string name="settings_tutorial">Guide de l’application</string>
@@ -359,7 +362,7 @@
     <string name="help_images_text">Choisissez l’appareil photo ou la galerie, recadrez avec le zoom, donnez un nom et enregistrez. Seul le JPG recadré est chiffré dans le coffre.</string>
     <string name="help_images_action">Ajouter une image</string>
     <string name="help_security_title">3. Sécurité</string>
-    <string name="help_security_text">La biométrie est la méthode par défaut sur un appareil configuré. Le verrouillage automatique est réglable. Le TOTP n’apparaît qu’après « Afficher le code ».</string>
+    <string name="help_security_text">Déverrouillez avec la biométrie forte ou le PIN, le schéma ou le mot de passe de verrouillage Android. Le verrouillage automatique est réglable. Le TOTP apparaît après « Afficher le code ».</string>
     <string name="help_generator_action">Ouvrir le générateur</string>
     <string name="help_settings_action">Ouvrir les paramètres</string>
     <string name="help_backup_title">4. Sauvegardes et récupération</string>

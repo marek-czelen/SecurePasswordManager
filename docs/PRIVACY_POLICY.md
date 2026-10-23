@@ -1,8 +1,8 @@
 # Privacy policy — draft
 
-**Effective date:** `<date>`  
-**Publisher:** `<legal entity or person>`  
-**Contact:** `<privacy email>`  
+**Effective date:** `01.10.2023`  
+**Publisher:** `Cretorix`  
+**Contact:** `talk@cretotix.eu`  
 **Policy URL:** `<HTTPS URL>`
 
 This draft must be reviewed and published at a stable HTTPS URL before a Google Play
@@ -54,11 +54,14 @@ user supplies the password), Bitwarden JSON, KeePass XML and 1Password 1PUX impo
 parsed locally and are not transmitted by the app. Imported 1Password attachments are
 not retained.
 
-## Biometrics and Keystore
+## Device authentication and Keystore
 
-Biometric authentication is handled by Android `BiometricPrompt` and Android Keystore/
-KeyMint. The app does not receive a fingerprint, face image or identity of the specific
-biometric used. It receives only authorization to use the device-bound key.
+Authentication is handled by Android `BiometricPrompt` and Android Keystore/KeyMint.
+The user can authenticate with strong biometrics or the device's secure screen credential
+(PIN, pattern or password). The app does not receive the device credential, a fingerprint,
+face image or the identity of the specific biometric used. It receives only authorization
+to use the device-bound key. A secure Android screen lock is required; biometric
+enrollment is optional.
 
 ## Google Play purchases
 
@@ -75,7 +78,7 @@ If the user enables SecureVault as an Android Autofill or Credential Manager
 provider, Android may send the provider a form structure or credential request. The
 provider processes it and the encrypted vault locally. Verified browser origins are
 matched against saved entry URLs by exact host. Requests without a verified web origin
-require biometric authentication and explicit entry selection. After the user selects a
+require device authentication and explicit entry selection. After the user selects a
 credential, Android supplies its username and password to the requesting app, which
 receives that plaintext and handles it under its own privacy policy. The provider does
 not save newly entered credentials or send vault data to the publisher. Provider

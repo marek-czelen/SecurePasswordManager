@@ -2,7 +2,7 @@
 
 ## Application flow
 
-`MainActivity` owns screens, biometric prompts, item dialogs and auto-lock. It delegates
+`MainActivity` owns screens, device-authentication prompts, item dialogs and auto-lock. It delegates
 vault persistence to `VaultV3Repository`. `Session` holds decrypted text data and the DEK
 only while the UI is unlocked or recreated within the same process.
 
@@ -26,7 +26,7 @@ passphrase.
 
 Passphrase QR export verifies the entered phrase by unwrapping the current DEK with the
 in-memory Recovery QR secret; it does not persist the passphrase. If that secret is absent
-after a biometric-only process restart, the user must authenticate once to unlock the local
+after a device-authenticated process restart, the user must authenticate once to unlock the local
 Keystore-wrapped Recovery QR before the passphrase can be verified. Failed passphrase
 checks use the same local rate limit as vault recovery.
 
@@ -77,7 +77,7 @@ device key, then switches the staged vault directory.
 
 Passphrase QR creation verifies the entered passphrase by unwrapping the current DEK with
 the independent Recovery QR secret. The app never persists the passphrase for QR display;
-after a biometric-only process restart it can load the local Recovery QR secret from its
+after a device-authenticated process restart it can load the local Recovery QR secret from its
 Keystore wrapper, then verify the manually entered passphrase.
 
 ## UI security rules
@@ -94,4 +94,5 @@ Keystore wrapper, then verify the manually entered passphrase.
 JVM tests cover KDF/AEAD, header and manifest tampering, object framing, text limits,
 backup round-trip, root-switch failure recovery and orphan collection. Android tests
 cover AtomicFile, bitmap processing and hardware-backed repository flows. Run connected
-tests on a device with hardware-backed strong-biometric Keystore before release.
+tests on devices with hardware-backed Keystore, using both biometric and device-credential
+authentication before release.

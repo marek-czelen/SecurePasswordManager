@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault: Passwords &amp; Docs</string>
+    <string name="app_name">SecureVault\nPasswords &amp; Docs</string>
     <string name="app_tagline">Verschlüsselter Tresor für Passwörter und Dokumente</string>
     <string name="first_run_title">Tresor erstellen</string>
     <string name="first_run_subtitle">Lege eine neue 12–24 Zeichen lange PIN oder Passphrase fest (nicht nur Ziffern). Speichere auch den unabhängigen QR-Code — beide werden zur Wiederherstellung benötigt.</string>
@@ -10,8 +10,11 @@
     <string name="unlock_subtitle">Tresor entsperren</string>
     <string name="hint_pin">PIN / Passphrase</string>
     <string name="action_unlock">PIN + QR (Wiederherstellung)</string>
-    <string name="action_biometric">Mit starker Biometrie entsperren</string>
+    <string name="action_biometric">Mit Biometrie oder Gerätesperre entsperren</string>
     <string name="action_recovery">Auf neuem Gerät wiederherstellen</string>
+    <string name="device_lock_required_title">Android-Bildschirmsperre erforderlich</string>
+    <string name="device_lock_required_message">Lege zum Schutz des Tresorschlüssels in den Android-Einstellungen eine PIN, ein Muster oder ein Passwort fest. Biometrie ist optional.</string>
+    <string name="action_open_security_settings">Sicherheitseinstellungen öffnen</string>
     <string name="err_recovery_passphrase_policy">Die Wiederherstellungs-Passphrase muss 12–24 Zeichen lang sein und darf nicht nur aus Ziffern bestehen.</string>
     <string name="err_recovery_decryption">Die Sicherung konnte nicht entschlüsselt werden. Prüfe, ob Passphrase, Recovery-QR und Sicherungsdatei zum selben Tresor gehören.</string>
     <string name="list_title">Passwörter</string>
@@ -275,9 +278,9 @@
     <string name="err_legacy_vault">Ein VLT2-Tresor wurde erkannt, wird von dieser Version aber nicht unterstützt. Öffne ihn mit der vorherigen App-Version oder erstelle einen neuen Tresor.</string>
     <string name="err_pin_mismatch">PIN / Passphrase muss 12–24 Zeichen lang sein, darf nicht nur aus Ziffern bestehen und muss bestätigt werden.</string>
     <string name="err_create">Tresor konnte nicht erstellt werden.</string>
-    <string name="err_unlock">Entsperre mit starker Biometrie. PIN / Passphrase wird bei der Wiederherstellung zusammen mit dem QR verwendet.</string>
+    <string name="err_unlock">Entsperre mit Biometrie oder der Android-Bildschirmsperre (PIN, Muster oder Passwort). Zur Wiederherstellung wird auch der QR-Code benötigt.</string>
     <string name="err_open">Tresor konnte nicht geöffnet werden.</string>
-    <string name="err_biometric">Biometrie ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="err_biometric">Authentifizierung fehlgeschlagen. Richte eine Android-Bildschirmsperre oder starke Biometrie ein.</string>
     <string name="err_save">Änderungen konnten nicht gespeichert werden.</string>
     <string name="err_recovery_create">Wiederherstellungscode konnte nicht erstellt werden.</string>
     <string name="err_recovery">Wiederherstellung fehlgeschlagen.</string>
@@ -287,7 +290,7 @@
     <string name="err_change_pin_true">Ändere die PIN nach dem Entsperren mit der richtigen PIN.</string>
     <string name="msg_copied">In die Zwischenablage kopiert</string>
     <string name="cd_logo">App-Logo</string>
-    <string name="cd_biometric">Mit Biometrie entsperren</string>
+    <string name="cd_biometric">Mit Biometrie oder Gerätesperre entsperren</string>
     <string name="cd_copy">Kopieren</string>
     <string name="cd_qr">Wiederherstellungs-QR-Code</string>
     <string name="settings_tutorial">App-Anleitung</string>
@@ -359,7 +362,7 @@
     <string name="help_images_text">Kamera oder Galerie wählen, Foto mit Zoom zuschneiden, benennen und speichern. Nur das JPG wird verschlüsselt im Tresor gespeichert.</string>
     <string name="help_images_action">Bild hinzufügen</string>
     <string name="help_security_title">3. Sicherheit</string>
-    <string name="help_security_text">Auf einem konfigurierten Gerät ist Biometrie voreingestellt. Die automatische Sperre ist einstellbar. TOTP wird erst nach „Code anzeigen“ sichtbar.</string>
+    <string name="help_security_text">Entsperre mit starker Biometrie oder der Android-Bildschirmsperre (PIN, Muster oder Passwort). Die automatische Sperre ist einstellbar. TOTP erscheint erst nach „Code anzeigen“.</string>
     <string name="help_generator_action">Passwortgenerator öffnen</string>
     <string name="help_settings_action">Einstellungen öffnen</string>
     <string name="help_backup_title">4. Backups und Wiederherstellung</string>

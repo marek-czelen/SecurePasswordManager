@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <com.example.securepasswordmanager.ZoomableImageView
+    <com.cretorix.securepasswordmanager.ZoomableImageView
         android:id="@+id/fullscreenImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

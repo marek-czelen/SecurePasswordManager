@@ -7,6 +7,7 @@ The dependency set currently includes:
 |---|---|---|
 | AndroidX/AppCompat/Core/RecyclerView/ConstraintLayout | Gradle version catalog | Apache License 2.0 |
 | AndroidX Credential Manager | 1.6.0 | Apache License 2.0 |
+| Google Play Billing Library | 9.1.0 | Apache License 2.0 |
 | Material Components | Gradle version catalog | Apache License 2.0 |
 | ZXing Android Embedded | 4.3.0 | Apache License 2.0 |
 | Google ML Kit Text Recognition | 16.0.1 | Google terms/license; review current SDK terms |

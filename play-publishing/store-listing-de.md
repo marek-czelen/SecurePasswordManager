@@ -16,7 +16,9 @@ App betreibt weder ein Konto noch eine eigene Cloud.
 - Durchsuche Einträge, ordne sie in Ordnern und markiere Favoriten.
 - Nutze den Passwortgenerator und lokale Prüfungen auf schwache oder wiederverwendete
   Passwörter.
-- Aktiviere Android Autofill oder Credential Manager, um nach der Authentifizierung
+- Entsperre mit starker Biometrie oder der Android-Bildschirmsperre (PIN, Muster oder
+  Passwort). Biometrie ist optional, eine sichere Bildschirmsperre ist erforderlich.
+- Aktiviere Android Autofill oder Credential Manager, um nach der Geräteauthentifizierung
   einen gespeicherten Login auszuwählen.
 
 **Verschlüsselter Tresor**

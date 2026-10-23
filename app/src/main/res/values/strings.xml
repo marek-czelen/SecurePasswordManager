@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault: Passwords &amp; Docs</string>
+    <string name="app_name">SecureVault\nPasswords &amp; Docs</string>
     <string name="app_tagline">Szyfrowany sejf na hasła i dokumenty</string>
 
     <!-- First run -->
@@ -11,11 +11,14 @@
     <string name="first_run_note">Kod QR zawiera losowy sekret, nie klucz danych. Przechowuj go oddzielnie od pliku vault.vlt3 i PIN-u.</string>
 
     <!-- Unlock -->
-    <string name="unlock_subtitle">Odblokuj magazyn</string>
+    <string name="unlock_subtitle"> </string>
     <string name="hint_pin">PIN / hasło</string>
     <string name="action_unlock">PIN + QR (odzyskiwanie)</string>
-    <string name="action_biometric">Odblokuj biometrią</string>
+    <string name="action_biometric">Odblokuj magazyn</string>
     <string name="action_recovery">Odzyskiwanie na nowym urządzeniu</string>
+    <string name="device_lock_required_title">Wymagana blokada ekranu Androida</string>
+    <string name="device_lock_required_message">Aby chronić klucz sejfu, ustaw w Androidzie PIN, wzór lub hasło. Biometria jest opcjonalna.</string>
+    <string name="action_open_security_settings">Otwórz ustawienia zabezpieczeń</string>
     <string name="err_recovery_passphrase_policy">Hasło odzyskiwania musi mieć 12–24 znaki i nie może składać się wyłącznie z cyfr.</string>
     <string name="err_recovery_decryption">Nie udało się odszyfrować kopii. Sprawdź, czy hasło, kod QR odzyskiwania i plik kopii należą do tego samego magazynu.</string>
 
@@ -303,9 +306,9 @@
     <string name="err_legacy_vault">Wykryto sejf VLT2, którego ta wersja nie obsługuje. Otwórz go w poprzedniej wersji aplikacji lub utwórz nowy sejf.</string>
     <string name="err_pin_mismatch">PIN / hasło musi mieć 12–24 znaków, nie może składać się wyłącznie z cyfr i musi być powtórzony poprawnie.</string>
     <string name="err_create">Nie udało się utworzyć magazynu.</string>
-    <string name="err_unlock">Do odblokowania użyj silnej biometrii. PIN / hasło jest dostępne razem z kodem QR w odzyskiwaniu.</string>
+    <string name="err_unlock">Odblokuj biometrią lub PIN-em, wzorem albo hasłem ekranu blokady Androida. Odzyskiwanie wymaga też kodu QR.</string>
     <string name="err_open">Nie udało się otworzyć magazynu.</string>
-    <string name="err_biometric">Biometria nie jest dostępna na tym urządzeniu.</string>
+    <string name="err_biometric">Nie można uwierzytelnić. Ustaw blokadę ekranu Androida lub skonfiguruj silną biometrię.</string>
     <string name="err_save">Nie udało się zapisać zmian.</string>
     <string name="err_recovery_create">Nie udało się utworzyć kodu odzyskiwania.</string>
     <string name="err_recovery">Nie udało się odzyskać magazynu.</string>
@@ -316,7 +319,7 @@
     <string name="msg_copied">Skopiowano do schowka</string>
 
     <string name="cd_logo">Logo aplikacji</string>
-    <string name="cd_biometric">Odblokuj biometrią</string>
+    <string name="cd_biometric">Odblokuj biometrią lub blokadą ekranu</string>
     <string name="cd_copy">Kopiuj</string>
     <string name="cd_qr">Kod odzyskiwania QR</string>
     <string name="settings_tutorial">Instrukcja aplikacji</string>
@@ -388,7 +391,7 @@
     <string name="help_images_text">Wybierz aparat lub galerię, zaznacz fragment zdjęcia z zoomem, nadaj mu nazwę i zapisz. Tylko przycięty fragment JPG trafia do zaszyfrowanego vaultu.</string>
     <string name="help_images_action">Otwórz dodawanie obrazu</string>
     <string name="help_security_title">3. Bezpieczeństwo</string>
-    <string name="help_security_text">Na znanym urządzeniu domyślnie używasz biometrii. Auto-lock można ustawić w Ustawieniach. TOTP jest opcjonalny i pokazuje się dopiero po naciśnięciu „Pokaż kod”.</string>
+    <string name="help_security_text">Sejf odblokujesz silną biometrią lub PIN-em, wzorem albo hasłem blokady Androida. Auto-lock można ustawić w Ustawieniach. TOTP pokazuje się po naciśnięciu „Pokaż kod”.</string>
     <string name="help_generator_action">Otwórz generator haseł</string>
     <string name="help_settings_action">Otwórz Ustawienia</string>
     <string name="help_backup_title">4. Kopie i odzyskiwanie</string>

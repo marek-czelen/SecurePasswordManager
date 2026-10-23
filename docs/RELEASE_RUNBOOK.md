@@ -6,7 +6,8 @@
 2. Replace all placeholders in `docs/PRIVACY_POLICY.md`.
 3. Review third-party licenses and include required notices in the release.
 4. Confirm no secrets, test vaults, QR payloads or local properties are in the source.
-5. Test VLT3 first run, RQR2 generation, biometric unlock, passphrase+QR recovery,
+5. Test VLT3 first run, RQR2 generation, biometric and device-PIN unlock,
+   passphrase+QR recovery,
    unsupported VLT2 messaging, import/export, OCR, auto-lock, clipboard clearing and
    delete-vault.
 6. Test wrong passphrase, wrong QR, tampered QR, tampered header/manifest/object,
@@ -33,8 +34,9 @@ production recovery material in the repository.
 - Inspect native libraries and dependency licenses.
 - Run a release APK/AAB through JADX and apktool; source visibility is expected and must
   not reveal secrets.
-- Install the release artifact on clean devices and test StrongBox, TEE-only and
-  biometric-enrollment-change behavior.
+- Install the release artifact on clean devices and test StrongBox, TEE-only,
+  biometric and device-credential unlock, no-biometric use and biometric-enrollment-change
+  behavior.
 
 ## Play upload
 

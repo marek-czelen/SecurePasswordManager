@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.securepasswordmanager"
+    namespace = "com.cretorix.securepasswordmanager"
     buildFeatures {
         buildConfig = true
     }
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.securepasswordmanager"
+        applicationId = "com.cretorix.securepasswordmanager"
         minSdk = 31
         targetSdk = 37
         versionCode = 1

@@ -33,7 +33,8 @@ before submitting the app.
 - [ ] Resolve all current lint errors and warnings that affect the release; the latest
   local `lintDebug` run reported 21 errors and 81 warnings.
 - [ ] Test Android 12–latest on physical devices, including a StrongBox device and a
-  device without StrongBox.
+  device without StrongBox; verify unlock with biometrics and with only the Android
+  device PIN/pattern/password configured.
 - [ ] Test classic Autofill on Android 12–13 and Credential Manager password retrieval
   on Android 14+, including provider selection, verified browser origins, biometric
   unlock, cancellation and native-app credential selection.
@@ -49,8 +50,8 @@ before submitting the app.
 - [ ] App name, short description, full description and screenshots are truthful.
 - [ ] Do not claim “unbreakable”, “anonymous”, or guaranteed plausible deniability.
 - [ ] Explain that the app is local-first and that a Recovery QR is a secret.
-- [ ] Explain that biometric unlock depends on the device’s Android Keystore/KeyMint
-  implementation.
+- [ ] Explain that unlock requires a secure Android screen credential and hardware-backed
+  Android Keystore/KeyMint; biometric enrollment is optional.
 - [ ] Provide a support email: `<support email>`.
 - [ ] Publish the privacy policy at a stable HTTPS URL: `<privacy policy URL>`.
 - [ ] Complete the content rating questionnaire.

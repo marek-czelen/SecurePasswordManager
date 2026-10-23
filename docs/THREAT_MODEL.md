@@ -13,7 +13,7 @@
 - Password entries, notes, TOTP secrets, folders, tags and favorites.
 - Separately encrypted image, thumbnail and file objects.
 - Independent 256-bit Recovery QR secret and passphrase.
-- Android Keystore private key and biometric authorization state.
+- Android Keystore private key and device-authentication state.
 
 ## Desired properties
 
@@ -23,7 +23,7 @@
 | Backup + passphrase, no QR | No recovery |
 | Backup + QR, no passphrase | No recovery |
 | Backup + passphrase + QR | Restore is allowed and creates a local hardware wrapper |
-| Original device + strong biometric | Daily unlock is allowed |
+| Original device + strong biometric or secure screen credential | Daily unlock is allowed |
 | Text edit | Media ciphertext is unchanged |
 | Media ciphertext tampering | Hash/tag failure is surfaced; a matching previous resource may be offered |
 | Interrupted write | Current or previous complete manifest remains recoverable |

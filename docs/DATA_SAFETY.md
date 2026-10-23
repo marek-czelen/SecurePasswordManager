@@ -24,7 +24,8 @@ The app processes authentication information, user-created password-manager cont
 attachments, user-selected images and user-selected password export files locally. When
 the user enables Android Autofill or Credential Manager, the provider handles form/credential
 requests locally and accesses vault entries only from an already-unlocked session or
-after biometric authentication. These values are not sent to the publisher.
+after device authentication with biometrics or the Android screen credential. These
+values are not sent to the publisher.
 
 ### User-initiated external transfer
 
@@ -32,7 +33,7 @@ When the user selects a saved login in an Autofill or Credential Manager suggest
 Android supplies its username and password to the requesting app. This transfers the
 selected plaintext credential to that app on the device; it is not sent to the
 publisher by SecureVault. Requests without a verified web origin require
-biometric authentication and explicit user selection; verified web origins are filtered
+device authentication and explicit user selection; verified web origins are filtered
 by exact host.
 
 The user can explicitly export one complete encrypted `vault.vlt3` container or configure

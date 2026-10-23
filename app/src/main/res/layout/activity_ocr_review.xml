@@ -26,7 +26,7 @@
         android:textAppearance="?attr/textAppearanceBodyMedium"
         android:textColor="?attr/colorOnSurfaceVariant" />
 
-    <com.example.securepasswordmanager.SelectionOverlayView
+    <com.cretorix.securepasswordmanager.SelectionOverlayView
         android:id="@+id/overlay"
         android:layout_width="match_parent"
         android:layout_height="0dp"

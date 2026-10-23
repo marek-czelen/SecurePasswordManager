@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.example.securepasswordmanager.ZoomableImageView
+    <com.cretorix.securepasswordmanager.ZoomableImageView
         android:id="@+id/documentReviewImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -21,7 +21,7 @@
         android:scaleType="matrix"
         android:visibility="gone" />
 
-    <com.example.securepasswordmanager.DocumentReviewOverlay
+    <com.cretorix.securepasswordmanager.DocumentReviewOverlay
         android:id="@+id/documentReviewOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

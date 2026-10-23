@@ -1,70 +1,98 @@
-# Google Play publication package
+# Pakiet publikacyjny Google Play
 
-This folder contains draft store copy and generated listing assets for **SecureVault:
-Passwords & Docs**. It is a preproduction package, not a completed Play Console
-submission. Replace every item marked `TODO` before production.
+Ten folder zawiera robocze teksty sklepu i grafiki aplikacji **SecureVault: Passwords &
+Docs**. To pakiet przedprodukcyjny, a nie ukończone zgłoszenie w Play Console. Przed
+publikacją uzupełnij wszystkie pozycje oznaczone jako `TODO`.
 
-## Current release values to resolve
+Aplikacja odblokowuje sejf silną biometrią lub blokadą ekranu Androida (PIN, wzór albo
+hasło). Wymagana jest bezpieczna blokada ekranu; skonfigurowanie biometrii jest
+opcjonalne.
 
-| Item | Current value | Required action |
+## Aktualne wartości do potwierdzenia
+
+| Pozycja | Aktualna wartość | Co zrobić |
 |---|---|---|
-| Display name | SecureVault: Passwords & Docs | Use the same title in the main store listing |
-| Android application ID | `com.example.securepasswordmanager` | **TODO:** choose the permanent, globally unique ID before the first Play upload. It is set in `app/build.gradle.kts` as `defaultConfig.applicationId`; changing it after publishing creates a different app |
-| Version | `1.0` / version code `1` | Increment `versionCode` for every uploaded release |
-| Billing product | `pro_unlock` | Create a one-time in-app product with this exact ID in Play Console |
-| Support contact | Not provided | **TODO:** enter a monitored support email |
-| Privacy contact / publisher | Placeholders remain | **TODO:** replace in `docs/PRIVACY_POLICY.md` |
-| Public privacy policy URL | Not provided | **TODO:** host the reviewed policy at a stable HTTPS URL |
-| Signing | Not configured here | Configure Play App Signing and keep the upload key outside the repository |
+| Nazwa wyświetlana | SecureVault: Passwords & Docs | Użyć tej samej nazwy w głównej ofercie sklepu |
+| Android application ID | `com.cretorix.securepasswordmanager` | Potwierdzić, że to stały, unikalny identyfikator przed pierwszym przesłaniem AAB. Wartość znajduje się w `app/build.gradle.kts` w `defaultConfig.applicationId`; po publikacji zmiana oznacza osobną aplikację |
+| Wersja | `1.0` / kod wersji `1` | Zwiększać `versionCode` przy każdym kolejnym przesłaniu |
+| Produkt Billing | `pro_unlock` | Utworzyć w Play Console jednorazowy produkt o dokładnie takim ID |
+| Model płatności | Aplikacja bezpłatna z opcjonalnym zakupem Pro | Wybrać bezpłatną dystrybucję; cenę Pro ustawić jako zakup w aplikacji |
+| Kategoria | Nieustawiona | Rekomendacja: Produktywność; potwierdzić właściwą kategorię dostępną w Play |
+| Kontakt pomocy | Niepodany | **TODO:** podać monitorowany adres e-mail |
+| Wydawca / kontakt prywatności | Pozostały pola zastępcze | **TODO:** uzupełnić w `docs/PRIVACY_POLICY.md` |
+| Publiczny URL polityki | Niepodany | **TODO:** opublikować sprawdzoną politykę pod stabilnym adresem HTTPS |
+| Podpisywanie | Nie skonfigurowano w repozytorium | Włączyć Play App Signing i przechowywać klucz uploadu poza repozytorium |
 
-Do not upload a production artifact while the application ID, publisher identity,
-support contact, privacy policy URL or store listing placeholders are unresolved.
+Nie przesyłaj wydania produkcyjnego, dopóki nie zostaną ustalone: stały application ID,
+tożsamość wydawcy, kontakty, publiczny URL polityki prywatności i treści oferty sklepu.
 
-## Where each item goes in Play Console
+## Gdzie wpisać poszczególne elementy w Play Console
 
-1. **Create app / App setup:** set the app name, default language, app/game type and
-   free/paid availability. Confirm the permanent package name matches
-   `defaultConfig.applicationId`.
-2. **Testing → Internal testing:** upload the signed Android App Bundle (`.aab`), add
-   testers and publish the internal test release. Install from the Play Store opt-in
-   link for realistic Billing tests.
-3. **Monetize with Play → Products → One-time products:** create `pro_unlock`, configure
-   the price and countries, and activate it before testing purchase/restore.
-4. **Grow users → Store presence → Main store listing:** copy the title, short
-   description and full description from the matching `store-listing-*.md` file. Upload
-   `assets/app-icon-512.png`, `assets/feature-graphic-1024x500.png` and the phone images
-   from `assets/screenshots/phone/`.
-5. **Store listing → Store listing experiments / translations:** add Polish, English,
-   German and French listing text if those locales will be targeted. The app UI contains
-   these four locales.
-6. **Policy and programs → App content:** complete App access, Ads, Content rating,
-   Target audience and Data safety. The app has no account sign-in; provide reviewer
-   instructions for creating a disposable local vault. Review `docs/DATA_SAFETY.md`
-   against the exact uploaded artifact and SDK disclosures.
-7. **Policy and programs → Privacy policy:** enter the public HTTPS URL for the reviewed
-   `docs/PRIVACY_POLICY.md`. Replace all legal/publisher/contact placeholders before
-   publishing it.
-8. **Store settings / App access and contact details:** enter the verified developer,
-   support and privacy contacts. Do not use example or personal test credentials.
-9. **Production → Countries/regions and release:** choose availability, upload the
-   production AAB and complete Play's release declarations.
+1. **Create app / App setup:** wpisać nazwę aplikacji, język domyślny, typ aplikacji/gry
+   oraz bezpłatną dystrybucję (Pro jest sprzedawane jako zakup w aplikacji). Potwierdzić,
+   że stała nazwa pakietu odpowiada `defaultConfig.applicationId`.
+2. **Testing → Internal testing:** przesłać podpisany Android App Bundle (`.aab`), dodać
+   testerów i opublikować wydanie testów wewnętrznych. Do realistycznych testów Billing
+   instalować aplikację ze sklepowego linku dołączenia do testu.
+3. **Monetize with Play → Products → One-time products:** utworzyć `pro_unlock`, ustawić
+   cenę i kraje dostępności oraz aktywować produkt przed testami zakupu i przywracania.
+4. **Grow users → Store presence → Main store listing:** skopiować tytuł, krótki i pełny
+   opis z odpowiedniego pliku `store-listing-*.md`. Przesłać
+   `assets/app-icon-512.png`, `assets/feature-graphic-1024x500.png` i zrzuty z
+   `assets/screenshots/phone/`.
+5. **Store listing → tłumaczenia:** dodać polski, angielski, niemiecki i francuski tekst
+   oferty, jeśli te języki będą kierowane do odbiorców. Aplikacja ma zasoby UI dla tych
+   czterech języków.
+6. **Policy and programs → App content:** wypełnić App access, Ads, Content rating,
+   Target audience i Data safety. Aplikacja nie ma logowania do konta — instrukcja dla
+   recenzenta powinna wyjaśniać, że może utworzyć lokalny, testowy sejf z tymczasowym
+   hasłem i syntetycznymi danymi. Zadeklarować brak reklam tylko wtedy, gdy pozostanie
+   to prawdą w finalnym wydaniu. Sprawdzić `docs/DATA_SAFETY.md` względem finalnego AAB
+   i ujawnień SDK.
+7. **Policy and programs → Privacy policy:** wkleić publiczny HTTPS URL sprawdzonej
+   polityki `docs/PRIVACY_POLICY.md`. Przed publikacją zastąpić wszystkie pola wydawcy i
+   kontaktów.
+8. **Store settings / App access and contact details:** wpisać zweryfikowane dane
+   wydawcy, kontaktu pomocy i prywatności. Nie używać przykładowych ani prywatnych danych
+   testowych.
+9. **Production → Countries/regions and release:** ustawić kraje dostępności, przesłać
+   produkcyjny AAB i uzupełnić deklaracje wydania w Play Console.
 
-Console navigation labels may change. Search Play Console for the named form if its
-section has moved.
+Nazwy sekcji w konsoli mogą się zmieniać. Jeśli sekcja została przeniesiona, wyszukaj
+w Play Console wymieniony formularz.
 
-## Screenshot set
+## Zrzuty ekranu
 
-Phone screenshots in `assets/screenshots/phone/` must come from the emulator with
-synthetic demo data only. Never include a real password, recovery QR, passphrase, email
-address or purchase receipt. Review every image at full size and replace any screen that
-shows an error, debug control, placeholder or unrelated emulator UI before submission.
+Zrzuty telefonu w `assets/screenshots/phone/` pochodzą z emulatora i zawierają wyłącznie
+syntetyczne dane. Nie umieszczaj na nich prawdziwych haseł, Recovery QR, passphrase,
+adresów e-mail ani potwierdzeń zakupów. Przed przesłaniem obejrzyj każdy obraz w pełnym
+rozmiarze i odrzuć ekran z błędem, kontrolką debugowania, placeholderem lub elementem
+emulatora.
 
-## Known preproduction blockers
+Przygotowano po cztery zrzuty PNG 1080×1920 po polsku i angielsku. Grafika główna jest
+obecnie po angielsku; jeśli będą używane niemieckie lub francuskie oferty, przygotuj
+również lokalne zrzuty/grafiki.
 
-- Replace the current `com.example.*` application ID before first upload.
-- Configure and activate the Play Console one-time product `pro_unlock`.
-- Supply the publisher name, support email, privacy contact and public HTTPS policy URL.
-- Review the store text and privacy/Data Safety statements against the final release.
-- Configure production signing, countries, target audience, content rating and app access.
-- The included Play screenshots are listing drafts; check current Play image requirements
-  before uploading.
+Zrzuty powstały w tymczasowej debugowej konfiguracji emulatora, która pozwalała przechwycić
+ekrany chronione przez `FLAG_SECURE` i obejść brak sprzętowego Keystore w emulatorze.
+Tego trybu nie ma w finalnym kodzie ani wydaniu. Obrazy prezentują interfejs — nie są
+potwierdzeniem ochrony kryptograficznej.
+
+## Blokery przedprodukcji
+
+- Potwierdzić, że `com.cretorix.securepasswordmanager` jest docelowym identyfikatorem
+  pakietu przed pierwszym przesłaniem.
+- Utworzyć i aktywować jednorazowy produkt Play Console `pro_unlock`.
+- Podać nazwę prawną wydawcy, e-mail pomocy, kontakt prywatności i publiczny HTTPS URL
+  polityki.
+- Sprawdzić tekst oferty, politykę prywatności i Data Safety względem finalnego wydania.
+- Na fizycznym urządzeniu z hardware-backed KeyMint sprawdzić świeży sejf bez
+  skonfigurowanej biometrii, ale z PIN-em/wzorem/hasłem blokady Androida, oraz odblokowanie
+  silną biometrią.
+- Sejfy utworzone w starszych wydaniach przed fallbackiem mogą używać kluczy
+  Keystore-only-biometrycznych. Nadal działają z wcześniej zarejestrowaną biometrią,
+  ale nie uzyskują automatycznie fallbacku PIN-em. Do testu nowej ścieżki użyć świeżego
+  sejfu; nie usuwać cennych danych testowych.
+- Skonfigurować podpis release, kraje, grupę docelową, ocenę treści i instrukcje dostępu
+  recenzenta.
+- Przed przesłaniem sprawdzić aktualne wymagania Play dla grafik i zrzutów ekranu.

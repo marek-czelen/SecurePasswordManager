@@ -15,7 +15,9 @@ its own cloud service.
 - Store logins, passwords, URLs, notes, tags and TOTP codes.
 - Search entries, organize them in folders and mark favorites.
 - Use the password generator and local checks for weak or reused passwords.
-- Enable Android Autofill or Credential Manager to select a saved login after
+- Unlock with strong biometrics or your Android screen-lock PIN, pattern or password.
+  Biometrics are optional, but the device must have a secure screen lock.
+- Enable Android Autofill or Credential Manager to select a saved login after device
   authentication.
 
 **Encrypted vault**

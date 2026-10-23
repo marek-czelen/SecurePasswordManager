@@ -14,7 +14,7 @@ the debug Free/Pro switch remains limited to debug builds.
 |---|---|---:|---:|
 | VLT3 hybrid encrypted vault | Implemented | Yes | Yes |
 | Argon2id passphrase + independent QR recovery | Implemented | Yes | Yes |
-| Strong biometric hardware unlock | Implemented | Yes | Yes |
+| Hardware-backed device unlock (strong biometric or Android screen credential) | Implemented | Yes | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes | Yes |
 | Password entries | Implemented | Yes | Yes |
 | Google Play Billing purchase and restore | Implemented; Play Console product setup required | No | One-time `pro_unlock` purchase |
@@ -55,9 +55,9 @@ The classic Android `AutofillService` is available from API 26; this app require
 or newer. Android Credential Manager password-provider support is added on API 34 and
 newer. Both paths use the local encrypted vault and keep plaintext out of persistent
 provider storage. A locked vault returns an authentication action that opens the
-hardware-backed biometric unlock flow. Verified browser origins are matched by exact
+hardware-backed device-authentication flow. Verified browser origins are matched by exact
 host against saved entry URLs; subdomains are not treated as matches. Requests without
-a verified web origin require biometric authentication and an explicit login choice.
+a verified web origin require device authentication and an explicit login choice.
 Saving new credentials from forms is not implemented.
 
 The user must enable SecurePasswordManager under Android's additional credential
@@ -75,7 +75,7 @@ The following are core trust and safety features and must not depend on Pro:
 
 - encryption and DEK protection;
 - passphrase policy;
-- biometric unlock;
+- device-authenticated unlock;
 - Recovery QR creation and recovery;
 - manual encrypted export/import;
 - vault deletion;

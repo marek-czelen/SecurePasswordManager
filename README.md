@@ -11,7 +11,8 @@ hybrid encrypted vault.
 
 - Random 256-bit DEK, Argon2id passphrase derivation and independent 256-bit Recovery QR.
 - Recovery requires both the passphrase and Recovery QR; the QR never contains the DEK.
-- Hardware-backed Android Keystore wrapper for daily biometric unlock.
+- Hardware-backed Android Keystore wrapper for daily unlock with strong biometrics or
+  the Android device PIN, pattern or password.
 - AES-256-GCM with per-generation HKDF-SHA-256 keys, random 96-bit nonces and
   authenticated object context.
 - Small bounded encrypted text block plus separately encrypted immutable image,
@@ -63,8 +64,8 @@ The debug APK is generated at:
 app\build\outputs\apk\debug\app-debug.apk
 ```
 
-Android instrumentation tests require a connected device. Repository tests additionally
-require hardware-backed strong-biometric Keystore support.
+Android instrumentation tests require a connected device. Repository tests additionally require hardware-backed Keystore support and a configured
+device credential; biometric enrollment is optional.
 
 ## Project structure
 
@@ -92,7 +93,9 @@ exports contain plaintext at the user-selected destination. External document pr
 apply their own storage and privacy terms.
 
 Before publication, replace placeholders in `docs/PRIVACY_POLICY.md`, review SDK
-privacy practices and complete `docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`.
+privacy practices and complete `docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`. The
+preproduction store copy, listing graphics, emulator screenshots and Play Console field
+map are in [`play-publishing/`](play-publishing/README.md).
 
 ## License and third-party code
 

@@ -15,8 +15,10 @@ własnej chmury.
 - Zapisuj loginy, hasła, adresy, notatki, tagi i kody TOTP.
 - Wyszukuj wpisy, porządkuj je w folderach i oznaczaj ulubione.
 - Używaj generatora haseł i lokalnego sprawdzania słabych oraz powtarzanych haseł.
+- Odblokuj sejf silną biometrią albo PIN-em, wzorem lub hasłem blokady ekranu Androida.
+  Biometria jest opcjonalna, ale urządzenie musi mieć ustawioną bezpieczną blokadę.
 - Włącz Android Autofill lub Credential Manager, aby wybrać zapisany login po
-  uwierzytelnieniu.
+  uwierzytelnieniu urządzeniem.
 
 **Zaszyfrowany sejf**
 - Magazyn VLT3 szyfruje dane lokalnie.
