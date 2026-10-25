@@ -44,7 +44,8 @@ public final class AdvancedImportExport {
     private static final int MAX_JSON_NESTING = 64;
     private static final int MAX_KEEPASS_GROUP_NESTING = 64;
     private static final String[] FIELD_KEYS =
-            {"name", "username", "password", "url", "notes", "folder", "tags", "totp"};
+            {"name", "username", "password", "url", "notes", "folder", "tags", "totp",
+                    "app_package"};
     private static final int MAX_RETAINED_ZIP_ENTRY_BYTES = 20 * 1024 * 1024;
 
     private AdvancedImportExport() {
@@ -134,7 +135,7 @@ public final class AdvancedImportExport {
         return result;
     }
 
-    /** Returns column indices for name, username, password, url, notes, folder, tags and TOTP. */
+    /** Returns column indices for standard login fields and the optional Android app package. */
     public static int[] suggestMapping(Table table) {
         int[] mapping = new int[FIELD_KEYS.length];
         Arrays.fill(mapping, -1);
@@ -169,6 +170,9 @@ public final class AdvancedImportExport {
                 return oneOf(name, "tags", "tag", "labels");
             case 7:
                 return oneOf(name, "totp", "otp", "onetimepassword", "totpsecret", "loginotp");
+            case 8:
+                return oneOf(name, "apppackage", "androidapppackage",
+                        "androidpackage", "packageid");
             default:
                 return false;
         }
@@ -219,9 +223,13 @@ public final class AdvancedImportExport {
                     throw new IOException("An imported field exceeds the configured limit");
                 }
             }
+            values[8] = values[8].trim();
+            if (!values[8].isEmpty() && !VaultItem.isValidPackageName(values[8])) {
+                throw new IOException("Imported Android app package is invalid");
+            }
             values[7] = normalizeTotp(values[7]);
             items.add(new VaultItem(title, values[1], values[2], values[3], values[4],
-                    values[6], values[5], values[7], false));
+                    values[6], values[5], values[7], false, values[8]));
             if (items.size() > MAX_ROWS) {
                 throw new IOException("Import exceeds the entry limit");
             }
@@ -603,7 +611,8 @@ public final class AdvancedImportExport {
                 String path = parent.isEmpty() ? name : name.isEmpty() ? parent : parent + "/" + name;
                 for (VaultItem item : pending) {
                     result.add(new VaultItem(item.title, item.username, item.password, item.url,
-                            item.notes, item.tags, path, item.totpSecret, item.favorite));
+                            item.notes, item.tags, path, item.totpSecret, item.favorite)
+                            .withAppPackageName(item.appPackageName));
                 }
                 return;
             }
@@ -1354,13 +1363,14 @@ public final class AdvancedImportExport {
     public static void writeCsv(OutputStream output, List<VaultItem> items) throws IOException {
         StringBuilder text = new StringBuilder();
         appendCsvRow(text, Arrays.asList("name", "username", "password", "url",
-                "notes", "folder", "tags", "totp"));
+                "notes", "folder", "tags", "totp", "app_package"));
         for (VaultItem item : items) {
             if (!VaultItem.TYPE_LOGIN.equals(item.type)) {
                 continue;
             }
             appendCsvRow(text, Arrays.asList(item.title, item.username, item.password,
-                    item.url, item.notes, item.folder, item.tags, item.totpSecret));
+                    item.url, item.notes, item.folder, item.tags, item.totpSecret,
+                    item.appPackageName));
             if (text.length() >= 64 * 1024) {
                 output.write(text.toString().getBytes(StandardCharsets.UTF_8));
                 text.setLength(0);

@@ -25,6 +25,8 @@ public final class VaultTextDataCodec {
     private static final int MAGIC = 0x56544433;
     private static final int LEGACY_TEXT_DATA_SCHEMA_VERSION = 1;
     private static final int PASSWORD_HISTORY_SCHEMA_VERSION = 2;
+    private static final int DOCUMENT_SCHEMA_VERSION = 3;
+    private static final int APP_PACKAGE_SCHEMA_VERSION = 4;
     private static final int PADDING_BLOCK_SIZE = 4096;
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -53,6 +55,7 @@ public final class VaultTextDataCodec {
             writeString(raw, item.username);
             writeString(raw, item.password);
             writeString(raw, item.url);
+            writeString(raw, item.appPackageName);
             writeString(raw, item.notes);
             writeString(raw, item.tags);
             writeString(raw, item.folder);
@@ -140,6 +143,8 @@ public final class VaultTextDataCodec {
             String username = readString(raw);
             String password = readString(raw);
             String url = readString(raw);
+            String appPackageName = schemaVersion >= APP_PACKAGE_SCHEMA_VERSION
+                    ? readString(raw) : "";
             String notes = readString(raw);
             String tags = readString(raw);
             String folder = readString(raw);
@@ -158,7 +163,7 @@ public final class VaultTextDataCodec {
                     thumbnailId = readHex(raw, 32);
                 }
             } else if (VaultItem.TYPE_DOCUMENT.equals(type)) {
-                if (schemaVersion < VaultV3Format.TEXT_DATA_SCHEMA_VERSION) {
+                if (schemaVersion < DOCUMENT_SCHEMA_VERSION) {
                     throw new IOException("Document entries require VLT3 text schema 3");
                 }
                 int pageCount = raw.readInt();
@@ -184,7 +189,8 @@ public final class VaultTextDataCodec {
             try {
                 item = new VaultItem(entryId, title, username, password, url, notes, tags,
                         folder, totp, favorite, type, attachmentId, thumbnailId,
-                        contentType, attachmentSize, documentPageIds, passwordHistory);
+                        contentType, attachmentSize, documentPageIds, passwordHistory,
+                        appPackageName);
                 validateItem(item, entryIds, resourceIds);
             } catch (IllegalArgumentException exception) {
                 throw new IOException("Invalid VLT3 entry", exception);
@@ -253,6 +259,7 @@ public final class VaultTextDataCodec {
         writeStringLengthCheck(item.username);
         writeStringLengthCheck(item.password);
         writeStringLengthCheck(item.url);
+        writeStringLengthCheck(item.appPackageName);
         writeStringLengthCheck(item.notes);
         writeStringLengthCheck(item.tags);
         writeStringLengthCheck(item.folder);

@@ -4,7 +4,7 @@ public final class VaultV3Format {
     public static final int CONTAINER_FORMAT_VERSION = 3;
     public static final int HEADER_SCHEMA_VERSION = 1;
     public static final int MANIFEST_SCHEMA_VERSION = 1;
-    public static final int TEXT_DATA_SCHEMA_VERSION = 3;
+    public static final int TEXT_DATA_SCHEMA_VERSION = 4;
     public static final int OBJECT_SCHEMA_VERSION = 1;
     public static final int BACKUP_CONTAINER_VERSION = 1;
     public static final int MAX_KDF_MEMORY_KIB = 256 * 1024;

@@ -24,6 +24,7 @@ final class CredentialProviderResponseFactory {
     static final String EXTRA_SESSION_TOKEN = "credential_provider_session";
     static final String EXTRA_ENTRY_ID = "credential_provider_entry_id";
     static final String MODE_UNLOCK = "unlock";
+    static final String MODE_CREATE = "create";
     static final String MODE_GET = "get";
 
     private static final AtomicInteger REQUEST_CODES = new AtomicInteger();
@@ -61,15 +62,26 @@ final class CredentialProviderResponseFactory {
     }
 
     static BeginGetCredentialResponse authenticationResponse(Context context) {
+        return authenticationActionResponse(context,
+                context.getString(R.string.autofill_unlock), MODE_UNLOCK);
+    }
+
+    static BeginGetCredentialResponse createEntryResponse(Context context, String label) {
+        return authenticationActionResponse(context,
+                context.getString(R.string.autofill_add_login_suggestion, label), MODE_CREATE);
+    }
+
+    private static BeginGetCredentialResponse authenticationActionResponse(
+            Context context, String label, String mode) {
         String token = java.util.UUID.randomUUID().toString();
         Intent intent = new Intent(context, CredentialProviderActivity.class);
-        intent.putExtra(EXTRA_MODE, MODE_UNLOCK);
-        intent.setData(Uri.parse("securepasswordmanager://credential/unlock/" + token));
+        intent.putExtra(EXTRA_MODE, mode);
+        intent.setData(Uri.parse("securepasswordmanager://credential/" + mode + "/" + token));
         PendingIntent pendingIntent = PendingIntent.getActivity(context,
                 REQUEST_CODES.getAndIncrement(), intent,
                 PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         AuthenticationAction authenticationAction = new AuthenticationAction.Builder(
-                context.getString(R.string.autofill_unlock), pendingIntent).build();
+                label, pendingIntent).build();
         return new BeginGetCredentialResponse.Builder()
                 .addAuthenticationAction(authenticationAction)
                 .build();

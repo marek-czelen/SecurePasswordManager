@@ -20,6 +20,7 @@ public final class VaultItem {
     public final String username;
     public final String password;
     public final String url;
+    public final String appPackageName;
     public final String notes;
     public final String tags;
     public final String folder;
@@ -46,6 +47,14 @@ public final class VaultItem {
                 totpSecret, favorite, TYPE_LOGIN, null, null, "", 0);
     }
 
+    public VaultItem(String title, String username, String password, String url,
+                     String notes, String tags, String folder, String totpSecret,
+                     boolean favorite, String appPackageName) {
+        this(randomEntryId(), title, username, password, url, notes, tags, folder,
+                totpSecret, favorite, TYPE_LOGIN, null, null, "", 0,
+                Collections.emptyList(), Collections.emptyList(), appPackageName);
+    }
+
     public VaultItem(String entryId, String title, String username, String password, String url,
                      String notes, String tags, String folder, String totpSecret,
                      boolean favorite, String type, String attachmentId,
@@ -70,11 +79,24 @@ public final class VaultItem {
                      boolean favorite, String type, String attachmentId,
                      String thumbnailId, String contentType, long attachmentSize,
                      List<String> documentPageIds, List<String> passwordHistory) {
+        this(entryId, title, username, password, url, notes, tags, folder, totpSecret,
+                favorite, type, attachmentId, thumbnailId, contentType, attachmentSize,
+                documentPageIds, passwordHistory, "");
+    }
+
+    public VaultItem(String entryId, String title, String username, String password, String url,
+                     String notes, String tags, String folder, String totpSecret,
+                     boolean favorite, String type, String attachmentId,
+                     String thumbnailId, String contentType, long attachmentSize,
+                     List<String> documentPageIds, List<String> passwordHistory,
+                     String appPackageName) {
         if (!isHexId(entryId, 16)
                 || (!TYPE_LOGIN.equals(type) && !TYPE_IMAGE.equals(type)
                 && !TYPE_FILE.equals(type) && !TYPE_DOCUMENT.equals(type))
                 || attachmentSize < 0 || passwordHistory == null
                 || documentPageIds == null
+                || (appPackageName != null && !appPackageName.isEmpty()
+                && (!TYPE_LOGIN.equals(type) || !isValidPackageName(appPackageName)))
                 || passwordHistory.size() > MAX_PASSWORD_HISTORY_ENTRIES
                 || (!TYPE_LOGIN.equals(type) && !passwordHistory.isEmpty())
                 || (TYPE_DOCUMENT.equals(type)
@@ -89,6 +111,7 @@ public final class VaultItem {
         this.username = value(username);
         this.password = value(password);
         this.url = value(url);
+        this.appPackageName = value(appPackageName);
         this.notes = value(notes);
         this.tags = value(tags);
         this.folder = value(folder);
@@ -150,7 +173,13 @@ public final class VaultItem {
     public VaultItem withFavorite(boolean value) {
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, value, type, attachmentId, thumbnailId, contentType, attachmentSize,
-                documentPageIds, passwordHistory);
+                documentPageIds, passwordHistory, appPackageName);
+    }
+
+    public VaultItem withAppPackageName(String packageName) {
+        return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
+                totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
+                attachmentSize, documentPageIds, passwordHistory, packageName);
     }
 
     /** Returns a copy with the immediately previous password at the front of its history. */
@@ -168,7 +197,7 @@ public final class VaultItem {
         }
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
-                attachmentSize, history);
+                attachmentSize, documentPageIds, history, appPackageName);
     }
 
     /** Computes the retained history for an edit, optionally recording this item's password. */
@@ -207,6 +236,31 @@ public final class VaultItem {
             }
         }
         return true;
+    }
+
+    public static boolean isValidPackageName(String value) {
+        if (value == null || value.length() < 3 || value.length() > 255) {
+            return false;
+        }
+        boolean hasSeparator = false;
+        boolean segmentEmpty = true;
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            if (character == '.') {
+                if (segmentEmpty) {
+                    return false;
+                }
+                hasSeparator = true;
+                segmentEmpty = true;
+            } else if ((character >= 'a' && character <= 'z')
+                    || (character >= 'A' && character <= 'Z')
+                    || (character >= '0' && character <= '9') || character == '_') {
+                segmentEmpty = false;
+            } else {
+                return false;
+            }
+        }
+        return hasSeparator && !segmentEmpty;
     }
 
     private static String normalizeId(String value) {

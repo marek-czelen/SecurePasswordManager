@@ -69,6 +69,7 @@
         <item>Ordner</item>
         <item>Tags</item>
         <item>TOTP</item>
+        <item>Android-App-Paket</item>
     </string-array>
     <string name="file_details_message">Typ: %1$s\nGröße: %2$s</string>
     <string name="msg_file_pro_required">Dateianhänge sind in Pro verfügbar.</string>
@@ -203,6 +204,7 @@
     <string name="hint_username">Login</string>
     <string name="hint_password">Passwort</string>
     <string name="hint_url">URL</string>
+    <string name="hint_app_package">Android-App-Paket</string>
     <string name="hint_notes">Notizen</string>
     <string name="action_save">Speichern</string>
     <string name="action_cancel">Abbrechen</string>
@@ -328,6 +330,11 @@
     <string name="autofill_auth_failed">Der Passworttresor konnte nicht authentifiziert werden.</string>
     <string name="autofill_vault_unavailable">Erstelle zuerst einen Passworttresor.</string>
     <string name="autofill_no_matching_credentials">Kein passender gespeicherter Login verfügbar.</string>
+    <string name="autofill_add_login_suggestion">Login für %1$s hinzufügen</string>
+    <string name="autofill_add_entry_title">Kein gespeicherter Login</string>
+    <string name="autofill_add_entry_message">Für %1$s ist kein Login gespeichert. Möchtest du einen hinzufügen?</string>
+    <string name="autofill_add_entry_yes">Login hinzufügen</string>
+    <string name="autofill_add_entry_no">Nein</string>
     <string name="autofill_recovery_required">Öffne die App und repariere den Tresor, bevor du Autofill verwendest.</string>
     <string name="autofill_choose_login">Gespeicherten Login auswählen</string>
     <string name="autofill_context_host_app">Website %1$s in App %2$s</string>

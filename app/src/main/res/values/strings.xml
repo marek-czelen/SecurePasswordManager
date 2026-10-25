@@ -79,6 +79,7 @@
         <item>Folder</item>
         <item>Tagi</item>
         <item>TOTP</item>
+        <item>Pakiet aplikacji Android</item>
     </string-array>
     <string name="file_details_message">Typ: %1$s\nRozmiar: %2$s</string>
     <string name="msg_file_pro_required">Dodawanie plików jest dostępne w wersji Pro.</string>
@@ -221,6 +222,7 @@
     <string name="hint_username">Login</string>
     <string name="hint_password">Hasło</string>
     <string name="hint_url">Adres URL</string>
+    <string name="hint_app_package">Aplikacja Android (identyfikator)</string>
     <string name="hint_notes">Notatki</string>
     <string name="action_save">Zapisz</string>
     <string name="action_cancel">Anuluj</string>
@@ -357,6 +359,11 @@
     <string name="autofill_auth_failed">Nie udało się uwierzytelnić magazynu.</string>
     <string name="autofill_vault_unavailable">Najpierw utwórz magazyn haseł.</string>
     <string name="autofill_no_matching_credentials">Brak pasującego zapisanego loginu.</string>
+    <string name="autofill_add_login_suggestion">Dodaj login dla %1$s</string>
+    <string name="autofill_add_entry_title">Brak zapisanego loginu</string>
+    <string name="autofill_add_entry_message">Nie ma zapisanego loginu dla %1$s. Czy chcesz dodać nowy wpis?</string>
+    <string name="autofill_add_entry_yes">Dodaj wpis</string>
+    <string name="autofill_add_entry_no">Nie</string>
     <string name="autofill_recovery_required">Otwórz aplikację i napraw magazyn przed użyciem autouzupełniania.</string>
     <string name="autofill_choose_login">Wybierz zapisany login</string>
     <string name="autofill_context_host_app">Witryna %1$s w aplikacji %2$s</string>

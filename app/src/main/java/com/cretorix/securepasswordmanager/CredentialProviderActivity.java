@@ -23,6 +23,7 @@ import androidx.credentials.provider.ProviderGetCredentialRequest;
 
 import android.hardware.biometrics.BiometricPrompt;
 
+import com.cretorix.securepasswordmanager.crypto.Crypto;
 import com.cretorix.securepasswordmanager.crypto.VaultData;
 import com.cretorix.securepasswordmanager.crypto.VaultItem;
 import com.cretorix.securepasswordmanager.repository.VaultV3Repository;
@@ -45,6 +46,9 @@ public final class CredentialProviderActivity extends AppCompatActivity {
     private String entryId;
     private boolean pickerVisible;
     private boolean finished;
+    private VaultData pendingVaultData;
+    private byte[] pendingVaultDek;
+    private byte[] pendingRecoverySecret;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,17 @@ public final class CredentialProviderActivity extends AppCompatActivity {
             beginGetRequest = PendingIntentHandler.retrieveBeginGetCredentialRequest(getIntent());
             if (beginGetRequest == null) {
                 finishCanceled();
+            } else {
+                authenticate();
+            }
+            return;
+        }
+        if (CredentialProviderResponseFactory.MODE_CREATE.equals(mode)) {
+            beginGetRequest = PendingIntentHandler.retrieveBeginGetCredentialRequest(getIntent());
+            if (beginGetRequest == null) {
+                finishCanceled();
+            } else if (Session.isActive() && !Session.isRecoveredPrevious()) {
+                handleUnlockedBeginRequest(Session.data(), null, null);
             } else {
                 authenticate();
             }
@@ -143,7 +158,8 @@ public final class CredentialProviderActivity extends AppCompatActivity {
                     showMessage(R.string.autofill_recovery_required);
                     finishCanceled();
                 } else if (beginGetRequest != null) {
-                    handleUnlockedBeginRequest(opened.data);
+                    handleUnlockedBeginRequest(opened.data, opened.copyDek(),
+                            repository.copyRecoverySecret());
                 } else {
                     returnCredential(findRequestedItem(opened.data));
                 }
@@ -157,17 +173,32 @@ public final class CredentialProviderActivity extends AppCompatActivity {
         }
     }
 
-    private void handleUnlockedBeginRequest(VaultData data) {
+    private void handleUnlockedBeginRequest(VaultData data, byte[] dataKey,
+                                            byte[] recoverySecret) {
         List<BeginGetPasswordOption> options =
                 CredentialProviderResponseFactory.passwordOptions(beginGetRequest);
         String origin = AutofillOrigin.verifiedCredentialOrigin(this,
                 beginGetRequest.getCallingAppInfo());
+        String appPackage = AutofillEntryFlow.credentialAppPackage(
+                this, beginGetRequest.getCallingAppInfo());
         List<VaultItem> matches = CredentialProviderResponseFactory.matchingItems(
-                AutofillMatcher.matchingLogins(data.items, origin), options);
+                AutofillMatcher.matchingLogins(data.items, origin, appPackage), options);
         if (matches.isEmpty()) {
+            if (!options.isEmpty()
+                    && AutofillMatcher.shouldOfferNewLogin(data.items, origin, appPackage)) {
+                pendingVaultData = data;
+                pendingVaultDek = dataKey;
+                pendingRecoverySecret = recoverySecret;
+                showCreateEntryPrompt(origin, appPackage);
+                return;
+            }
+            Crypto.wipe(dataKey);
+            Crypto.wipe(recoverySecret);
             finishCanceled();
             return;
         }
+        Crypto.wipe(dataKey);
+        Crypto.wipe(recoverySecret);
         if (origin != null
                 && matches.size() <= CredentialProviderResponseFactory.MAX_PROVIDER_ENTRIES) {
             returnBeginResponse(CredentialProviderResponseFactory.credentialsResponse(
@@ -175,6 +206,29 @@ public final class CredentialProviderActivity extends AppCompatActivity {
             return;
         }
         showCredentialPicker(matches, origin);
+    }
+
+    private void showCreateEntryPrompt(String origin, String appPackage) {
+        AutofillEntryFlow.NewEntry target =
+                AutofillEntryFlow.newEntry(this, origin, appPackage);
+        if (target == null) {
+            Crypto.wipe(pendingVaultDek);
+            Crypto.wipe(pendingRecoverySecret);
+            pendingVaultData = null;
+            pendingVaultDek = null;
+            pendingRecoverySecret = null;
+            showMessage(R.string.autofill_request_failed);
+            finishCanceled();
+            return;
+        }
+        AutofillEntryFlow.showPrompt(this, target.title,
+                () -> openNewEntry(target), this::finishCanceled);
+    }
+
+    private void openNewEntry(AutofillEntryFlow.NewEntry target) {
+        AutofillEntryFlow.launchNewEntry(this, target, pendingVaultData,
+                pendingVaultDek, pendingRecoverySecret);
+        finishCanceled();
     }
 
     private void showCredentialPicker(List<VaultItem> matches, String origin) {
@@ -233,8 +287,11 @@ public final class CredentialProviderActivity extends AppCompatActivity {
         if (data == null || getRequest == null) {
             return null;
         }
+        String origin = verifiedOrigin(getRequest);
+        String appPackage = AutofillEntryFlow.credentialAppPackage(
+                this, getRequest.getCallingAppInfo());
         for (VaultItem item : AutofillMatcher.matchingLogins(data.items,
-                verifiedOrigin(getRequest))) {
+                origin, appPackage)) {
             if (entryId.equals(item.entryId) && isAllowedByRequest(item, getRequest)) {
                 return item;
             }
@@ -248,9 +305,10 @@ public final class CredentialProviderActivity extends AppCompatActivity {
 
     private boolean isAllowedByRequest(VaultItem item, ProviderGetCredentialRequest request) {
         String origin = verifiedOrigin(request);
-        if (origin != null
-                && AutofillMatcher.matchingLogins(Collections.singletonList(item), origin)
-                .isEmpty()) {
+        String appPackage = AutofillEntryFlow.credentialAppPackage(
+                this, request.getCallingAppInfo());
+        if (AutofillMatcher.matchingLogins(
+                Collections.singletonList(item), origin, appPackage).isEmpty()) {
             return false;
         }
         for (androidx.credentials.CredentialOption option : request.getCredentialOptions()) {
@@ -325,6 +383,11 @@ public final class CredentialProviderActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        pendingVaultData = null;
+        Crypto.wipe(pendingVaultDek);
+        Crypto.wipe(pendingRecoverySecret);
+        pendingVaultDek = null;
+        pendingRecoverySecret = null;
         if (repository != null) {
             repository.clearInMemorySecrets();
         }

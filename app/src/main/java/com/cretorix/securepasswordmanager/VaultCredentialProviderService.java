@@ -41,10 +41,20 @@ public final class VaultCredentialProviderService extends CredentialProviderServ
             if (Session.isActive() && !Session.isRecoveredPrevious()) {
                 String origin = AutofillOrigin.verifiedCredentialOrigin(this,
                         request.getCallingAppInfo());
+                String appPackage = AutofillEntryFlow.credentialAppPackage(
+                        this, request.getCallingAppInfo());
                 List<VaultItem> matches = AutofillMatcher.matchingLogins(
-                        Session.data().items, origin);
+                        Session.data().items, origin, appPackage);
                 matches = CredentialProviderResponseFactory.matchingItems(matches, options);
                 if (matches.isEmpty()) {
+                    if (AutofillMatcher.shouldOfferNewLogin(
+                            Session.data().items, origin, appPackage)) {
+                        String label = AutofillEntryFlow.targetLabel(
+                                this, origin, appPackage);
+                        callback.onResult(CredentialProviderResponseFactory.createEntryResponse(
+                                this, label));
+                        return;
+                    }
                     callback.onError(new NoCredentialException());
                     return;
                 }

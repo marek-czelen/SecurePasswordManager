@@ -9,6 +9,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class AutofillMatcherTest {
     @Test
@@ -39,6 +41,41 @@ public class AutofillMatcherTest {
         assertEquals(0, AutofillMatcher.matchingLogins(
                 Arrays.asList(login("Example", "https://example.com")),
                 "not a valid domain").size());
+    }
+
+    @Test
+    public void offersNewLoginOnlyWhenValidSiteHasNoMatchingLogin() {
+        List<VaultItem> items = Arrays.asList(
+                login("Example", "https://example.com"),
+                login("Other", "https://other.example"));
+
+        assertTrue(AutofillMatcher.shouldOfferNewLogin(items, "new.example"));
+        assertFalse(AutofillMatcher.shouldOfferNewLogin(items, "example.com"));
+        assertFalse(AutofillMatcher.shouldOfferNewLogin(items, null));
+        assertFalse(AutofillMatcher.shouldOfferNewLogin(items, "not a valid domain"));
+    }
+
+    @Test
+    public void matchesAndOffersAppLoginsByExactPackageWhenNoWebDomainExists() {
+        VaultItem appLogin = new VaultItem("KFC", "user", "secret", "", "", "",
+                "", "", false, "com.kfc_polska");
+        VaultItem websiteLogin = login("Website", "https://example.com");
+        List<VaultItem> items = Arrays.asList(appLogin, websiteLogin);
+
+        assertEquals(Arrays.asList(appLogin),
+                AutofillMatcher.matchingLogins(items, null, "com.kfc_polska"));
+        assertEquals(0, AutofillMatcher.matchingLogins(
+                items, null, "com.other.app").size());
+        assertEquals(Arrays.asList(websiteLogin),
+                AutofillMatcher.matchingLogins(items, "example.com", "com.kfc_polska"));
+        assertEquals(Arrays.asList(appLogin),
+                AutofillMatcher.matchingLogins(items, "missing.example", "com.kfc_polska"));
+        assertFalse(AutofillMatcher.shouldOfferNewLogin(
+                items, "missing.example", "com.kfc_polska"));
+        assertTrue(AutofillMatcher.shouldOfferNewLogin(
+                items, null, "com.other.app"));
+        assertFalse(AutofillMatcher.shouldOfferNewLogin(
+                items, null, "com.kfc_polska"));
     }
 
     @Test

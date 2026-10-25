@@ -45,14 +45,20 @@ public final class PasswordAutofillService extends AutofillService {
                 callback.onSuccess(null);
                 return;
             }
+            String appPackage = AutofillEntryFlow.nativeAppPackage(this, form.targetPackage);
             if (Session.isActive()) {
                 if (Session.isRecoveredPrevious()) {
                     callback.onFailure(getString(R.string.autofill_recovery_required));
                     return;
                 }
                 List<VaultItem> matches = AutofillMatcher.matchingLogins(
-                        Session.data().items, form.webDomain);
+                        Session.data().items, form.webDomain, appPackage);
                 if (matches.isEmpty()) {
+                    if (AutofillMatcher.shouldOfferNewLogin(
+                            Session.data().items, form.webDomain, appPackage)) {
+                        callback.onSuccess(authenticationResponse(form, true));
+                        return;
+                    }
                     callback.onSuccess(null);
                     return;
                 }
@@ -76,12 +82,22 @@ public final class PasswordAutofillService extends AutofillService {
     }
 
     private FillResponse authenticationResponse(AutofillForm form) {
+        return authenticationResponse(form, false);
+    }
+
+    private FillResponse authenticationResponse(AutofillForm form, boolean createEntry) {
         Intent intent = new Intent(this, AutofillAuthActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         form.addToIntent(intent);
         PendingIntent authentication = PendingIntent.getActivity(this,
                 REQUEST_CODES.getAndIncrement(), intent,
                 PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE);
+        if (createEntry) {
+            String label = AutofillEntryFlow.targetLabel(this, form.webDomain,
+                    AutofillEntryFlow.nativeAppPackage(this, form.targetPackage));
+            return AutofillDatasetFactory.createEntryResponse(
+                    this, form, authentication, label);
+        }
         return AutofillDatasetFactory.authenticationResponse(this, form, authentication);
     }
 }

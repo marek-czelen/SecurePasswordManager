@@ -104,6 +104,8 @@ import java.util.concurrent.Executors;
 import javax.crypto.Cipher;
 
 public final class MainActivity extends AppCompatActivity {
+    static final String EXTRA_AUTOFILL_CREATE_TOKEN =
+            "com.cretorix.securepasswordmanager.autofill.CREATE_TOKEN";
     private static final String IMAGE_LOG = "SPM_IMAGE_FLOW";
     private static final String RECOVERY_LOG = "SPM_RECOVERY";
     private static final int REQUEST_VAULT_FILE = 4101;
@@ -111,6 +113,9 @@ public final class MainActivity extends AppCompatActivity {
     private static final int MAX_DOCUMENT_BYTES = 60 * 1024 * 1024;
     private static final long CLIPBOARD_TIMEOUT_MS = 30_000L;
     private static final String KEY_PENDING_PHOTO = "pending_photo";
+    private static final String KEY_PENDING_AUTOFILL_TITLE = "pending_autofill_title";
+    private static final String KEY_PENDING_AUTOFILL_URL = "pending_autofill_url";
+    private static final String KEY_PENDING_AUTOFILL_PACKAGE = "pending_autofill_package";
     private static final String KEY_AWAITING = "awaiting_result";
     private static boolean sImageFlowActive;
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
@@ -126,6 +131,9 @@ public final class MainActivity extends AppCompatActivity {
     private boolean importSavePending;
     private boolean unlocked;
     private VaultData currentData = VaultData.empty();
+    private String pendingAutofillTitle;
+    private String pendingAutofillUrl;
+    private String pendingAutofillPackage;
 
     private PasswordAdapter adapter;
     private String searchQuery = "";
@@ -342,6 +350,14 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AutofillEntryFlow.NewEntry pendingEntry = AutofillEntryFlow.consumePendingEntry(
+                getIntent().getStringExtra(EXTRA_AUTOFILL_CREATE_TOKEN));
+        if (pendingEntry != null) {
+            pendingAutofillTitle = pendingEntry.title;
+            pendingAutofillUrl = pendingEntry.url;
+            pendingAutofillPackage = pendingEntry.appPackageName;
+        }
+        getIntent().removeExtra(EXTRA_AUTOFILL_CREATE_TOKEN);
         // We handle edge-to-edge insets ourselves so no control is ever hidden behind the
         // status bar or the navigation bar.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -351,6 +367,12 @@ public final class MainActivity extends AppCompatActivity {
             // Restore in-flight capture state so a camera-triggered Activity recreation does
             // not lose the photo URI or wrongly auto-lock during the OCR flow.
             pendingPhotoUri = savedInstanceState.getParcelable(KEY_PENDING_PHOTO);
+            if (pendingAutofillTitle == null) {
+                pendingAutofillTitle = savedInstanceState.getString(KEY_PENDING_AUTOFILL_TITLE);
+                pendingAutofillUrl = savedInstanceState.getString(KEY_PENDING_AUTOFILL_URL);
+                pendingAutofillPackage =
+                        savedInstanceState.getString(KEY_PENDING_AUTOFILL_PACKAGE);
+            }
             awaitingResult = savedInstanceState.getBoolean(KEY_AWAITING, false);
         }
         try {
@@ -461,6 +483,9 @@ public final class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(KEY_PENDING_PHOTO, pendingPhotoUri);
+        outState.putString(KEY_PENDING_AUTOFILL_TITLE, pendingAutofillTitle);
+        outState.putString(KEY_PENDING_AUTOFILL_URL, pendingAutofillUrl);
+        outState.putString(KEY_PENDING_AUTOFILL_PACKAGE, pendingAutofillPackage);
         outState.putBoolean(KEY_AWAITING, awaitingResult);
     }
 
@@ -761,8 +786,32 @@ public final class MainActivity extends AppCompatActivity {
             showRecoveredPreviousDialog();
         } else {
             scheduleOrphanCollection();
-            maybePromptAutofillSetup();
+            if (!showPendingAutofillEntry()) {
+                maybePromptAutofillSetup();
+            }
         }
+    }
+
+    private boolean showPendingAutofillEntry() {
+        if (pendingAutofillTitle == null) {
+            return false;
+        }
+        String title = pendingAutofillTitle;
+        String url = pendingAutofillUrl == null ? "" : pendingAutofillUrl;
+        String appPackage = pendingAutofillPackage == null ? "" : pendingAutofillPackage;
+        pendingAutofillTitle = null;
+        pendingAutofillUrl = null;
+        pendingAutofillPackage = null;
+        if (title.trim().isEmpty()
+                || (!appPackage.isEmpty() && !VaultItem.isValidPackageName(appPackage))
+                || (appPackage.isEmpty() && AutofillMatcher.hostFromUrl(url) == null)) {
+            toast(R.string.autofill_request_failed);
+            return true;
+        }
+        VaultItem prefill = new VaultItem(title, "", "", url, "", "")
+                .withAppPackageName(appPackage);
+        showEntryDialog(prefill, null);
+        return true;
     }
 
     private void maybePromptAutofillSetup() {
@@ -1948,6 +1997,9 @@ public final class MainActivity extends AppCompatActivity {
         TextInputEditText username = view.findViewById(R.id.editUsername);
         TextInputEditText password = view.findViewById(R.id.editPassword);
         TextInputEditText url = view.findViewById(R.id.editUrl);
+        TextInputEditText appPackage = view.findViewById(R.id.editAppPackage);
+        com.google.android.material.textfield.TextInputLayout appPackageLayout =
+                view.findViewById(R.id.inputAppPackage);
         TextInputEditText notes = view.findViewById(R.id.editNotes);
         TextInputEditText folder = view.findViewById(R.id.editFolder);
         TextInputEditText tags = view.findViewById(R.id.editTags);
@@ -1959,6 +2011,10 @@ public final class MainActivity extends AppCompatActivity {
             username.setText(prefill.username);
             password.setText(prefill.password);
             url.setText(prefill.url);
+            if (!prefill.appPackageName.isEmpty()) {
+                appPackage.setText(prefill.appPackageName);
+                appPackageLayout.setVisibility(View.VISIBLE);
+            }
             notes.setText(prefill.notes);
             folder.setText(prefill.folder);
             tags.setText(prefill.tags);
@@ -1977,7 +2033,8 @@ public final class MainActivity extends AppCompatActivity {
                     if (replaceTarget == null) {
                         edited = new VaultItem(str(title), str(username), str(password),
                                 str(url), str(notes), str(tags), str(folder), str(totp),
-                                favorite.isChecked());
+                                favorite.isChecked(), prefill == null
+                                ? "" : prefill.appPackageName);
                     } else {
                         String newPassword = str(password);
                         List<String> passwordHistory = replaceTarget.passwordHistoryAfterChange(
@@ -1985,7 +2042,8 @@ public final class MainActivity extends AppCompatActivity {
                         edited = new VaultItem(replaceTarget.entryId, str(title), str(username),
                                 newPassword, str(url), str(notes), str(tags), str(folder),
                                 str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
-                                null, null, "", 0, passwordHistory);
+                                null, null, "", 0, Collections.emptyList(), passwordHistory,
+                                replaceTarget.appPackageName);
                     }
                     List<VaultItem> items = new ArrayList<>(currentData.items);
                     if (replaceTarget != null) {

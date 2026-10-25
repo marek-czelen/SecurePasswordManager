@@ -73,6 +73,7 @@
         <item>Folder</item>
         <item>Tags</item>
         <item>TOTP</item>
+        <item>Android app package</item>
     </string-array>
     <string name="file_details_message">Type: %1$s\nSize: %2$s</string>
     <string name="msg_file_pro_required">File attachments are available in Pro.</string>
@@ -207,6 +208,7 @@
     <string name="hint_username">Login</string>
     <string name="hint_password">Password</string>
     <string name="hint_url">URL</string>
+    <string name="hint_app_package">Android app package</string>
     <string name="hint_notes">Notes</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
@@ -332,6 +334,11 @@
     <string name="autofill_auth_failed">Could not authenticate the password vault.</string>
     <string name="autofill_vault_unavailable">Create a password vault before using autofill.</string>
     <string name="autofill_no_matching_credentials">No matching saved login is available.</string>
+    <string name="autofill_add_login_suggestion">Add login for %1$s</string>
+    <string name="autofill_add_entry_title">No saved login</string>
+    <string name="autofill_add_entry_message">There is no saved login for %1$s. Would you like to add one?</string>
+    <string name="autofill_add_entry_yes">Add login</string>
+    <string name="autofill_add_entry_no">No</string>
     <string name="autofill_recovery_required">Open the app and repair the vault before using autofill.</string>
     <string name="autofill_choose_login">Choose a saved login</string>
     <string name="autofill_context_host_app">Site %1$s in app %2$s</string>

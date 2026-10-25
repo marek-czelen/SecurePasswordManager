@@ -48,8 +48,20 @@ final class AutofillDatasetFactory {
 
     static FillResponse authenticationResponse(Context context, AutofillForm form,
                                                PendingIntent authentication) {
-        RemoteViews presentation = presentation(context,
+        return authenticationResponse(context, form, authentication,
                 context.getString(R.string.autofill_unlock));
+    }
+
+    static FillResponse createEntryResponse(Context context, AutofillForm form,
+                                            PendingIntent authentication, String label) {
+        return authenticationResponse(context, form, authentication,
+                context.getString(R.string.autofill_add_login_suggestion, label));
+    }
+
+    private static FillResponse authenticationResponse(Context context, AutofillForm form,
+                                                       PendingIntent authentication,
+                                                       String label) {
+        RemoteViews presentation = presentation(context, label);
         Dataset dataset = new Dataset.Builder(presentation)
                 .setValue(form.passwordId, null, presentation)
                 .setAuthentication(authentication.getIntentSender())

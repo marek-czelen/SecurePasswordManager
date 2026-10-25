@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.hardware.biometrics.BiometricPrompt;
 
+import com.cretorix.securepasswordmanager.crypto.Crypto;
 import com.cretorix.securepasswordmanager.crypto.VaultData;
 import com.cretorix.securepasswordmanager.crypto.VaultItem;
 import com.cretorix.securepasswordmanager.repository.VaultV3Repository;
@@ -31,6 +32,9 @@ public final class AutofillAuthActivity extends AppCompatActivity {
     private VaultV3Repository repository;
     private boolean finished;
     private boolean pickerVisible;
+    private VaultData pendingVaultData;
+    private byte[] pendingVaultDek;
+    private byte[] pendingRecoverySecret;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +54,7 @@ public final class AutofillAuthActivity extends AppCompatActivity {
                 finishCanceled();
                 return;
             }
-            showCredentials(Session.data());
+            showCredentials(Session.data(), null, null);
         } else {
             authenticate();
         }
@@ -90,7 +94,8 @@ public final class AutofillAuthActivity extends AppCompatActivity {
                                         showMessage(R.string.autofill_recovery_required);
                                         finishCanceled();
                                     } else {
-                                        showCredentials(opened.data);
+                                        showCredentials(opened.data, opened.copyDek(),
+                                                repository.copyRecoverySecret());
                                     }
                                 } finally {
                                     opened.clear();
@@ -118,14 +123,51 @@ public final class AutofillAuthActivity extends AppCompatActivity {
         }
     }
 
-    private void showCredentials(VaultData data) {
-        List<VaultItem> matches = AutofillMatcher.matchingLogins(data.items, form.webDomain);
+    private void showCredentials(VaultData data, byte[] dataKey, byte[] recoverySecret) {
+        String appPackage = AutofillEntryFlow.nativeAppPackage(this, form.targetPackage);
+        List<VaultItem> matches = AutofillMatcher.matchingLogins(
+                data.items, form.webDomain, appPackage);
         if (matches.isEmpty()) {
+            if (AutofillMatcher.shouldOfferNewLogin(
+                    data.items, form.webDomain, appPackage)) {
+                pendingVaultData = data;
+                pendingVaultDek = dataKey;
+                pendingRecoverySecret = recoverySecret;
+                showCreateEntryPrompt(appPackage);
+                return;
+            }
+            Crypto.wipe(dataKey);
+            Crypto.wipe(recoverySecret);
             showMessage(R.string.autofill_no_matching_credentials);
             finishCanceled();
             return;
         }
+        Crypto.wipe(dataKey);
+        Crypto.wipe(recoverySecret);
         showCredentialPicker(matches);
+    }
+
+    private void showCreateEntryPrompt(String appPackage) {
+        AutofillEntryFlow.NewEntry target = AutofillEntryFlow.newEntry(
+                this, form.webDomain, appPackage);
+        if (target == null) {
+            Crypto.wipe(pendingVaultDek);
+            Crypto.wipe(pendingRecoverySecret);
+            pendingVaultData = null;
+            pendingVaultDek = null;
+            pendingRecoverySecret = null;
+            showMessage(R.string.autofill_request_failed);
+            finishCanceled();
+            return;
+        }
+        AutofillEntryFlow.showPrompt(this, target.title, () -> openNewEntry(target),
+                this::finishCanceled);
+    }
+
+    private void openNewEntry(AutofillEntryFlow.NewEntry target) {
+        AutofillEntryFlow.launchNewEntry(this, target, pendingVaultData,
+                pendingVaultDek, pendingRecoverySecret);
+        finishCanceled();
     }
 
     private void showCredentialPicker(List<VaultItem> matches) {
@@ -213,10 +255,19 @@ public final class AutofillAuthActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        clearPendingVaultData();
         if (repository != null) {
             repository.clearInMemorySecrets();
         }
         super.onDestroy();
+    }
+
+    private void clearPendingVaultData() {
+        pendingVaultData = null;
+        Crypto.wipe(pendingVaultDek);
+        Crypto.wipe(pendingRecoverySecret);
+        pendingVaultDek = null;
+        pendingRecoverySecret = null;
     }
 
     private static final class CredentialChoice {

@@ -69,6 +69,7 @@
         <item>Dossier</item>
         <item>Tags</item>
         <item>TOTP</item>
+        <item>Package de l’application Android</item>
     </string-array>
     <string name="file_details_message">Type : %1$s\nTaille : %2$s</string>
     <string name="msg_file_pro_required">Les pièces jointes sont disponibles dans Pro.</string>
@@ -203,6 +204,7 @@
     <string name="hint_username">Login</string>
     <string name="hint_password">Mot de passe</string>
     <string name="hint_url">URL</string>
+    <string name="hint_app_package">Package de l’application Android</string>
     <string name="hint_notes">Notes</string>
     <string name="action_save">Enregistrer</string>
     <string name="action_cancel">Annuler</string>
@@ -328,6 +330,11 @@
     <string name="autofill_auth_failed">Impossible d’authentifier le coffre de mots de passe.</string>
     <string name="autofill_vault_unavailable">Créez un coffre avant d’utiliser le remplissage automatique.</string>
     <string name="autofill_no_matching_credentials">Aucun identifiant enregistré correspondant.</string>
+    <string name="autofill_add_login_suggestion">Ajouter un identifiant pour %1$s</string>
+    <string name="autofill_add_entry_title">Aucun identifiant enregistré</string>
+    <string name="autofill_add_entry_message">Aucun identifiant n’est enregistré pour %1$s. Voulez-vous en ajouter un ?</string>
+    <string name="autofill_add_entry_yes">Ajouter</string>
+    <string name="autofill_add_entry_no">Non</string>
     <string name="autofill_recovery_required">Ouvrez l’application et réparez le coffre avant d’utiliser le remplissage automatique.</string>
     <string name="autofill_choose_login">Choisir un identifiant enregistré</string>
     <string name="autofill_context_host_app">Site %1$s dans l’application %2$s</string>

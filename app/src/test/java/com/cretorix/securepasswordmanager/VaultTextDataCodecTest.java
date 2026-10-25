@@ -27,7 +27,8 @@ public final class VaultTextDataCodecTest {
         VaultItem login = new VaultItem(entryId, "Example", "user", "secret", "https://site",
                 "private note", "work,important", "Work", "JBSWY3DPEHPK3PXP",
                 true, VaultItem.TYPE_LOGIN, null, null, "", 0,
-                Arrays.asList("old-secret", "older-secret"));
+                Arrays.asList("old-secret", "older-secret"))
+                .withAppPackageName("com.example.shop");
         VaultItem image = VaultItem.imageReference("ID card", repeat("ab", 32),
                 repeat("cd", 32), 120_000);
         VaultItem file = VaultItem.fileReference("Document", repeat("ef", 32),
@@ -42,6 +43,7 @@ public final class VaultTextDataCodecTest {
         assertEquals("secret", decoded.items.get(0).password);
         assertEquals("Work", decoded.items.get(0).folder);
         assertEquals("JBSWY3DPEHPK3PXP", decoded.items.get(0).totpSecret);
+        assertEquals("com.example.shop", decoded.items.get(0).appPackageName);
         assertEquals(Arrays.asList("old-secret", "older-secret"),
                 decoded.items.get(0).passwordHistory);
         assertEquals(repeat("ab", 32), decoded.items.get(1).attachmentId);
@@ -60,6 +62,7 @@ public final class VaultTextDataCodecTest {
 
         assertEquals(1, decoded.items.size());
         assertEquals("legacy-secret", decoded.items.get(0).password);
+        assertEquals("", decoded.items.get(0).appPackageName);
         assertTrue(decoded.items.get(0).passwordHistory.isEmpty());
         Crypto.wipe(legacy);
     }
@@ -71,6 +74,18 @@ public final class VaultTextDataCodecTest {
 
         assertEquals(Collections.singletonList("legacy-old"),
                 decoded.items.get(0).passwordHistory);
+        Crypto.wipe(legacy);
+    }
+
+    @Test
+    public void decodesTextSchemaThreeDocumentsWithoutAppPackageField() throws Exception {
+        byte[] legacy = legacySchemaThreeDocumentBlock();
+        VaultData decoded = VaultTextDataCodec.decode(legacy);
+
+        assertEquals(VaultItem.TYPE_DOCUMENT, decoded.items.get(0).type);
+        assertEquals(Collections.singletonList(repeat("03", 32)),
+                decoded.items.get(0).documentPageIds);
+        assertEquals("", decoded.items.get(0).appPackageName);
         Crypto.wipe(legacy);
     }
 
@@ -244,6 +259,38 @@ public final class VaultTextDataCodecTest {
         raw.writeBoolean(false);
         raw.writeInt(1);
         writeString(raw, "legacy-old");
+        raw.flush();
+
+        byte[] record = rawBytes.toByteArray();
+        ByteArrayOutputStream paddedBytes = new ByteArrayOutputStream(4096);
+        DataOutputStream padded = new DataOutputStream(paddedBytes);
+        padded.writeInt(record.length);
+        padded.write(record);
+        padded.write(new byte[4096 - Integer.BYTES - record.length]);
+        padded.flush();
+        return paddedBytes.toByteArray();
+    }
+
+    private static byte[] legacySchemaThreeDocumentBlock() throws IOException {
+        ByteArrayOutputStream rawBytes = new ByteArrayOutputStream();
+        DataOutputStream raw = new DataOutputStream(rawBytes);
+        raw.writeInt(0x56544433);
+        raw.writeInt(3);
+        raw.writeInt(1);
+        writeHex(raw, repeat("03", 16));
+        raw.writeByte(4);
+        writeString(raw, "Old document");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        writeString(raw, "");
+        raw.writeBoolean(false);
+        raw.writeInt(1);
+        writeHex(raw, repeat("03", 32));
+        raw.writeInt(0);
         raw.flush();
 
         byte[] record = rawBytes.toByteArray();

@@ -16,15 +16,16 @@ import static org.junit.Assert.assertThrows;
 public final class AdvancedImportExportCsvTest {
     @Test
     public void parsesQuotedCsvAndMapsFieldsFromHeaders() throws Exception {
-        String csv = "\ufeffTitle;Login Name;Password;Website;Notes;Group;Tags;One-time password\r\n"
+        String csv = "\ufeffTitle;Login Name;Password;Website;Notes;Group;Tags;"
+                + "One-time password;Android app package\r\n"
                 + "\"Acme; Portal\";alice;\"p\"\"ass,word\";https://example.test;"
-                + "\"line one\r\nline two\";Work;personal;totp-secret\r\n";
+                + "\"line one\r\nline two\";Work;personal;totp-secret;com.example.shop\r\n";
         AdvancedImportExport.Table table = AdvancedImportExport.parseCsv(
                 csv.getBytes(StandardCharsets.UTF_8));
         AdvancedImportExport.MappingResult mapped = AdvancedImportExport.map(table,
                 AdvancedImportExport.suggestMapping(table));
 
-        assertEquals(8, table.columns.size());
+        assertEquals(9, table.columns.size());
         assertEquals(1, mapped.items.size());
         VaultItem item = mapped.items.get(0);
         assertEquals("Acme; Portal", item.title);
@@ -33,12 +34,14 @@ public final class AdvancedImportExportCsvTest {
         assertEquals("Work", item.folder);
         assertEquals("personal", item.tags);
         assertEquals("totp-secret", item.totpSecret);
+        assertEquals("com.example.shop", item.appPackageName);
     }
 
     @Test
     public void exportsAllLoginColumnsAsQuotedRfc4180CsvAndSkipsMedia() throws Exception {
         VaultItem login = new VaultItem("A, B", "alice", "p\"ass", "https://site",
-                "two\nlines", "tag", "Work", "JBSWY3DPEHPK3PXP", false);
+                "two\nlines", "tag", "Work", "JBSWY3DPEHPK3PXP", false)
+                .withAppPackageName("com.example.shop");
         VaultItem file = VaultItem.fileReference("doc.pdf", repeat("ab", 32),
                 "application/pdf", 0);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -46,9 +49,10 @@ public final class AdvancedImportExportCsvTest {
         AdvancedImportExport.writeCsv(output, Arrays.asList(login, file));
 
         assertEquals("\"name\",\"username\",\"password\",\"url\",\"notes\",\"folder\","
-                        + "\"tags\",\"totp\"\r\n"
+                        + "\"tags\",\"totp\",\"app_package\"\r\n"
                         + "\"A, B\",\"alice\",\"p\"\"ass\",\"https://site\","
-                        + "\"two\nlines\",\"Work\",\"tag\",\"JBSWY3DPEHPK3PXP\"\r\n",
+                        + "\"two\nlines\",\"Work\",\"tag\",\"JBSWY3DPEHPK3PXP\","
+                        + "\"com.example.shop\"\r\n",
                 new String(output.toByteArray(), StandardCharsets.UTF_8));
     }
 
@@ -61,10 +65,10 @@ public final class AdvancedImportExportCsvTest {
         AdvancedImportExport.writeCsv(output, Arrays.asList(login));
 
         assertEquals("\"name\",\"username\",\"password\",\"url\",\"notes\",\"folder\","
-                        + "\"tags\",\"totp\"\r\n"
+                        + "\"tags\",\"totp\",\"app_package\"\r\n"
                         + "\"'=1+1\",\"' \t+cmd\",\"'-1+1\",\"'@SUM(1,2)\","
                         + "\"'\ntext\",\"normal\",\"'\u00a0=2+2\","
-                        + "\"JBSWY3DPEHPK3PXP\"\r\n",
+                        + "\"JBSWY3DPEHPK3PXP\",\"\"\r\n",
                 new String(output.toByteArray(), StandardCharsets.UTF_8));
     }
 
