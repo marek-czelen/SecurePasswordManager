@@ -152,7 +152,7 @@
     <string name="menu_generator">Passwortgenerator</string>
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_lock">Sperren</string>
-    <string name="menu_tutorial">Anleitung</string>
+    <string name="menu_tutorial">Hilfe &amp; FAQ</string>
     <string name="menu_open">Aktionsmenü öffnen</string>
     <string name="menu_section_vault">Tresorwerkzeuge</string>
     <string name="menu_section_app">App</string>
@@ -295,7 +295,7 @@
     <string name="cd_biometric">Mit Biometrie oder Gerätesperre entsperren</string>
     <string name="cd_copy">Kopieren</string>
     <string name="cd_qr">Wiederherstellungs-QR-Code</string>
-    <string name="settings_tutorial">App-Anleitung</string>
+    <string name="settings_tutorial">Hilfe und FAQ</string>
     <string name="settings_premium_debug">Free-/Pro-Testmodus</string>
     <string name="settings_premium_title">SecureVault Pro</string>
     <string name="settings_premium_desc">Einmaliger Kauf. Nach der Aktivierung bleibt Pro auf diesem Gerät offline verfügbar.</string>
@@ -324,7 +324,7 @@
     <string name="msg_autofill_setup_returned">Wähle SecureVault als bevorzugten Dienst und aktiviere ihn bei Bedarf unter „Zusätzliche Anbieter“.</string>
 
     <string name="autofill_service_label">SecureVault Passworttresor</string>
-    <string name="autofill_unlock">SecureVault entsperren</string>
+    <string name="autofill_unlock">Mit SecureVault ausfüllen</string>
     <string name="autofill_unlock_title">Passworttresor entsperren</string>
     <string name="autofill_unlock_subtitle">Authentifizieren, um einen gespeicherten Login zu verwenden.</string>
     <string name="autofill_auth_failed">Der Passworttresor konnte nicht authentifiziert werden.</string>
@@ -361,7 +361,7 @@
     <string name="tutorial_health_text">Der lokale Bericht erkennt schwache und wiederverwendete Passwörter. Es werden keine Passwörter gesendet.</string>
     <string name="tutorial_end_title">Fertig</string>
     <string name="tutorial_end_text">Deine Daten bleiben verschlüsselt. Die Wiederherstellung benötigt Passphrase und unabhängigen QR-Code.</string>
-    <string name="help_intro">Diese Anleitung erklärt die App. Die Schaltflächen öffnen die echten Funktionen zum direkten Ausprobieren.</string>
+    <string name="help_intro">Anleitung zur App und Antworten auf häufige Fragen. Die Schaltflächen öffnen passende Funktionen.</string>
     <string name="help_list_title">1. Eine gemeinsame Liste</string>
     <string name="help_list_text">Passwort- und Bildeinträge erscheinen in einer Liste. Die Suche berücksichtigt Namen, Logins, URLs, Ordner und Tags.</string>
     <string name="help_add_action">Hinzufügen öffnen</string>
@@ -376,4 +376,10 @@
     <string name="help_backup_text">Ein Backup enthält nur die verschlüsselte Datei vault.vlt3 und kann außerhalb des Telefons gespeichert werden. Auf einem neuen Gerät werden vault.vlt3, Passphrase-QR und RQR2 benötigt.</string>
     <string name="help_recovery_qr_action">RQR2 anzeigen</string>
     <string name="help_recovery_action">Wiederherstellung öffnen</string>
+    <string name="help_faq_title">FAQ — Passwort-Autofill</string>
+    <string name="help_faq_chrome_question">Wie richte ich Autofill in Chrome ein?</string>
+    <string name="help_faq_chrome_answer">1. Lege SecureVault in den Android-Einstellungen als bevorzugten Dienst fest: Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern &gt; SecureVault. Falls angezeigt, aktiviere SecureVault zuerst unter „Zusätzliche Anbieter“.\n2. Öffne in Chrome 135 oder neuer ⋮ &gt; Einstellungen &gt; Autofill-Dienste und aktiviere „Mit einem anderen Dienst automatisch ausfüllen“.\n3. Starte Chrome neu, tippe in ein Anmeldefeld und wähle den SecureVault-Vorschlag. Fehlt die Einstellung, aktualisiere Chrome. Bezeichnungen und Pfade können je nach Gerät variieren.</string>
+    <string name="help_faq_default_provider_question">Wie lege ich SecureVault als Android-Standard für Passwörter fest?</string>
+    <string name="help_faq_default_provider_answer">Öffne unter Android 14 oder neuer Einstellungen &gt; Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern und wähle SecureVault. Aktiviere es bei Bedarf zuerst unter „Zusätzliche Anbieter“. Bei älteren Android-Versionen suche in den Einstellungen nach „Autofill-Dienst“ oder öffne System &gt; Sprachen und Eingabe &gt; Autofill-Dienst und wähle SecureVault. Die Pfade unterscheiden sich je nach Hersteller.</string>
+    <string name="help_autofill_settings_action">Autofill-Einstellungen öffnen</string>
 </resources>

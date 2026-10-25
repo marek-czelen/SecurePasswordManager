@@ -156,7 +156,7 @@
     <string name="menu_generator">Password generator</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_lock">Lock</string>
-    <string name="menu_tutorial">Tutorial</string>
+    <string name="menu_tutorial">Help &amp; FAQ</string>
     <string name="menu_open">Open actions menu</string>
     <string name="menu_section_vault">Vault tools</string>
     <string name="menu_section_app">App</string>
@@ -299,7 +299,7 @@
     <string name="cd_biometric">Unlock with biometrics or device lock</string>
     <string name="cd_copy">Copy</string>
     <string name="cd_qr">Recovery QR code</string>
-    <string name="settings_tutorial">App tutorial</string>
+    <string name="settings_tutorial">Help and FAQ</string>
     <string name="settings_premium_debug">Free / Pro test mode</string>
     <string name="settings_premium_title">SecureVault Pro</string>
     <string name="settings_premium_desc">One-time purchase. Once activated, Pro remains available offline on this device.</string>
@@ -328,7 +328,7 @@
     <string name="msg_autofill_setup_returned">Choose SecureVault as the preferred service and enable it under Additional providers if needed.</string>
 
     <string name="autofill_service_label">SecureVault password vault</string>
-    <string name="autofill_unlock">Unlock SecureVault</string>
+    <string name="autofill_unlock">Fill with SecureVault</string>
     <string name="autofill_unlock_title">Unlock password vault</string>
     <string name="autofill_unlock_subtitle">Authenticate to use a saved login.</string>
     <string name="autofill_auth_failed">Could not authenticate the password vault.</string>
@@ -365,7 +365,7 @@
     <string name="tutorial_health_text">The local report detects weak and reused passwords. No passwords are sent over the network.</string>
     <string name="tutorial_end_title">Done</string>
     <string name="tutorial_end_text">Your data remains encrypted. Recovery requires the passphrase and the independent QR code.</string>
-    <string name="help_intro">This guide explains the app. The buttons below open the real features so you can try them immediately.</string>
+    <string name="help_intro">A guide to the app and answers to common questions. Buttons open the relevant features.</string>
     <string name="help_list_title">1. One entry list</string>
     <string name="help_list_text">Password and image entries appear in one list. Search covers names, logins, URLs, folders and tags.</string>
     <string name="help_add_action">Open Add</string>
@@ -380,4 +380,10 @@
     <string name="help_backup_text">A backup contains only encrypted vault.vlt3 and can be stored outside the phone. A new device needs vault.vlt3, the passphrase QR and the RQR2 recovery QR. Both codes can be scanned instead of typed.</string>
     <string name="help_recovery_qr_action">Show RQR2</string>
     <string name="help_recovery_action">Open recovery</string>
+    <string name="help_faq_title">FAQ — password autofill</string>
+    <string name="help_faq_chrome_question">How do I set up autofill in Chrome?</string>
+    <string name="help_faq_chrome_answer">1. In Android Settings, set SecureVault as the preferred service: Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” &gt; SecureVault. If shown, enable SecureVault under “Additional providers” first.\n2. In Chrome 135 or later, open ⋮ &gt; Settings &gt; Autofill services and turn on “Autofill using another service”.\n3. Restart Chrome, focus a sign-in field, and select the SecureVault suggestion. If the setting is missing, update Chrome. Menu names and locations vary by device.</string>
+    <string name="help_faq_default_provider_question">How do I set SecureVault as Android’s default password provider?</string>
+    <string name="help_faq_default_provider_answer">On Android 14 or later, open Settings &gt; Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” and select SecureVault. Enable it under “Additional providers” first if needed. On older Android versions, search Settings for “Autofill service”, or open System &gt; Languages &amp; input &gt; Autofill service and select SecureVault. Paths vary by device manufacturer.</string>
+    <string name="help_autofill_settings_action">Open autofill settings</string>
 </resources>

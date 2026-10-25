@@ -71,8 +71,9 @@ final class AutofillDatasetFactory {
 
     private static RemoteViews presentation(Context context, String label) {
         RemoteViews views = new RemoteViews(context.getPackageName(),
-                android.R.layout.simple_list_item_1);
-        views.setTextViewText(android.R.id.text1, label);
+                R.layout.autofill_suggestion);
+        views.setImageViewResource(R.id.autofillSuggestionIcon, R.mipmap.ic_launcher);
+        views.setTextViewText(R.id.autofillSuggestionLabel, label);
         return views;
     }
 }

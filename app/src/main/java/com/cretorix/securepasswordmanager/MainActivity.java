@@ -2222,6 +2222,10 @@ public final class MainActivity extends AppCompatActivity {
             dialog.dismiss();
             showSettings();
         });
+        view.findViewById(R.id.helpAutofillSettings).setOnClickListener(v -> {
+            dialog.dismiss();
+            launchAutofillSetup();
+        });
         view.findViewById(R.id.helpRecoveryQr).setOnClickListener(v -> showRecoveryQrDialog());
         view.findViewById(R.id.helpRecovery).setOnClickListener(v -> {
             dialog.dismiss();

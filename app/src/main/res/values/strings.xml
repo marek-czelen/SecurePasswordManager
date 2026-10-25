@@ -164,7 +164,7 @@
     <string name="menu_generator">Generator hasła</string>
     <string name="menu_settings">Ustawienia</string>
     <string name="menu_lock">Zablokuj</string>
-    <string name="menu_tutorial">Instrukcja</string>
+    <string name="menu_tutorial">Pomoc i FAQ</string>
     <string name="menu_open">Otwórz menu</string>
     <string name="menu_section_vault">Narzędzia magazynu</string>
     <string name="menu_section_app">Aplikacja</string>
@@ -324,7 +324,7 @@
     <string name="cd_biometric">Odblokuj biometrią lub blokadą ekranu</string>
     <string name="cd_copy">Kopiuj</string>
     <string name="cd_qr">Kod odzyskiwania QR</string>
-    <string name="settings_tutorial">Instrukcja aplikacji</string>
+    <string name="settings_tutorial">Pomoc i FAQ</string>
     <string name="settings_premium_debug">Tryb testowy Free / Pro</string>
     <string name="settings_premium_title">SecureVault Pro</string>
     <string name="settings_premium_desc">Jednorazowy zakup. Po aktywacji Pro pozostaje dostępne offline na tym urządzeniu.</string>
@@ -353,7 +353,7 @@
     <string name="msg_autofill_setup_returned">Wybierz SecureVault jako preferowaną usługę i włącz go w „Dodatkowych dostawcach”, jeśli jest wyłączony.</string>
 
     <string name="autofill_service_label">SecureVault - magazyn haseł</string>
-    <string name="autofill_unlock">Odblokuj SecureVault</string>
+    <string name="autofill_unlock">Wypełnij z SecureVault</string>
     <string name="autofill_unlock_title">Odblokuj magazyn haseł</string>
     <string name="autofill_unlock_subtitle">Uwierzytelnij się, aby użyć zapisanego loginu.</string>
     <string name="autofill_auth_failed">Nie udało się uwierzytelnić magazynu.</string>
@@ -390,7 +390,7 @@
     <string name="tutorial_health_text">Raport lokalnie wykrywa słabe i powtórzone hasła. Żadne hasła nie są wysyłane do sieci.</string>
     <string name="tutorial_end_title">Gotowe</string>
     <string name="tutorial_end_text">Dane pozostają zaszyfrowane. Recovery wymaga passphrase oraz niezależnego kodu QR.</string>
-    <string name="help_intro">To jest instrukcja działania aplikacji. Przyciski poniżej otwierają rzeczywiste funkcje, więc możesz od razu je przetestować.</string>
+    <string name="help_intro">Instrukcja aplikacji i odpowiedzi na najczęstsze pytania. Przyciski otwierają rzeczywiste funkcje.</string>
     <string name="help_list_title">1. Jedna lista wpisów</string>
     <string name="help_list_text">Na jednej liście znajdują się wpisy tekstowe oraz obrazy. Każdy obraz ma własną nazwę i ikonę obrazu. Wyszukiwanie obejmuje nazwy, loginy, URL, foldery i tagi.</string>
     <string name="help_add_action">Otwórz Dodaj</string>
@@ -405,4 +405,10 @@
     <string name="help_backup_text">Kopia zawiera wyłącznie zaszyfrowany vault.vlt3 i może być bezpiecznie przechowywana poza telefonem. Na nowym urządzeniu potrzebujesz pliku vault.vlt3, passphrase QR oraz RQR2 recovery QR. Kody można skanować zamiast przepisywać.</string>
     <string name="help_recovery_qr_action">Pokaż RQR2</string>
     <string name="help_recovery_action">Otwórz odzyskiwanie</string>
+    <string name="help_faq_title">FAQ — autouzupełnianie haseł</string>
+    <string name="help_faq_chrome_question">Jak skonfigurować autouzupełnianie w Chrome?</string>
+    <string name="help_faq_chrome_answer">1. W Ustawieniach Androida ustaw SecureVault jako preferowaną usługę: Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” &gt; SecureVault. Jeśli pojawi się taka opcja, włącz SecureVault w „Dodatkowych dostawcach”.\n2. W Chrome 135 lub nowszym otwórz ⋮ &gt; Ustawienia &gt; Usługi autouzupełniania i włącz „Autouzupełnianie z innej usługi”.\n3. Uruchom ponownie Chrome, dotknij pola logowania i wybierz podpowiedź SecureVault. Jeśli nie widzisz ustawienia, zaktualizuj Chrome. Nazwy i położenie opcji mogą różnić się zależnie od telefonu.</string>
+    <string name="help_faq_default_provider_question">Jak ustawić SecureVault jako domyślnego dostawcę haseł Androida?</string>
+    <string name="help_faq_default_provider_answer">Na Androidzie 14 lub nowszym otwórz Ustawienia &gt; Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” i wybierz SecureVault. W razie potrzeby najpierw włącz go w „Dodatkowych dostawcach”. Na starszym Androidzie wyszukaj w Ustawieniach „Usługa autouzupełniania” albo przejdź do System &gt; Języki i wprowadzanie &gt; Usługa autouzupełniania i wybierz SecureVault. Ścieżka może różnić się u producentów telefonów.</string>
+    <string name="help_autofill_settings_action">Otwórz ustawienia autouzupełniania</string>
 </resources>

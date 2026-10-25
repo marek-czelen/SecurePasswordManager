@@ -152,7 +152,7 @@
     <string name="menu_generator">Générateur de mot de passe</string>
     <string name="menu_settings">Paramètres</string>
     <string name="menu_lock">Verrouiller</string>
-    <string name="menu_tutorial">Guide</string>
+    <string name="menu_tutorial">Aide et FAQ</string>
     <string name="menu_open">Ouvrir le menu d’actions</string>
     <string name="menu_section_vault">Outils du coffre-fort</string>
     <string name="menu_section_app">Application</string>
@@ -295,7 +295,7 @@
     <string name="cd_biometric">Déverrouiller par biométrie ou verrouillage écran</string>
     <string name="cd_copy">Copier</string>
     <string name="cd_qr">Code QR de récupération</string>
-    <string name="settings_tutorial">Guide de l’application</string>
+    <string name="settings_tutorial">Aide et FAQ</string>
     <string name="settings_premium_debug">Mode de test Free / Pro</string>
     <string name="settings_premium_title">SecureVault Pro</string>
     <string name="settings_premium_desc">Achat unique. Une fois activé, Pro reste disponible hors ligne sur cet appareil.</string>
@@ -324,7 +324,7 @@
     <string name="msg_autofill_setup_returned">Choisissez SecureVault comme service préféré et activez-le dans « Fournisseurs supplémentaires » si nécessaire.</string>
 
     <string name="autofill_service_label">Coffre de mots de passe SecureVault</string>
-    <string name="autofill_unlock">Déverrouiller SecureVault</string>
+    <string name="autofill_unlock">Remplir avec SecureVault</string>
     <string name="autofill_unlock_title">Déverrouiller le coffre de mots de passe</string>
     <string name="autofill_unlock_subtitle">Authentifiez-vous pour utiliser un identifiant enregistré.</string>
     <string name="autofill_auth_failed">Impossible d’authentifier le coffre de mots de passe.</string>
@@ -361,7 +361,7 @@
     <string name="tutorial_health_text">Le rapport local détecte les mots de passe faibles et réutilisés. Aucun mot de passe n’est envoyé.</string>
     <string name="tutorial_end_title">Terminé</string>
     <string name="tutorial_end_text">Vos données restent chiffrées. La récupération nécessite la phrase secrète et le QR indépendant.</string>
-    <string name="help_intro">Ce guide explique l’application. Les boutons ouvrent les vraies fonctions pour les essayer immédiatement.</string>
+    <string name="help_intro">Guide de l’application et réponses aux questions fréquentes. Les boutons ouvrent les fonctions correspondantes.</string>
     <string name="help_list_title">1. Une seule liste</string>
     <string name="help_list_text">Les mots de passe et les images apparaissent dans une même liste. La recherche couvre les noms, logins, URL, dossiers et tags.</string>
     <string name="help_add_action">Ouvrir Ajouter</string>
@@ -376,4 +376,10 @@
     <string name="help_backup_text">Une sauvegarde contient uniquement vault.vlt3 chiffré et peut être stockée hors du téléphone. Un nouvel appareil nécessite vault.vlt3, le QR de phrase secrète et le QR RQR2.</string>
     <string name="help_recovery_qr_action">Afficher RQR2</string>
     <string name="help_recovery_action">Ouvrir la récupération</string>
+    <string name="help_faq_title">FAQ — remplissage automatique des mots de passe</string>
+    <string name="help_faq_chrome_question">Comment configurer le remplissage automatique dans Chrome ?</string>
+    <string name="help_faq_chrome_answer">1. Dans les paramètres Android, définissez SecureVault comme service préféré : Mots de passe, clés d’accès et comptes &gt; Modifier sous « Service préféré » &gt; SecureVault. Si nécessaire, activez d’abord SecureVault dans « Fournisseurs supplémentaires ».\n2. Dans Chrome 135 ou version ultérieure, ouvrez ⋮ &gt; Paramètres &gt; Services de remplissage automatique et activez « Remplir automatiquement avec un autre service ».\n3. Redémarrez Chrome, touchez un champ de connexion et choisissez la suggestion SecureVault. Si le réglage n’apparaît pas, mettez Chrome à jour. Les noms et chemins peuvent varier selon l’appareil.</string>
+    <string name="help_faq_default_provider_question">Comment définir SecureVault comme gestionnaire de mots de passe par défaut sur Android ?</string>
+    <string name="help_faq_default_provider_answer">Sous Android 14 ou version ultérieure, ouvrez Paramètres &gt; Mots de passe, clés d’accès et comptes &gt; Modifier sous « Service préféré », puis choisissez SecureVault. Activez-le d’abord dans « Fournisseurs supplémentaires » si nécessaire. Sur une ancienne version, recherchez « Service de remplissage automatique » dans les paramètres ou ouvrez Système &gt; Langues et saisie &gt; Service de remplissage automatique et choisissez SecureVault. Les chemins varient selon le fabricant.</string>
+    <string name="help_autofill_settings_action">Ouvrir les paramètres de remplissage</string>
 </resources>
