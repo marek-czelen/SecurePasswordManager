@@ -22,8 +22,8 @@
     <string name="action_add">Add</string>
     <string name="menu_images">Image container</string>
     <string name="add_image_container">Add image to list</string>
-    <string name="add_file">Add file (Pro)</string>
-    <string name="add_document">Add document (Pro)</string>
+    <string name="add_file">Add file (1 Free, more with Pro)</string>
+    <string name="add_document">Add document (1 Free, more with Pro)</string>
     <string name="item_image_kind">JPG image</string>
     <string name="item_file_kind">File</string>
     <string name="action_password_history">Password history (Pro)</string>
@@ -76,7 +76,7 @@
         <item>Android app package</item>
     </string-array>
     <string name="file_details_message">Type: %1$s\nSize: %2$s</string>
-    <string name="msg_file_pro_required">File attachments are available in Pro.</string>
+    <string name="msg_file_free_limit">Free includes one file. Adding more requires Pro.</string>
     <string name="msg_file_saved">File saved in the encrypted vault.</string>
     <string name="msg_document_saved">Document saved in the encrypted vault.</string>
     <string name="msg_file_exported">File exported.</string>
@@ -100,7 +100,7 @@
     <string name="image_crop_select">Select an image fragment</string>
     <string name="msg_image_saved">Image saved in the encrypted vault</string>
     <string name="err_image">The image could not be prepared.</string>
-    <string name="msg_document_pro_required">Document scanning is available in Pro.</string>
+    <string name="msg_document_free_limit">Free includes one document. Adding more requires Pro.</string>
     <string name="document_scan_title">Scan document</string>
     <string name="document_scan_hint">Frame the document and take a photo. Its edges will be detected after capture.</string>
     <string name="document_scan_processing">Processing photo and detecting edges…</string>
@@ -385,5 +385,9 @@
     <string name="help_faq_chrome_answer">1. In Android Settings, set SecureVault as the preferred service: Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” &gt; SecureVault. If shown, enable SecureVault under “Additional providers” first.\n2. In Chrome 135 or later, open ⋮ &gt; Settings &gt; Autofill services and turn on “Autofill using another service”.\n3. Restart Chrome, focus a sign-in field, and select the SecureVault suggestion. If the setting is missing, update Chrome. Menu names and locations vary by device.</string>
     <string name="help_faq_default_provider_question">How do I set SecureVault as Android’s default password provider?</string>
     <string name="help_faq_default_provider_answer">On Android 14 or later, open Settings &gt; Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” and select SecureVault. Enable it under “Additional providers” first if needed. On older Android versions, search Settings for “Autofill service”, or open System &gt; Languages &amp; input &gt; Autofill service and select SecureVault. Paths vary by device manufacturer.</string>
+    <string name="help_faq_pro_question">What is included in Pro?</string>
+    <string name="help_faq_pro_answer">Free lets you add one file and one document. Pro allows more files and documents, and unlocks password history and advanced import/export.</string>
+    <string name="help_faq_vault_reader_question">Can I read a vault backup without the phone app?</string>
+    <string name="help_faq_vault_reader_answer">Yes. An offline web-page vault reader and a standalone Windows file are available at https://www.cretorix.eu.</string>
     <string name="help_autofill_settings_action">Open autofill settings</string>
 </resources>

@@ -22,8 +22,8 @@
     <string name="action_add">Hinzufügen</string>
     <string name="menu_images">Bildcontainer</string>
     <string name="add_image_container">Bild zur Liste hinzufügen</string>
-    <string name="add_file">Datei hinzufügen (Pro)</string>
-    <string name="add_document">Dokument scannen (Pro)</string>
+    <string name="add_file">Datei hinzufügen (1 Free, mehr mit Pro)</string>
+    <string name="add_document">Dokument scannen (1 Free, mehr mit Pro)</string>
     <string name="item_image_kind">JPG-Bild</string>
     <string name="item_file_kind">Datei</string>
     <string name="action_password_history">Passwortverlauf (Pro)</string>
@@ -72,7 +72,7 @@
         <item>Android-App-Paket</item>
     </string-array>
     <string name="file_details_message">Typ: %1$s\nGröße: %2$s</string>
-    <string name="msg_file_pro_required">Dateianhänge sind in Pro verfügbar.</string>
+    <string name="msg_file_free_limit">Free enthält eine Datei. Weitere Dateien erfordern Pro.</string>
     <string name="msg_file_saved">Datei im verschlüsselten Tresor gespeichert.</string>
     <string name="msg_document_saved">Dokument im verschlüsselten Tresor gespeichert.</string>
     <string name="msg_file_exported">Datei exportiert.</string>
@@ -96,7 +96,7 @@
     <string name="image_crop_select">Bildauschnitt markieren</string>
     <string name="msg_image_saved">Bild im verschlüsselten Tresor gespeichert</string>
     <string name="err_image">Bild konnte nicht vorbereitet werden.</string>
-    <string name="msg_document_pro_required">Das Scannen von Dokumenten ist in Pro verfügbar.</string>
+    <string name="msg_document_free_limit">Free enthält ein Dokument. Weitere Dokumente erfordern Pro.</string>
     <string name="document_scan_title">Dokument scannen</string>
     <string name="document_scan_hint">Richte das Dokument im Bild aus und mache ein Foto. Die Kanten werden danach erkannt.</string>
     <string name="document_scan_processing">Foto wird verarbeitet und Kanten werden erkannt…</string>
@@ -381,5 +381,9 @@
     <string name="help_faq_chrome_answer">1. Lege SecureVault in den Android-Einstellungen als bevorzugten Dienst fest: Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern &gt; SecureVault. Falls angezeigt, aktiviere SecureVault zuerst unter „Zusätzliche Anbieter“.\n2. Öffne in Chrome 135 oder neuer ⋮ &gt; Einstellungen &gt; Autofill-Dienste und aktiviere „Mit einem anderen Dienst automatisch ausfüllen“.\n3. Starte Chrome neu, tippe in ein Anmeldefeld und wähle den SecureVault-Vorschlag. Fehlt die Einstellung, aktualisiere Chrome. Bezeichnungen und Pfade können je nach Gerät variieren.</string>
     <string name="help_faq_default_provider_question">Wie lege ich SecureVault als Android-Standard für Passwörter fest?</string>
     <string name="help_faq_default_provider_answer">Öffne unter Android 14 oder neuer Einstellungen &gt; Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern und wähle SecureVault. Aktiviere es bei Bedarf zuerst unter „Zusätzliche Anbieter“. Bei älteren Android-Versionen suche in den Einstellungen nach „Autofill-Dienst“ oder öffne System &gt; Sprachen und Eingabe &gt; Autofill-Dienst und wähle SecureVault. Die Pfade unterscheiden sich je nach Hersteller.</string>
+    <string name="help_faq_pro_question">Was ist in Pro enthalten?</string>
+    <string name="help_faq_pro_answer">Free erlaubt eine Datei und ein Dokument. Pro ermöglicht weitere Dateien und Dokumente und schaltet den Passwortverlauf sowie den erweiterten Import/Export frei.</string>
+    <string name="help_faq_vault_reader_question">Kann ich ein Tresor-Backup ohne die Handy-App lesen?</string>
+    <string name="help_faq_vault_reader_answer">Ja. Ein Offline-Webseiten-Leser für Tresor-Backups und eine eigenständige Windows-Datei sind unter https://www.cretorix.eu verfügbar.</string>
     <string name="help_autofill_settings_action">Autofill-Einstellungen öffnen</string>
 </resources>

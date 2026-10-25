@@ -22,8 +22,8 @@
     <string name="action_add">Ajouter</string>
     <string name="menu_images">Conteneur d’images</string>
     <string name="add_image_container">Ajouter une image à la liste</string>
-    <string name="add_file">Ajouter un fichier (Pro)</string>
-    <string name="add_document">Scanner un document (Pro)</string>
+    <string name="add_file">Ajouter un fichier (1 Free, plus avec Pro)</string>
+    <string name="add_document">Scanner un document (1 Free, plus avec Pro)</string>
     <string name="item_image_kind">Image JPG</string>
     <string name="item_file_kind">Fichier</string>
     <string name="action_password_history">Historique des mots de passe (Pro)</string>
@@ -72,7 +72,7 @@
         <item>Package de l’application Android</item>
     </string-array>
     <string name="file_details_message">Type : %1$s\nTaille : %2$s</string>
-    <string name="msg_file_pro_required">Les pièces jointes sont disponibles dans Pro.</string>
+    <string name="msg_file_free_limit">Free inclut un fichier. L’ajout d’autres fichiers nécessite Pro.</string>
     <string name="msg_file_saved">Fichier enregistré dans le coffre chiffré.</string>
     <string name="msg_document_saved">Document enregistré dans le coffre chiffré.</string>
     <string name="msg_file_exported">Fichier exporté.</string>
@@ -96,7 +96,7 @@
     <string name="image_crop_select">Sélectionnez une partie de l’image</string>
     <string name="msg_image_saved">Image enregistrée dans le coffre chiffré</string>
     <string name="err_image">Impossible de préparer l’image.</string>
-    <string name="msg_document_pro_required">Le scan de documents est disponible dans Pro.</string>
+    <string name="msg_document_free_limit">Free inclut un document. L’ajout d’autres documents nécessite Pro.</string>
     <string name="document_scan_title">Scanner un document</string>
     <string name="document_scan_hint">Cadrez le document et prenez une photo. Ses bords seront détectés après la capture.</string>
     <string name="document_scan_processing">Traitement de la photo et détection des bords…</string>
@@ -381,5 +381,9 @@
     <string name="help_faq_chrome_answer">1. Dans les paramètres Android, définissez SecureVault comme service préféré : Mots de passe, clés d’accès et comptes &gt; Modifier sous « Service préféré » &gt; SecureVault. Si nécessaire, activez d’abord SecureVault dans « Fournisseurs supplémentaires ».\n2. Dans Chrome 135 ou version ultérieure, ouvrez ⋮ &gt; Paramètres &gt; Services de remplissage automatique et activez « Remplir automatiquement avec un autre service ».\n3. Redémarrez Chrome, touchez un champ de connexion et choisissez la suggestion SecureVault. Si le réglage n’apparaît pas, mettez Chrome à jour. Les noms et chemins peuvent varier selon l’appareil.</string>
     <string name="help_faq_default_provider_question">Comment définir SecureVault comme gestionnaire de mots de passe par défaut sur Android ?</string>
     <string name="help_faq_default_provider_answer">Sous Android 14 ou version ultérieure, ouvrez Paramètres &gt; Mots de passe, clés d’accès et comptes &gt; Modifier sous « Service préféré », puis choisissez SecureVault. Activez-le d’abord dans « Fournisseurs supplémentaires » si nécessaire. Sur une ancienne version, recherchez « Service de remplissage automatique » dans les paramètres ou ouvrez Système &gt; Langues et saisie &gt; Service de remplissage automatique et choisissez SecureVault. Les chemins varient selon le fabricant.</string>
+    <string name="help_faq_pro_question">Que comprend la version Pro ?</string>
+    <string name="help_faq_pro_answer">La version Free permet d’ajouter un fichier et un document. Pro permet d’en ajouter davantage et débloque l’historique des mots de passe ainsi que l’import/export avancé.</string>
+    <string name="help_faq_vault_reader_question">Puis-je lire une sauvegarde sans l’application mobile ?</string>
+    <string name="help_faq_vault_reader_answer">Oui. Un lecteur de sauvegarde vault sous forme de page web hors ligne et un fichier autonome pour Windows sont disponibles sur https://www.cretorix.eu.</string>
     <string name="help_autofill_settings_action">Ouvrir les paramètres de remplissage</string>
 </resources>

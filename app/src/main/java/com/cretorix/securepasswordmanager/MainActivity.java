@@ -394,9 +394,10 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addScannedDocument(ArrayList<Uri> pages, String title) {
-        if (!premiumManager.isPro()) {
+        if (!PremiumAttachmentLimits.canAddDocument(
+                premiumManager.isPro(), countDocuments(currentData))) {
             deleteTemporaryDocumentPages(pages);
-            toast(R.string.msg_document_pro_required);
+            toast(R.string.msg_document_free_limit);
             return;
         }
         if (pages.isEmpty() || pages.size() > VaultItem.MAX_DOCUMENT_PAGES) {
@@ -871,8 +872,9 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void requestDocumentScan() {
-        if (!premiumManager.isPro()) {
-            toast(R.string.msg_document_pro_required);
+        if (!PremiumAttachmentLimits.canAddDocument(
+                premiumManager.isPro(), countDocuments(currentData))) {
+            toast(R.string.msg_document_free_limit);
             return;
         }
         if (awaitingResult || saveInProgress) {
@@ -3048,8 +3050,13 @@ public final class MainActivity extends AppCompatActivity {
                 } else if (option == 1) {
                     showImageSourceChooser();
                 } else if (option == 2) {
-                    awaitingResult = true;
-                    pickFileLauncher.launch(new String[]{"*/*"});
+                    if (!PremiumAttachmentLimits.canAddFile(
+                            premiumManager.isPro(), countFiles(currentData))) {
+                        toast(R.string.msg_file_free_limit);
+                    } else {
+                        awaitingResult = true;
+                        pickFileLauncher.launch(new String[]{"*/*"});
+                    }
                 } else {
                     requestDocumentScan();
                 }
@@ -3187,8 +3194,9 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addSelectedFile(Uri uri) {
-        if (!premiumManager.isPro()) {
-            toast(R.string.msg_file_pro_required);
+        if (!PremiumAttachmentLimits.canAddFile(
+                premiumManager.isPro(), countFiles(currentData))) {
+            toast(R.string.msg_file_free_limit);
             return;
         }
         awaitingResult = true;

@@ -28,8 +28,8 @@
     <string name="action_add">Dodaj</string>
     <string name="menu_images">Kontener obrazów</string>
     <string name="add_image_container">Dodaj obraz do kontenera</string>
-    <string name="add_file">Dodaj plik (Pro)</string>
-    <string name="add_document">Dodaj dokument (Pro)</string>
+    <string name="add_file">Dodaj plik (1 Free, więcej w Pro)</string>
+    <string name="add_document">Dodaj dokument (1 Free, więcej w Pro)</string>
     <string name="item_image_kind">Obraz JPG</string>
     <string name="item_file_kind">Plik</string>
     <string name="action_password_history">Historia haseł (Pro)</string>
@@ -82,7 +82,7 @@
         <item>Pakiet aplikacji Android</item>
     </string-array>
     <string name="file_details_message">Typ: %1$s\nRozmiar: %2$s</string>
-    <string name="msg_file_pro_required">Dodawanie plików jest dostępne w wersji Pro.</string>
+    <string name="msg_file_free_limit">W wersji Free możesz dodać jeden plik. Dodawanie kolejnych wymaga Pro.</string>
     <string name="msg_file_saved">Plik zapisano w zaszyfrowanym sejfie.</string>
     <string name="msg_document_saved">Dokument zapisano w zaszyfrowanym sejfie.</string>
     <string name="msg_file_exported">Plik wyeksportowano.</string>
@@ -106,7 +106,7 @@
     <string name="image_crop_select">Zaznacz fragment obrazu</string>
     <string name="msg_image_saved">Obraz zapisano w zaszyfrowanym kontenerze</string>
     <string name="err_image">Nie udało się przygotować obrazu.</string>
-    <string name="msg_document_pro_required">Skanowanie dokumentów jest dostępne w wersji Pro.</string>
+    <string name="msg_document_free_limit">W wersji Free możesz dodać jeden dokument. Dodawanie kolejnych wymaga Pro.</string>
     <string name="document_scan_title">Skan dokumentu</string>
     <string name="document_scan_hint">Ustaw dokument w kadrze i zrób zdjęcie. Krawędzie wykryjemy po jego zrobieniu.</string>
     <string name="document_scan_processing">Przetwarzanie zdjęcia i wykrywanie krawędzi…</string>
@@ -410,5 +410,9 @@
     <string name="help_faq_chrome_answer">1. W Ustawieniach Androida ustaw SecureVault jako preferowaną usługę: Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” &gt; SecureVault. Jeśli pojawi się taka opcja, włącz SecureVault w „Dodatkowych dostawcach”.\n2. W Chrome 135 lub nowszym otwórz ⋮ &gt; Ustawienia &gt; Usługi autouzupełniania i włącz „Autouzupełnianie z innej usługi”.\n3. Uruchom ponownie Chrome, dotknij pola logowania i wybierz podpowiedź SecureVault. Jeśli nie widzisz ustawienia, zaktualizuj Chrome. Nazwy i położenie opcji mogą różnić się zależnie od telefonu.</string>
     <string name="help_faq_default_provider_question">Jak ustawić SecureVault jako domyślnego dostawcę haseł Androida?</string>
     <string name="help_faq_default_provider_answer">Na Androidzie 14 lub nowszym otwórz Ustawienia &gt; Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” i wybierz SecureVault. W razie potrzeby najpierw włącz go w „Dodatkowych dostawcach”. Na starszym Androidzie wyszukaj w Ustawieniach „Usługa autouzupełniania” albo przejdź do System &gt; Języki i wprowadzanie &gt; Usługa autouzupełniania i wybierz SecureVault. Ścieżka może różnić się u producentów telefonów.</string>
+    <string name="help_faq_pro_question">Co zawiera wersja Pro?</string>
+    <string name="help_faq_pro_answer">W wersji Free możesz dodać jeden plik i jeden dokument. Pro pozwala dodawać większą liczbę plików i dokumentów oraz odblokowuje historię haseł i zaawansowany import/eksport.</string>
+    <string name="help_faq_vault_reader_question">Czy mogę odczytać kopię sejfu bez aplikacji na telefonie?</string>
+    <string name="help_faq_vault_reader_answer">Tak. Na stronie https://www.cretorix.eu dostępny jest czytnik kopii vault działający jako strona offline oraz samodzielny plik dla Windows.</string>
     <string name="help_autofill_settings_action">Otwórz ustawienia autouzupełniania</string>
 </resources>
