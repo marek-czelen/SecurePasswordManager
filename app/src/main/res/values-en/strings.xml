@@ -26,19 +26,18 @@
     <string name="add_document">Add document (1 Free, more with Pro)</string>
     <string name="item_image_kind">JPG image</string>
     <string name="item_file_kind">File</string>
-    <string name="action_password_history">Password history (Pro)</string>
+    <string name="action_password_history">Password history</string>
     <string name="password_history_title">Password history</string>
     <string name="password_history_entry">Previous password %1$d</string>
     <string name="password_history_empty">No previous passwords have been saved.</string>
-    <string name="msg_password_history_pro_required">Password history is available in Pro.</string>
     <string name="err_passphrase_qr_mismatch">That passphrase does not match the current vault. No QR code was created.</string>
-    <string name="menu_advanced_import_export">Advanced import/export (Pro)</string>
-    <string name="msg_advanced_pro_required">Advanced import and export are available in Pro.</string>
+    <string name="menu_advanced_import_export">Advanced import/export</string>
     <string name="advanced_import_export_title">Advanced import/export</string>
     <string name="advanced_import">Import passwords</string>
     <string name="advanced_export_csv">Export to CSV</string>
     <string name="csv_plaintext_title">CSV export is not encrypted</string>
     <string name="csv_plaintext_warning">The CSV file contains passwords and TOTP secrets in plain text and can be read by other apps. Spreadsheets may treat values starting with =, +, - or @ as formulas. Only password entries are exported; images and attachments are omitted. Continue?</string>
+    <string name="csv_free_limit_warning">Free exports the first %1$d password entries per operation. Pro exports all entries.</string>
     <string name="msg_csv_nothing_to_export">There are no password entries to export.</string>
     <string name="msg_csv_exported">CSV file exported.</string>
     <string name="err_csv_export">Could not export the CSV file.</string>
@@ -56,6 +55,8 @@
     <string name="import_empty">No entries to import. Rows skipped: %1$d.</string>
     <string name="import_capacity">Cannot add %1$d entries; the vault has room for %2$d more.</string>
     <string name="import_preview_count">New entries to add: %1$d</string>
+    <string name="import_free_limit">Free can import up to %1$d entries per operation.</string>
+    <string name="import_free_limit_skipped">Free limit: the first %1$d entries will be imported; additional entries skipped: %2$d. Pro removes the Free five-entry cap per operation.</string>
     <string name="import_preview_login">%1$s — %2$s</string>
     <string name="import_ignored_rows">Blank or unmapped rows skipped: %1$d</string>
     <string name="import_more_titles">… and %1$d more entries</string>
@@ -302,7 +303,7 @@
     <string name="settings_tutorial">Help and FAQ</string>
     <string name="settings_premium_debug">Free / Pro test mode</string>
     <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">One-time purchase. Once activated, Pro remains available offline on this device.</string>
+    <string name="settings_premium_desc">Free: 1 file, 1 document, 2 previous passwords per entry and 5 entries per advanced import/export operation. Pro raises history to 5 previous passwords and removes the Free five-entry cap per operation. One-time purchase; works offline on this device.</string>
     <string name="premium_action_buy">Buy Pro</string>
     <string name="premium_action_buy_price">Buy Pro — %1$s</string>
     <string name="premium_action_restore">Restore purchase</string>
@@ -386,7 +387,7 @@
     <string name="help_faq_default_provider_question">How do I set SecureVault as Android’s default password provider?</string>
     <string name="help_faq_default_provider_answer">On Android 14 or later, open Settings &gt; Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” and select SecureVault. Enable it under “Additional providers” first if needed. On older Android versions, search Settings for “Autofill service”, or open System &gt; Languages &amp; input &gt; Autofill service and select SecureVault. Paths vary by device manufacturer.</string>
     <string name="help_faq_pro_question">What is included in Pro?</string>
-    <string name="help_faq_pro_answer">Free lets you add one file and one document. Pro allows more files and documents, and unlocks password history and advanced import/export.</string>
+    <string name="help_faq_pro_answer">All features are available in Free with limits: one file, one document, up to 2 previous passwords per entry and up to 5 entries per advanced import/export operation. Pro allows more files and documents, stores up to 5 previous passwords per entry, and removes the Free five-entry cap per operation. Full encrypted vault backups are not limited.</string>
     <string name="help_faq_vault_reader_question">Can I read a vault backup without the phone app?</string>
     <string name="help_faq_vault_reader_answer">Yes. Web vault reader: https://www.cretorix.eu/apps/securevault-web/index.html. Standalone Windows file: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Open autofill settings</string>

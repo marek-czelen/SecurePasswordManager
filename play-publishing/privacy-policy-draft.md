@@ -48,7 +48,7 @@ location, it is refreshed after each successful vault save; the provider receive
 ciphertext, not the vault plaintext. If the user explicitly exports an individual
 attachment, the selected destination receives that file's plaintext. The
 selected provider processes stored files under its own terms and privacy policy. The
-publisher does not receive the vault key. Pro CSV export is a separate user-initiated
+publisher does not receive the vault key. CSV export is a separate user-initiated
 action that writes login fields, including passwords and TOTP secrets, as plaintext to a
 user-selected destination. CSV, XLSX (including password-protected workbooks when the
 user supplies the password), Bitwarden JSON, KeePass XML and 1Password 1PUX imports are

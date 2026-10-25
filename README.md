@@ -18,11 +18,13 @@ hybrid encrypted vault.
 - Small bounded encrypted text block plus separately encrypted immutable image,
   thumbnail, document-page and file objects.
 - Password entries, named images, multi-page scanned documents and files appear in the
-  same searchable list. Media is loaded only when needed. File attachments and document
-  scanning are Pro-gated; image entries and backup/recovery are not.
+  same searchable list. Media is loaded only when needed. Free supports one file and one
+  scanned document, two previous passwords per login, and five records per advanced
+  password import/export operation. Pro raises the history limit to five and removes
+  the import/export record cap; encrypted vault backup and recovery remain unrestricted.
 - Copy-on-write saves with `manifest.current` as the commit point and
   `manifest.previous` for recovery.
-- One-file encrypted backup/export, passphrase+Recovery-QR import, and an optional
+- Encrypted backup/export, passphrase+Recovery-QR import, and an optional
   user-selected encrypted backup location refreshed after each successful save.
 - Folders, tags, favorites, TOTP, local password-health checks and auto-lock.
 - On-device OCR review, document scanning, clipboard timeout and `FLAG_SECURE`.
@@ -88,7 +90,7 @@ SECURITY_DESIGN.md                VLT3 key hierarchy, storage and transaction mo
 ## Privacy and release
 
 The app has no publisher-controlled account, analytics or vault backend. OCR runs
-on-device. Vault backups are encrypted; explicitly exported attachments and Pro CSV
+on-device. Vault backups are encrypted; explicitly exported attachments and CSV
 exports contain plaintext at the user-selected destination. External document providers
 apply their own storage and privacy terms.
 

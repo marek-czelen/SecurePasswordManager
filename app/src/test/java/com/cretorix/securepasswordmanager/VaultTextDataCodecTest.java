@@ -117,6 +117,21 @@ public final class VaultTextDataCodecTest {
     }
 
     @Test
+    public void passwordHistoryCanBeCappedByTheActivePlan() {
+        VaultItem item = new VaultItem(repeat("02", 16), "Example", "user", "current",
+                "", "", "", "", "", false, VaultItem.TYPE_LOGIN,
+                null, null, "", 0, Arrays.asList("older", "oldest", "ancient"));
+
+        assertEquals(Arrays.asList("current", "older"),
+                item.passwordHistoryAfterChange("next", true, 2));
+        assertEquals(Arrays.asList("older", "oldest", "ancient"),
+                item.passwordHistoryAfterChange("current", true, 2));
+        assertThrows(IllegalArgumentException.class,
+                () -> item.passwordHistoryAfterChange("next", true,
+                        VaultItem.MAX_PASSWORD_HISTORY_ENTRIES + 1));
+    }
+
+    @Test
     public void rejectsInlineMediaDuplicateIdsAndInvalidReferences() {
         VaultItem missingImageRef = new VaultItem(repeat("44", 16), "no-image-ref",
                 "", "", "", "", "", "", "", false, VaultItem.TYPE_IMAGE,

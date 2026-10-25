@@ -42,7 +42,7 @@ The user can explicitly export one complete encrypted `vault.vlt3` container or 
 a document-provider location that is refreshed after each successful vault save. The
 location is selected by the user; the application writes the encrypted header, manifest
 and object ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
-that file's plaintext to the user-selected destination. Pro CSV export writes login
+that file's plaintext to the user-selected destination. CSV export writes login
 fields, including passwords and TOTP secrets, as unencrypted UTF-8 CSV to a destination
 explicitly selected by the user. CSV export excludes images and file attachments. The app
 warns that spreadsheet programs may interpret formula-like cell values when opening CSV.

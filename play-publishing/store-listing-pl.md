@@ -29,11 +29,13 @@ własnej chmury.
 - Dodawaj obrazy, załączniki i wielostronicowe skany dokumentów jako zaszyfrowane dane.
 
 **SecureVault Pro**
-W wersji Free możesz dodać jeden plik i jeden dokument. Pro pozwala dodawać większą
-liczbę plików i dokumentów, a także odblokowuje historię haseł oraz zaawansowany
-import/eksport. Dostęp Pro jest odblokowywany jednorazowym zakupem w Google Play.
-Zakup można przywrócić z ustawień. Ostatnio potwierdzony dostęp jest zapamiętywany na
-urządzeniu, aby Pro działało także offline.
+Wszystkie funkcje są dostępne w Free z limitami: jeden plik, jeden dokument, do dwóch
+poprzednich haseł na wpis oraz do pięciu wpisów na operację zaawansowanego importu lub
+eksportu CSV. Pro pozwala dodawać więcej plików i dokumentów, przechowywać do pięciu
+poprzednich haseł na wpis oraz usuwa limit Free pięciu wpisów na operację zaawansowanego
+importu/eksportu. Pełna zaszyfrowana kopia sejfu nie jest limitowana. Pro odblokowuje
+jednorazowy zakup Google Play; można go przywrócić z ustawień, a ostatnio potwierdzony
+dostęp jest zapamiętywany na urządzeniu i działa offline.
 
 SecureVault nie synchronizuje sejfu z serwerem wydawcy. Użytkownik sam wybiera miejsce
 kopii zapasowej. Eksport pojedynczego załącznika lub CSV może zapisać odszyfrowane dane

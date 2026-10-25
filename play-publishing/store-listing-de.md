@@ -32,11 +32,14 @@ App betreibt weder ein Konto noch eine eigene Cloud.
   hinzu.
 
 **SecureVault Pro**
-Free erlaubt eine Datei und ein Dokument. Pro ermöglicht weitere Dateien und Dokumente
-und schaltet außerdem den Passwortverlauf sowie den erweiterten Import/Export frei.
-Pro wird durch einen einmaligen Google-Play-Kauf freigeschaltet.
-Den Kauf kannst du in den Einstellungen wiederherstellen. Die zuletzt bestätigte
-Berechtigung wird auf diesem Gerät gespeichert, damit Pro auch offline verfügbar bleibt.
+Alle Funktionen sind in Free eingeschränkt verfügbar: eine Datei, ein Dokument, bis zu
+zwei frühere Passwörter pro Eintrag und bis zu fünf Einträge pro erweitertem Import- oder
+CSV-Exportvorgang. Pro ermöglicht weitere Dateien und Dokumente, speichert bis zu fünf
+frühere Passwörter pro Eintrag und hebt das Free-Limit von fünf Einträgen pro Vorgang auf.
+Vollständige verschlüsselte Tresor-Backups sind nicht begrenzt. Pro wird durch einen
+einmaligen Google-Play-Kauf freigeschaltet. Den Kauf kannst du in den Einstellungen
+wiederherstellen. Die zuletzt bestätigte Berechtigung wird auf diesem Gerät gespeichert,
+damit Pro auch offline verfügbar bleibt.
 
 SecureVault synchronisiert deinen Tresor nicht mit einem Server des Anbieters. Du wählst
 den Speicherort für Sicherungen selbst. Beim Export eines einzelnen Anhangs oder einer

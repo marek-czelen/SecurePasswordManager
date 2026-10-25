@@ -32,9 +32,12 @@ aucun compte ni service cloud propre.
 - Ajoutez des images, pièces jointes et numérisations multipages comme données chiffrées.
 
 **SecureVault Pro**
-Free permet d’ajouter un fichier et un document. Pro permet d’en ajouter davantage et
-débloque également l’historique des mots de passe et l’import/export avancé. Pro est
-activé par un achat unique sur Google Play.
+Toutes les fonctions sont disponibles dans Free avec des limites : un fichier, un
+document, jusqu’à deux anciens mots de passe par entrée et jusqu’à cinq entrées par
+opération d’import avancé ou d’export CSV. Pro permet d’ajouter davantage de fichiers et
+de documents, conserve jusqu’à cinq anciens mots de passe par entrée et supprime la
+limite Free de cinq entrées par opération. Les sauvegardes chiffrées complètes du
+coffre ne sont pas limitées. Pro est activé par un achat unique sur Google Play.
 Vous pouvez restaurer l’achat dans les paramètres. Le dernier droit confirmé est mis en
 cache sur cet appareil pour rester disponible hors ligne.
 

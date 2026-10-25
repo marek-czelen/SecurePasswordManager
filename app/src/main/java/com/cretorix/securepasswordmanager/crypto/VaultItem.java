@@ -202,15 +202,28 @@ public final class VaultItem {
 
     /** Computes the retained history for an edit, optionally recording this item's password. */
     public List<String> passwordHistoryAfterChange(String newPassword, boolean recordPrevious) {
+        return passwordHistoryAfterChange(newPassword, recordPrevious,
+                MAX_PASSWORD_HISTORY_ENTRIES);
+    }
+
+    /** Computes history for an edit, capped to the active plan's retained-entry limit. */
+    public List<String> passwordHistoryAfterChange(String newPassword, boolean recordPrevious,
+                                                   int maxEntries) {
+        if (maxEntries < 0 || maxEntries > MAX_PASSWORD_HISTORY_ENTRIES) {
+            throw new IllegalArgumentException("Invalid password history limit");
+        }
         String nextPassword = value(newPassword);
         List<String> history = new ArrayList<>(passwordHistory);
         history.remove(nextPassword);
-        if (recordPrevious && !password.isEmpty() && !password.equals(nextPassword)) {
+        boolean passwordChanged = !password.isEmpty() && !password.equals(nextPassword);
+        if (recordPrevious && passwordChanged) {
             history.remove(password);
             history.add(0, password);
         }
-        if (history.size() > MAX_PASSWORD_HISTORY_ENTRIES) {
-            history.remove(history.size() - 1);
+        if (passwordChanged) {
+            while (history.size() > maxEntries) {
+                history.remove(history.size() - 1);
+            }
         }
         return Collections.unmodifiableList(history);
     }

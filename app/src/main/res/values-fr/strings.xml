@@ -26,19 +26,18 @@
     <string name="add_document">Scanner un document (1 Free, plus avec Pro)</string>
     <string name="item_image_kind">Image JPG</string>
     <string name="item_file_kind">Fichier</string>
-    <string name="action_password_history">Historique des mots de passe (Pro)</string>
+    <string name="action_password_history">Historique des mots de passe</string>
     <string name="password_history_title">Historique des mots de passe</string>
     <string name="password_history_entry">Ancien mot de passe %1$d</string>
     <string name="password_history_empty">Aucun ancien mot de passe n’a été enregistré.</string>
-    <string name="msg_password_history_pro_required">L’historique des mots de passe est disponible dans Pro.</string>
     <string name="err_passphrase_qr_mismatch">Cette phrase secrète ne correspond pas au coffre actuel. Aucun QR n’a été créé.</string>
-    <string name="menu_advanced_import_export">Import/export avancé (Pro)</string>
-    <string name="msg_advanced_pro_required">L’import et l’export avancés sont disponibles dans Pro.</string>
+    <string name="menu_advanced_import_export">Import/export avancé</string>
     <string name="advanced_import_export_title">Import/export avancé</string>
     <string name="advanced_import">Importer des mots de passe</string>
     <string name="advanced_export_csv">Exporter en CSV</string>
     <string name="csv_plaintext_title">L’export CSV n’est pas chiffré</string>
     <string name="csv_plaintext_warning">Le fichier CSV contient les mots de passe et secrets TOTP en texte brut et peut être lu par d’autres applications. Les tableurs peuvent interpréter les valeurs commençant par =, +, - ou @ comme des formules. Seules les entrées de mots de passe sont exportées ; les images et pièces jointes sont exclues. Continuer ?</string>
+    <string name="csv_free_limit_warning">Free exporte les %1$d premières entrées de mots de passe par opération. Pro exporte toutes les entrées.</string>
     <string name="msg_csv_nothing_to_export">Aucune entrée de mot de passe à exporter.</string>
     <string name="msg_csv_exported">Fichier CSV exporté.</string>
     <string name="err_csv_export">Impossible d’exporter le fichier CSV.</string>
@@ -52,6 +51,8 @@
     <string name="import_empty">Aucune entrée à importer. Lignes ignorées : %1$d.</string>
     <string name="import_capacity">Impossible d’ajouter %1$d entrées ; le coffre peut en accueillir %2$d de plus.</string>
     <string name="import_preview_count">Nouvelles entrées à ajouter : %1$d</string>
+    <string name="import_free_limit">Free permet d’importer jusqu’à %1$d entrées par opération.</string>
+    <string name="import_free_limit_skipped">Limite Free : les %1$d premières entrées seront importées ; entrées supplémentaires ignorées : %2$d. Pro supprime la limite Free de cinq entrées par opération.</string>
     <string name="import_preview_login">%1$s — %2$s</string>
     <string name="import_ignored_rows">Lignes vides ou non associées ignorées : %1$d</string>
     <string name="import_more_titles">… et %1$d autres entrées</string>
@@ -298,7 +299,7 @@
     <string name="settings_tutorial">Aide et FAQ</string>
     <string name="settings_premium_debug">Mode de test Free / Pro</string>
     <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">Achat unique. Une fois activé, Pro reste disponible hors ligne sur cet appareil.</string>
+    <string name="settings_premium_desc">Free : 1 fichier, 1 document, 2 anciens mots de passe par entrée et 5 entrées par opération d’import/export avancé. Pro porte l’historique à 5 anciens mots de passe et supprime la limite Free de cinq entrées par opération. Achat unique, utilisable hors ligne sur cet appareil.</string>
     <string name="premium_action_buy">Acheter Pro</string>
     <string name="premium_action_buy_price">Acheter Pro — %1$s</string>
     <string name="premium_action_restore">Restaurer l’achat</string>
@@ -382,7 +383,7 @@
     <string name="help_faq_default_provider_question">Comment définir SecureVault comme gestionnaire de mots de passe par défaut sur Android ?</string>
     <string name="help_faq_default_provider_answer">Sous Android 14 ou version ultérieure, ouvrez Paramètres &gt; Mots de passe, clés d’accès et comptes &gt; Modifier sous « Service préféré », puis choisissez SecureVault. Activez-le d’abord dans « Fournisseurs supplémentaires » si nécessaire. Sur une ancienne version, recherchez « Service de remplissage automatique » dans les paramètres ou ouvrez Système &gt; Langues et saisie &gt; Service de remplissage automatique et choisissez SecureVault. Les chemins varient selon le fabricant.</string>
     <string name="help_faq_pro_question">Que comprend la version Pro ?</string>
-    <string name="help_faq_pro_answer">La version Free permet d’ajouter un fichier et un document. Pro permet d’en ajouter davantage et débloque l’historique des mots de passe ainsi que l’import/export avancé.</string>
+    <string name="help_faq_pro_answer">Toutes les fonctions sont disponibles dans Free avec des limites : un fichier, un document, jusqu’à 2 anciens mots de passe par entrée et jusqu’à 5 entrées par opération d’import/export avancé. Pro permet d’ajouter davantage de fichiers et de documents, conserve jusqu’à 5 anciens mots de passe par entrée et supprime la limite Free de cinq entrées par opération. Les sauvegardes chiffrées complètes du coffre ne sont pas limitées.</string>
     <string name="help_faq_vault_reader_question">Puis-je lire une sauvegarde sans l’application mobile ?</string>
     <string name="help_faq_vault_reader_answer">Oui. Lecteur web vault : https://www.cretorix.eu/apps/securevault-web/index.html. Fichier autonome Windows : https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Ouvrir les paramètres de remplissage</string>

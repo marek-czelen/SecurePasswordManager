@@ -26,19 +26,18 @@
     <string name="add_document">Dokument scannen (1 Free, mehr mit Pro)</string>
     <string name="item_image_kind">JPG-Bild</string>
     <string name="item_file_kind">Datei</string>
-    <string name="action_password_history">Passwortverlauf (Pro)</string>
+    <string name="action_password_history">Passwortverlauf</string>
     <string name="password_history_title">Passwortverlauf</string>
     <string name="password_history_entry">Vorheriges Passwort %1$d</string>
     <string name="password_history_empty">Es wurden keine früheren Passwörter gespeichert.</string>
-    <string name="msg_password_history_pro_required">Der Passwortverlauf ist in Pro verfügbar.</string>
     <string name="err_passphrase_qr_mismatch">Diese Passphrase gehört nicht zum aktuellen Tresor. Es wurde kein QR-Code erstellt.</string>
-    <string name="menu_advanced_import_export">Erweiterter Import/Export (Pro)</string>
-    <string name="msg_advanced_pro_required">Erweiterter Import und Export sind in Pro verfügbar.</string>
+    <string name="menu_advanced_import_export">Erweiterter Import/Export</string>
     <string name="advanced_import_export_title">Erweiterter Import/Export</string>
     <string name="advanced_import">Passwörter importieren</string>
     <string name="advanced_export_csv">Als CSV exportieren</string>
     <string name="csv_plaintext_title">CSV-Export ist nicht verschlüsselt</string>
     <string name="csv_plaintext_warning">Die CSV-Datei enthält Passwörter und TOTP-Geheimnisse im Klartext und kann von anderen Apps gelesen werden. Tabellenkalkulationen können Werte, die mit =, +, - oder @ beginnen, als Formeln ausführen. Es werden nur Passworteinträge exportiert; Bilder und Anhänge entfallen. Fortfahren?</string>
+    <string name="csv_free_limit_warning">Free exportiert die ersten %1$d Passworteinträge pro Vorgang. Pro exportiert alle Einträge.</string>
     <string name="msg_csv_nothing_to_export">Keine Passworteinträge zum Exportieren vorhanden.</string>
     <string name="msg_csv_exported">CSV-Datei exportiert.</string>
     <string name="err_csv_export">CSV-Datei konnte nicht exportiert werden.</string>
@@ -52,6 +51,8 @@
     <string name="import_empty">Keine Einträge zum Importieren. Übersprungene Zeilen: %1$d.</string>
     <string name="import_capacity">%1$d Einträge können nicht hinzugefügt werden; der Tresor hat noch Platz für %2$d.</string>
     <string name="import_preview_count">Neue Einträge zum Hinzufügen: %1$d</string>
+    <string name="import_free_limit">Mit Free können bis zu %1$d Einträge pro Vorgang importiert werden.</string>
+    <string name="import_free_limit_skipped">Free-Limit: Die ersten %1$d Einträge werden importiert; zusätzliche übersprungene Einträge: %2$d. Pro hebt das Free-Limit von fünf Einträgen pro Vorgang auf.</string>
     <string name="import_preview_login">%1$s — %2$s</string>
     <string name="import_ignored_rows">Leere oder nicht zugeordnete Zeilen übersprungen: %1$d</string>
     <string name="import_more_titles">… und %1$d weitere Einträge</string>
@@ -298,7 +299,7 @@
     <string name="settings_tutorial">Hilfe und FAQ</string>
     <string name="settings_premium_debug">Free-/Pro-Testmodus</string>
     <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">Einmaliger Kauf. Nach der Aktivierung bleibt Pro auf diesem Gerät offline verfügbar.</string>
+    <string name="settings_premium_desc">Free: 1 Datei, 1 Dokument, 2 frühere Passwörter pro Eintrag und 5 Einträge pro erweitertem Import/Export-Vorgang. Pro erhöht den Verlauf auf 5 frühere Passwörter und hebt das Free-Limit von fünf Einträgen pro Vorgang auf. Einmalkauf; offline auf diesem Gerät verfügbar.</string>
     <string name="premium_action_buy">Pro kaufen</string>
     <string name="premium_action_buy_price">Pro kaufen — %1$s</string>
     <string name="premium_action_restore">Kauf wiederherstellen</string>
@@ -382,7 +383,7 @@
     <string name="help_faq_default_provider_question">Wie lege ich SecureVault als Android-Standard für Passwörter fest?</string>
     <string name="help_faq_default_provider_answer">Öffne unter Android 14 oder neuer Einstellungen &gt; Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern und wähle SecureVault. Aktiviere es bei Bedarf zuerst unter „Zusätzliche Anbieter“. Bei älteren Android-Versionen suche in den Einstellungen nach „Autofill-Dienst“ oder öffne System &gt; Sprachen und Eingabe &gt; Autofill-Dienst und wähle SecureVault. Die Pfade unterscheiden sich je nach Hersteller.</string>
     <string name="help_faq_pro_question">Was ist in Pro enthalten?</string>
-    <string name="help_faq_pro_answer">Free erlaubt eine Datei und ein Dokument. Pro ermöglicht weitere Dateien und Dokumente und schaltet den Passwortverlauf sowie den erweiterten Import/Export frei.</string>
+    <string name="help_faq_pro_answer">Alle Funktionen sind in Free eingeschränkt verfügbar: eine Datei, ein Dokument, bis zu 2 frühere Passwörter pro Eintrag und bis zu 5 Einträge pro erweitertem Import/Export-Vorgang. Pro ermöglicht weitere Dateien und Dokumente, speichert bis zu 5 frühere Passwörter pro Eintrag und hebt das Free-Limit von fünf Einträgen pro Vorgang auf. Vollständige verschlüsselte Tresor-Backups sind nicht begrenzt.</string>
     <string name="help_faq_vault_reader_question">Kann ich ein Tresor-Backup ohne die Handy-App lesen?</string>
     <string name="help_faq_vault_reader_answer">Ja. Web-Tresor-Leser: https://www.cretorix.eu/apps/securevault-web/index.html. Eigenständige Windows-Datei: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Autofill-Einstellungen öffnen</string>

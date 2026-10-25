@@ -397,7 +397,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addScannedDocument(ArrayList<Uri> pages, String title) {
-        if (!PremiumAttachmentLimits.canAddDocument(
+        if (!PremiumLimits.canAddDocument(
                 premiumManager.isPro(), countDocuments(currentData))) {
             deleteTemporaryDocumentPages(pages);
             toast(R.string.msg_document_free_limit);
@@ -875,7 +875,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void requestDocumentScan() {
-        if (!PremiumAttachmentLimits.canAddDocument(
+        if (!PremiumLimits.canAddDocument(
                 premiumManager.isPro(), countDocuments(currentData))) {
             toast(R.string.msg_document_free_limit);
             return;
@@ -939,11 +939,7 @@ public final class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_advanced_import_export) {
-            if (!premiumManager.isPro()) {
-                toast(R.string.msg_advanced_pro_required);
-            } else {
-                showAdvancedImportExport();
-            }
+            showAdvancedImportExport();
             return true;
         }
         if (id == R.id.action_favorites) {
@@ -987,19 +983,20 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void warnBeforeCsvExport() {
-        int logins = 0;
-        for (VaultItem item : currentData.items) {
-            if (VaultItem.TYPE_LOGIN.equals(item.type)) {
-                logins++;
-            }
-        }
-        if (logins == 0) {
+        List<VaultItem> exportItems =
+                PremiumLimits.csvExportEntries(currentData.items, premiumManager.isPro());
+        if (exportItems.isEmpty()) {
             toast(R.string.msg_csv_nothing_to_export);
             return;
         }
+        String warning = getString(R.string.csv_plaintext_warning);
+        if (!premiumManager.isPro()) {
+            warning += "\n\n" + getString(R.string.csv_free_limit_warning,
+                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
+        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.csv_plaintext_title)
-                .setMessage(R.string.csv_plaintext_warning)
+                .setMessage(warning)
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_export, (dialog, which) -> {
                     awaitingResult = true;
@@ -1261,7 +1258,12 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showImportPreview(List<VaultItem> items, int ignoredRows, String warning) {
-        if (items.isEmpty()) {
+        boolean isPro = premiumManager.isPro();
+        int skippedByFreeLimit = isPro ? 0 : Math.max(0,
+                items.size() - PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
+        List<VaultItem> importItems =
+                PremiumLimits.limitImportExportEntries(items, isPro);
+        if (importItems.isEmpty()) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.import_preview_title)
                     .setMessage(getString(R.string.import_empty, ignoredRows))
@@ -1270,32 +1272,41 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         int capacity = VaultTextDataCodec.MAX_ITEMS - currentData.items.size();
-        if (items.size() > capacity) {
+        if (importItems.size() > capacity) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.import_preview_title)
-                    .setMessage(getString(R.string.import_capacity, items.size(), capacity))
+                    .setMessage(getString(R.string.import_capacity, importItems.size(), capacity))
                     .setPositiveButton(R.string.action_close, null)
                     .show();
             return;
         }
         StringBuilder preview = new StringBuilder();
-        preview.append(getString(R.string.import_preview_count, items.size()));
+        preview.append(getString(R.string.import_preview_count, importItems.size()));
+        if (!isPro) {
+            preview.append("\n").append(getString(R.string.import_free_limit,
+                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT));
+        }
         if (ignoredRows > 0) {
             preview.append("\n").append(getString(R.string.import_ignored_rows, ignoredRows));
+        }
+        if (skippedByFreeLimit > 0) {
+            preview.append("\n").append(getString(R.string.import_free_limit_skipped,
+                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT, skippedByFreeLimit));
         }
         if (!warning.isEmpty()) {
             preview.append("\n\n").append(warning);
         }
         preview.append("\n\n");
-        int visible = Math.min(items.size(), 40);
+        int visible = Math.min(importItems.size(), 40);
         for (int i = 0; i < visible; i++) {
-            VaultItem item = items.get(i);
+            VaultItem item = importItems.get(i);
             preview.append("• ").append(item.username.isEmpty() ? item.title
                     : getString(R.string.import_preview_login, item.title, item.username))
                     .append('\n');
         }
-        if (items.size() > visible) {
-            preview.append(getString(R.string.import_more_titles, items.size() - visible));
+        if (importItems.size() > visible) {
+            preview.append(getString(R.string.import_more_titles,
+                    importItems.size() - visible));
         }
         preview.append("\n").append(getString(R.string.import_append_confirm));
         new MaterialAlertDialogBuilder(this)
@@ -1304,7 +1315,7 @@ public final class MainActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.import_append, (dialog, which) -> {
                     List<VaultItem> appended = new ArrayList<>(currentData.items);
-                    appended.addAll(items);
+                    appended.addAll(importItems);
                     importSavePending = true;
                     saveData(new VaultData(appended));
                 })
@@ -1320,7 +1331,9 @@ public final class MainActivity extends AppCompatActivity {
                     if (output == null) {
                         throw new IOException("Unable to open export destination");
                     }
-                    AdvancedImportExport.writeCsv(output, snapshot.items);
+                    AdvancedImportExport.writeCsv(output,
+                            PremiumLimits.csvExportEntries(snapshot.items,
+                                    premiumManager.isPro()));
                     runOnUiThread(() -> {
                         awaitingResult = false;
                         toast(R.string.msg_csv_exported);
@@ -1459,11 +1472,9 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showPasswordHistory(VaultItem item) {
-        if (!premiumManager.isPro()) {
-            toast(R.string.msg_password_history_pro_required);
-            return;
-        }
-        if (item.passwordHistory.isEmpty()) {
+        int visibleCount = Math.min(item.passwordHistory.size(),
+                PremiumLimits.passwordHistoryLimit(premiumManager.isPro()));
+        if (visibleCount == 0) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.password_history_title)
                     .setMessage(R.string.password_history_empty)
@@ -1471,7 +1482,7 @@ public final class MainActivity extends AppCompatActivity {
                     .show();
             return;
         }
-        String[] entries = new String[item.passwordHistory.size()];
+        String[] entries = new String[visibleCount];
         for (int i = 0; i < entries.length; i++) {
             entries[i] = getString(R.string.password_history_entry, i + 1);
         }
@@ -2043,7 +2054,8 @@ public final class MainActivity extends AppCompatActivity {
                     } else {
                         String newPassword = str(password);
                         List<String> passwordHistory = replaceTarget.passwordHistoryAfterChange(
-                                newPassword, premiumManager.isPro());
+                                newPassword, true,
+                                PremiumLimits.passwordHistoryLimit(premiumManager.isPro()));
                         edited = new VaultItem(replaceTarget.entryId, str(title), str(username),
                                 newPassword, str(url), str(notes), str(tags), str(folder),
                                 str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
@@ -3062,7 +3074,7 @@ public final class MainActivity extends AppCompatActivity {
                 } else if (option == 1) {
                     showImageSourceChooser();
                 } else if (option == 2) {
-                    if (!PremiumAttachmentLimits.canAddFile(
+                    if (!PremiumLimits.canAddFile(
                             premiumManager.isPro(), countFiles(currentData))) {
                         toast(R.string.msg_file_free_limit);
                     } else {
@@ -3206,7 +3218,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addSelectedFile(Uri uri) {
-        if (!PremiumAttachmentLimits.canAddFile(
+        if (!PremiumLimits.canAddFile(
                 premiumManager.isPro(), countFiles(currentData))) {
             toast(R.string.msg_file_free_limit);
             return;
