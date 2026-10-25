@@ -32,9 +32,11 @@ values are not sent to the publisher.
 When the user selects a saved login in an Autofill or Credential Manager suggestion,
 Android supplies its username and password to the requesting app. This transfers the
 selected plaintext credential to that app on the device; it is not sent to the
-publisher by SecureVault. Requests without a verified web origin require
-device authentication and explicit user selection; verified web origins are filtered
-by exact host.
+publisher by SecureVault. Requests without a verified web origin are matched by app
+package and require device authentication and explicit user selection; verified web
+origins are matched by exact host. If no entry matches, SecureVault may offer to open
+its own entry form, where the user can add an item manually. The provider does not read
+or automatically save credentials typed into the requesting app.
 
 The user can explicitly export one complete encrypted `vault.vlt3` container or configure
 a document-provider location that is refreshed after each successful vault save. The

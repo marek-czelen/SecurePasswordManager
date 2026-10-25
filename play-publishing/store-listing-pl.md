@@ -29,7 +29,8 @@ własnej chmury.
 - Dodawaj obrazy, załączniki i wielostronicowe skany dokumentów jako zaszyfrowane dane.
 
 **SecureVault Pro**
-Pro odblokowuje historię haseł, załączniki, skanowanie dokumentów i zaawansowany
+W wersji Free możesz dodać jeden plik i jeden dokument. Pro pozwala dodawać większą
+liczbę plików i dokumentów, a także odblokowuje historię haseł oraz zaawansowany
 import/eksport. Dostęp Pro jest odblokowywany jednorazowym zakupem w Google Play.
 Zakup można przywrócić z ustawień. Ostatnio potwierdzony dostęp jest zapamiętywany na
 urządzeniu, aby Pro działało także offline.

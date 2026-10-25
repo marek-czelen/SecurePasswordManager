@@ -32,8 +32,9 @@ App betreibt weder ein Konto noch eine eigene Cloud.
   hinzu.
 
 **SecureVault Pro**
-Pro schaltet den Passwortverlauf, Dateianhänge, Dokumentenscans und erweiterten
-Import/Export frei. Pro wird durch einen einmaligen Google-Play-Kauf freigeschaltet.
+Free erlaubt eine Datei und ein Dokument. Pro ermöglicht weitere Dateien und Dokumente
+und schaltet außerdem den Passwortverlauf sowie den erweiterten Import/Export frei.
+Pro wird durch einen einmaligen Google-Play-Kauf freigeschaltet.
 Den Kauf kannst du in den Einstellungen wiederherstellen. Die zuletzt bestätigte
 Berechtigung wird auf diesem Gerät gespeichert, damit Pro auch offline verfügbar bleibt.
 

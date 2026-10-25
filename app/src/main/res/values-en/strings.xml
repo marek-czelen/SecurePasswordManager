@@ -258,7 +258,7 @@
     <string name="settings_delete_vault_desc">Delete the local vault, keys and temporary files</string>
     <string name="delete_vault_title">Delete local vault?</string>
     <string name="delete_vault_message">This deletes the local vault, device keys and cache files. External backups are not deleted.</string>
-    <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
+    <string name="privacy_policy_url">https://www.cretorix.eu/securevault-privacy.html</string>
     <string name="privacy_policy_text">SecureVault processes passwords, notes, passphrases, QR codes, TOTP and images locally. The automatic backup at the selected location is refreshed after each successful vault save and is encrypted. OCR runs on-device. Explicit attachment or CSV exports may write plaintext data to the selected provider.</string>
     <string name="recovery_qr_title">Recovery code</string>
     <string name="recovery_qr_note">RQR2: a random 256-bit secret and authenticated metadata, never the DEK. Store it separately from vault.vlt3. Recovery also requires the PIN / passphrase.</string>
@@ -388,6 +388,6 @@
     <string name="help_faq_pro_question">What is included in Pro?</string>
     <string name="help_faq_pro_answer">Free lets you add one file and one document. Pro allows more files and documents, and unlocks password history and advanced import/export.</string>
     <string name="help_faq_vault_reader_question">Can I read a vault backup without the phone app?</string>
-    <string name="help_faq_vault_reader_answer">Yes. An offline web-page vault reader and a standalone Windows file are available at https://www.cretorix.eu.</string>
+    <string name="help_faq_vault_reader_answer">Yes. Web vault reader: https://www.cretorix.eu/apps/securevault-web/index.html. Standalone Windows file: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Open autofill settings</string>
 </resources>

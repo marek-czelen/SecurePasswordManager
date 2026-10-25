@@ -1,12 +1,13 @@
 # Privacy policy — draft
 
-**Effective date:** `<date>`  
-**Publisher:** `<legal entity or person>`  
-**Contact:** `<privacy email>`  
-**Policy URL:** `<HTTPS URL>`
+**Published policy URL:** https://www.cretorix.eu/securevault-privacy.html
 
-This draft must be reviewed and published at a stable HTTPS URL before a Google Play
-submission. Replace placeholders and adapt it to the final release and legal entity.
+**Published contact:** talk@cretorix.eu
+
+This file is a working copy for release review, not a substitute for checking the live
+page. The publisher confirms the live page identifies Cretorix and has the effective
+date 1 October 2023. Keep this copy synchronized with the live policy and the final Play
+Console Data Safety declaration.
 
 ## What the app does
 
@@ -74,14 +75,17 @@ Settings is opened, the app queries Google Play to reconcile the cached entitlem
 
 ## Android Autofill and Credential Manager
 
-If the user enables SecureVault as an Android Autofill or Credential Manager
-provider, Android may send the provider a form structure or credential request. The
-provider processes it and the encrypted vault locally. Verified browser origins are
-matched against saved entry URLs by exact host. Requests without a verified web origin
-require device authentication and explicit entry selection. After the user selects a
+If the user enables SecureVault as an Android Autofill or Credential Manager provider,
+Android may send the provider a form structure or credential request. The provider
+processes it and the encrypted vault locally. Verified browser origins are matched
+against saved entry URLs by exact host; requests without a verified web origin can be
+matched to a saved Android app package. Requests without a verified web origin require
+device authentication and explicit entry selection. After the user selects a
 credential, Android supplies its username and password to the requesting app, which
-receives that plaintext and handles it under its own privacy policy. The provider does
-not save newly entered credentials or send vault data to the publisher. Provider
+receives that plaintext and handles it under its own privacy policy. SecureVault does
+not read or automatically save values typed into another app. If no entry matches,
+SecureVault may offer to open its own entry form; the user enters any new credentials
+there manually. The provider does not send vault data to the publisher. Provider
 selection can be changed in Android settings.
 
 ## Sharing and retention

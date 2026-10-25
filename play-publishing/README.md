@@ -10,11 +10,12 @@ konfigurację Play Console. Szczegółowa mapa pól znajduje się w
 | Plik lub folder | Zawartość |
 |---|---|
 | `PLAY-CONSOLE-GUIDE.md` | Gdzie w Play Console wpisać poszczególne dane i jakie są blokery |
+| `app-access-instructions.md` | Instrukcja dostępu dla recenzenta Google Play |
 | `store-listing-pl.md` | Polski tytuł, krótki i pełny opis |
 | `store-listing-en.md` | Angielski tytuł, krótki i pełny opis |
 | `store-listing-de.md` | Niemiecki tytuł, krótki i pełny opis |
 | `store-listing-fr.md` | Francuski tytuł, krótki i pełny opis |
-| `privacy-policy-draft.md` | Projekt polityki prywatności; wymaga uzupełnienia wydawcy, kontaktu i URL |
+| `privacy-policy-draft.md` | Kopia robocza do kontroli zgodności z opublikowaną polityką |
 | `data-safety-worksheet.md` | Arkusz przygotowawczy Data Safety, nie są to finalne odpowiedzi prawne |
 | `third-party-notices-draft.md` | Lista zależności do przeglądu przed wydaniem |
 | `assets/app-icon-512.png` | Ikona aplikacji do Google Play |
@@ -34,13 +35,15 @@ konfigurację Play Console. Szczegółowa mapa pól znajduje się w
 3. **Skonfiguruj Billing.** Utwórz i aktywuj w Play Console jednorazowy produkt
    `pro_unlock`, ustaw cenę i kraje dostępności, a zakup/przywracanie sprawdź jako
    licencjonowany tester na ścieżce testów wewnętrznych.
-4. **Uzupełnij dane wydawcy.** Wpisz nazwę prawną wydawcy, kontakt pomocy i kontakt
-   prywatności. Opublikuj sprawdzoną politykę pod stabilnym adresem HTTPS, a następnie
-   zmień URL zarówno w Play Console, jak i w `privacy_policy_url` w
-   `app/src/main/res/values*/strings.xml`.
+4. **Potwierdź dane wydawcy i politykę.** Opublikowana polityka jest pod adresem
+   `https://www.cretorix.eu/securevault-privacy.html`; według wydawcy zawiera nazwę
+   Cretorix, datę 1 października 2023 r. i kontakt `talk@cretorix.eu`. Potwierdź, że
+   te dane są aktualne, a następnie podaj osobny, monitorowany kontakt pomocy w Play
+   Console.
 5. **Uzupełnij deklaracje Play.** Zweryfikuj Data Safety względem finalnego AAB i
    ujawnionych praktyk SDK; wypełnij formularze Ads, Content rating, Target audience,
-   App access, kraje dostępności i pozostałe wymagane sekcje.
+   App access, kraje dostępności i pozostałe wymagane sekcje. Instrukcja App access
+   znajduje się w `app-access-instructions.md`.
 6. **Przetestuj uwierzytelnianie na sprzęcie.** Na fizycznym urządzeniu z hardware-backed
    KeyMint sprawdź nowy sejf bez skonfigurowanej biometrii, ale z PIN-em/wzorem/hasłem
    blokady Androida, oraz odblokowanie silną biometrią. Starsze sejfy testowe zachowują

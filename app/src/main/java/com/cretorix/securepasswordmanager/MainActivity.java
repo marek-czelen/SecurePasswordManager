@@ -23,6 +23,7 @@ import android.os.Looper;
 import android.os.PersistableBundle;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
+import android.text.SpannableString;
 import android.util.Log;
 import android.text.Editable;
 import android.text.InputType;
@@ -40,6 +41,8 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -2202,12 +2205,21 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showPrivacyDialog() {
-        new MaterialAlertDialogBuilder(this)
+        SpannableString message = new SpannableString(getString(R.string.privacy_policy_text)
+                + "\n\n" + getString(R.string.privacy_policy_url));
+        Linkify.addLinks(message, Linkify.WEB_URLS);
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.settings_privacy)
-                .setMessage(getString(R.string.privacy_policy_text)
-                        + "\n\n" + getString(R.string.privacy_policy_url))
+                .setMessage(message)
                 .setPositiveButton(R.string.action_close, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(ignored -> {
+            TextView messageView = dialog.findViewById(android.R.id.message);
+            if (messageView != null) {
+                messageView.setMovementMethod(LinkMovementMethod.getInstance());
+            }
+        });
+        dialog.show();
     }
 
     private void showTutorial() {

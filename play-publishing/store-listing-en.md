@@ -29,8 +29,9 @@ its own cloud service.
 - Add images, file attachments and multi-page document scans as encrypted vault data.
 
 **SecureVault Pro**
-Pro unlocks password history, file attachments, document scanning and advanced
-import/export. Pro is unlocked with a one-time Google Play purchase. You can restore
+Free lets you add one file and one document. Pro allows more files and documents, and
+also unlocks password history and advanced import/export. Pro is unlocked with a
+one-time Google Play purchase. You can restore
 the purchase in Settings. The last confirmed entitlement is cached on this device so
 Pro remains available offline.
 

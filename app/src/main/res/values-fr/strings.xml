@@ -254,7 +254,7 @@
     <string name="settings_delete_vault_desc">Supprimer le coffre local, les clés et les fichiers temporaires</string>
     <string name="delete_vault_title">Supprimer le coffre local ?</string>
     <string name="delete_vault_message">Cette action supprime le coffre local, les clés de l’appareil et le cache. Les sauvegardes externes ne sont pas supprimées.</string>
-    <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
+    <string name="privacy_policy_url">https://www.cretorix.eu/securevault-privacy.html</string>
     <string name="privacy_policy_text">SecureVault traite localement les mots de passe, notes, phrases secrètes, QR, TOTP et images. La sauvegarde automatique dans l’emplacement choisi est actualisée après chaque enregistrement réussi du coffre et elle est chiffrée. L’OCR fonctionne sur l’appareil. Un export explicite de pièce jointe ou CSV peut écrire des données en clair chez le fournisseur choisi.</string>
     <string name="recovery_qr_title">Code de récupération</string>
     <string name="recovery_qr_note">RQR2 : secret aléatoire de 256 bits et métadonnées authentifiées, jamais la DEK. Conservez-le séparément de vault.vlt3. La récupération nécessite aussi le PIN / la phrase secrète.</string>
@@ -384,6 +384,6 @@
     <string name="help_faq_pro_question">Que comprend la version Pro ?</string>
     <string name="help_faq_pro_answer">La version Free permet d’ajouter un fichier et un document. Pro permet d’en ajouter davantage et débloque l’historique des mots de passe ainsi que l’import/export avancé.</string>
     <string name="help_faq_vault_reader_question">Puis-je lire une sauvegarde sans l’application mobile ?</string>
-    <string name="help_faq_vault_reader_answer">Oui. Un lecteur de sauvegarde vault sous forme de page web hors ligne et un fichier autonome pour Windows sont disponibles sur https://www.cretorix.eu.</string>
+    <string name="help_faq_vault_reader_answer">Oui. Lecteur web vault : https://www.cretorix.eu/apps/securevault-web/index.html. Fichier autonome Windows : https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Ouvrir les paramètres de remplissage</string>
 </resources>

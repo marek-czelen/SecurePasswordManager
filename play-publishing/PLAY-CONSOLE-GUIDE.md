@@ -18,9 +18,10 @@ opcjonalne.
 | Produkt Billing | `pro_unlock` | Utworzyć w Play Console jednorazowy produkt o dokładnie takim ID |
 | Model płatności | Aplikacja bezpłatna z opcjonalnym zakupem Pro | Wybrać bezpłatną dystrybucję; cenę Pro ustawić jako zakup w aplikacji |
 | Kategoria | Nieustawiona | Rekomendacja: Produktywność; potwierdzić właściwą kategorię dostępną w Play |
-| Kontakt pomocy | Niepodany | **TODO:** podać monitorowany adres e-mail |
-| Wydawca / kontakt prywatności | Pozostały pola zastępcze | **TODO:** uzupełnić w `docs/PRIVACY_POLICY.md` |
-| Publiczny URL polityki | Niepodany | **TODO:** opublikować sprawdzoną politykę pod stabilnym adresem HTTPS |
+| Kontakt pomocy | Niepotwierdzony | **TODO:** podać monitorowany adres e-mail pomocy |
+| Kontakt prywatności | `talk@cretorix.eu` | Potwierdzić, że jest monitorowany i aktualny |
+| Wydawca / data polityki | Cretorix / 1 października 2023 r. (potwierdzone przez wydawcę) | Upewnić się, że te dane nadal są aktualne |
+| Publiczny URL polityki | `https://www.cretorix.eu/securevault-privacy.html` | Działa i jest używany w aplikacji; potwierdzić ten sam URL w Play Console |
 | Podpisywanie | Nie skonfigurowano w repozytorium | Włączyć Play App Signing i przechowywać klucz uploadu poza repozytorium |
 
 Nie przesyłaj wydania produkcyjnego, dopóki nie zostaną ustalone: stały application ID,
@@ -44,14 +45,14 @@ tożsamość wydawcy, kontakty, publiczny URL polityki prywatności i treści of
    oferty, jeśli te języki będą kierowane do odbiorców. Aplikacja ma zasoby UI dla tych
    czterech języków.
 6. **Policy and programs → App content:** wypełnić App access, Ads, Content rating,
-   Target audience i Data safety. Aplikacja nie ma logowania do konta — instrukcja dla
-   recenzenta powinna wyjaśniać, że może utworzyć lokalny, testowy sejf z tymczasowym
-   hasłem i syntetycznymi danymi. Zadeklarować brak reklam tylko wtedy, gdy pozostanie
-   to prawdą w finalnym wydaniu. Sprawdzić `docs/DATA_SAFETY.md` względem finalnego AAB
-   i ujawnień SDK.
-7. **Policy and programs → Privacy policy:** wkleić publiczny HTTPS URL sprawdzonej
-   polityki `docs/PRIVACY_POLICY.md`. Przed publikacją zastąpić wszystkie pola wydawcy i
-   kontaktów.
+   Target audience i Data safety. Aplikacja nie ma logowania do konta — wkleić
+   `app-access-instructions.md`, która opisuje utworzenie lokalnego sejfu, wymagania
+   hasła głównego i blokady ekranu oraz testowe dane syntetyczne. Zadeklarować brak
+   reklam tylko wtedy, gdy pozostanie to prawdą w finalnym wydaniu. Sprawdzić
+   `data-safety-worksheet.md` i praktyki SDK względem finalnego AAB.
+7. **Policy and programs → Privacy policy:** wkleić
+   `https://www.cretorix.eu/securevault-privacy.html`. Potwierdzić, że publiczna strona,
+   zasoby aplikacji i odpowiedzi Data Safety opisują te same praktyki.
 8. **Store settings / App access and contact details:** wpisać zweryfikowane dane
    wydawcy, kontaktu pomocy i prywatności. Nie używać przykładowych ani prywatnych danych
    testowych.

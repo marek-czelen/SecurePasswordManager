@@ -254,7 +254,7 @@
     <string name="settings_delete_vault_desc">Lokalen Tresor, Schlüssel und temporäre Dateien löschen</string>
     <string name="delete_vault_title">Lokalen Tresor löschen?</string>
     <string name="delete_vault_message">Lokaler Tresor, Geräteschlüssel und Cache-Dateien werden gelöscht. Externe Backups bleiben bestehen.</string>
-    <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
+    <string name="privacy_policy_url">https://www.cretorix.eu/securevault-privacy.html</string>
     <string name="privacy_policy_text">SecureVault verarbeitet Passwörter, Notizen, Passphrasen, QR-Codes, TOTP und Bilder lokal. Die automatische Sicherung am ausgewählten Speicherort wird nach jedem erfolgreichen Speichern des Tresors aktualisiert und ist verschlüsselt. OCR läuft auf dem Gerät. Ein ausdrücklich angeforderter Anhang- oder CSV-Export kann Klartext an den ausgewählten Anbieter schreiben.</string>
     <string name="recovery_qr_title">Wiederherstellungscode</string>
     <string name="recovery_qr_note">RQR2: zufälliges 256-Bit-Geheimnis und authentifizierte Metadaten, niemals der DEK. Getrennt von vault.vlt3 aufbewahren. Wiederherstellung benötigt zusätzlich PIN / Passphrase.</string>
@@ -384,6 +384,6 @@
     <string name="help_faq_pro_question">Was ist in Pro enthalten?</string>
     <string name="help_faq_pro_answer">Free erlaubt eine Datei und ein Dokument. Pro ermöglicht weitere Dateien und Dokumente und schaltet den Passwortverlauf sowie den erweiterten Import/Export frei.</string>
     <string name="help_faq_vault_reader_question">Kann ich ein Tresor-Backup ohne die Handy-App lesen?</string>
-    <string name="help_faq_vault_reader_answer">Ja. Ein Offline-Webseiten-Leser für Tresor-Backups und eine eigenständige Windows-Datei sind unter https://www.cretorix.eu verfügbar.</string>
+    <string name="help_faq_vault_reader_answer">Ja. Web-Tresor-Leser: https://www.cretorix.eu/apps/securevault-web/index.html. Eigenständige Windows-Datei: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Autofill-Einstellungen öffnen</string>
 </resources>

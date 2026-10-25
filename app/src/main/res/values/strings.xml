@@ -276,7 +276,7 @@
     <string name="settings_delete_vault_desc">Usuwa lokalny vault, klucze i tymczasowe pliki</string>
     <string name="delete_vault_title">Usunąć lokalny magazyn?</string>
     <string name="delete_vault_message">Ta operacja usuwa lokalny vault, klucze urządzenia i pliki cache. Kopie zewnętrzne nie zostaną usunięte.</string>
-    <string name="privacy_policy_url">https://example.com/securepasswordmanager/privacy</string>
+    <string name="privacy_policy_url">https://www.cretorix.eu/securevault-privacy.html</string>
     <string name="privacy_policy_text">SecureVault przetwarza hasła, notatki, passphrase, kody QR, TOTP i obrazy lokalnie. Automatyczna kopia w wybranej lokalizacji jest odświeżana po każdym udanym zapisie vaultu i jest zaszyfrowana. OCR działa na urządzeniu. Jawny eksport załącznika lub CSV może zapisać dane w postaci jawnej u wybranego dostawcy.</string>
 
     <!-- Recovery -->
@@ -413,6 +413,6 @@
     <string name="help_faq_pro_question">Co zawiera wersja Pro?</string>
     <string name="help_faq_pro_answer">W wersji Free możesz dodać jeden plik i jeden dokument. Pro pozwala dodawać większą liczbę plików i dokumentów oraz odblokowuje historię haseł i zaawansowany import/eksport.</string>
     <string name="help_faq_vault_reader_question">Czy mogę odczytać kopię sejfu bez aplikacji na telefonie?</string>
-    <string name="help_faq_vault_reader_answer">Tak. Na stronie https://www.cretorix.eu dostępny jest czytnik kopii vault działający jako strona offline oraz samodzielny plik dla Windows.</string>
+    <string name="help_faq_vault_reader_answer">Tak. Webowy czytnik kopii vault: https://www.cretorix.eu/apps/securevault-web/index.html. Samodzielny plik dla Windows: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Otwórz ustawienia autouzupełniania</string>
 </resources>

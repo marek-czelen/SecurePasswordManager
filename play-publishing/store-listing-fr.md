@@ -32,8 +32,9 @@ aucun compte ni service cloud propre.
 - Ajoutez des images, pièces jointes et numérisations multipages comme données chiffrées.
 
 **SecureVault Pro**
-Pro déverrouille l’historique des mots de passe, les pièces jointes, la numérisation de
-documents et l’import/export avancé. Pro est activé par un achat unique sur Google Play.
+Free permet d’ajouter un fichier et un document. Pro permet d’en ajouter davantage et
+débloque également l’historique des mots de passe et l’import/export avancé. Pro est
+activé par un achat unique sur Google Play.
 Vous pouvez restaurer l’achat dans les paramètres. Le dernier droit confirmé est mis en
 cache sur cet appareil pour rester disponible hors ligne.
 
