@@ -1,9 +1,9 @@
 # Privacy policy — draft
 
-**Effective date:** `01.10.2023`  
+**Effective date:** `1 October 2023`
 **Publisher:** `Cretorix`  
-**Contact:** `talk@cretotix.eu`  
-**Policy URL:** `<HTTPS URL>`
+**Contact:** `talk@cretorix.eu`
+**Policy URL:** `https://www.cretorix.eu/securevault-privacy.html`
 
 This draft must be reviewed and published at a stable HTTPS URL before a Google Play
 submission. Replace placeholders and adapt it to the final release and legal entity.
@@ -29,6 +29,20 @@ The app may process the following data locally at the user’s direction:
 This data is sensitive. It is stored in the encrypted local vault and is not used for
 advertising, profiling or sale.
 
+## Advertising and consent
+
+The app uses Google Mobile Ads (AdMob) to show a banner only on the unlock screen before
+the vault is opened. Ad requests do not contain passwords, vault entries, the passphrase,
+Recovery QR, TOTP secrets or attachment contents. Google may process advertising-related
+data such as device or advertising identifiers, IP address, approximate location, ad
+interactions and diagnostics as described in Google's current privacy disclosures.
+Personalization depends on user consent and settings. Google UMP presents consent choices
+and, when required, an in-app privacy-options entry point. An optional one-time Google
+Play purchase removes the banner; the ad-removal entitlement is stored locally.
+
+The exact AdMob/UMP data categories and retention must be verified against the SDK
+disclosures configured for the released app before publication.
+
 ## Camera and OCR
 
 Camera access is requested only after a user starts a camera-based flow: OCR/photo
@@ -47,7 +61,7 @@ location, it is refreshed after each successful vault save; the provider receive
 ciphertext, not the vault plaintext. If the user explicitly exports an individual
 attachment, the selected destination receives that file's plaintext. The
 selected provider processes stored files under its own terms and privacy policy. The
-publisher does not receive the vault key. Pro CSV export is a separate user-initiated
+publisher does not receive the vault key. CSV export is a separate user-initiated
 action that writes login fields, including passwords and TOTP secrets, as plaintext to a
 user-selected destination. CSV, XLSX (including password-protected workbooks when the
 user supplies the password), Bitwarden JSON, KeePass XML and 1Password 1PUX imports are
@@ -65,12 +79,13 @@ enrollment is optional.
 
 ## Google Play purchases
 
-The optional Pro entitlement is sold as a one-time purchase through Google Play Billing.
-Google Play handles payment processing; the app does not receive payment card details.
-The app processes the purchased product ID, purchase state and purchase token on-device
-to acknowledge and restore the purchase. It stores only a device-local Pro entitlement
-flag for offline access; the token is not sent to a publisher-controlled server. When
-Settings is opened, the app queries Google Play to reconcile the cached entitlement.
+The optional ad-removal entitlement is sold as a one-time purchase through Google Play
+Billing. Google Play handles payment processing; the app does not receive payment card
+details. The app processes the purchased product ID, purchase state and purchase token
+on-device to acknowledge and restore the purchase. It stores only a device-local
+ad-removal entitlement flag for offline access; the token is not sent to a
+publisher-controlled server. When Settings is opened, the app queries Google Play to
+reconcile the cached entitlement.
 
 ## Android Autofill and Credential Manager
 
@@ -86,10 +101,10 @@ selection can be changed in Android settings.
 
 ## Sharing and retention
 
-The app does not operate a publisher-controlled account, analytics service, advertising
-service or server-side vault. Local data remains until the user deletes the vault,
-clears app data or uninstalls the app. External backup copies remain wherever the user
-saved them and must be deleted by the user.
+The app does not operate a publisher-controlled account, analytics service or
+server-side vault. Google provides advertising through AdMob. Local data remains until
+the user deletes the vault, clears app data or uninstalls the app. External backup copies
+remain wherever the user saved them and must be deleted by the user.
 
 ## Security limitations
 

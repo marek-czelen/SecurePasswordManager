@@ -3,7 +3,7 @@
 **Titel (29/30):** SecureVault: Passwords & Docs
 
 **Kurzbeschreibung (max. 80 Zeichen):**  
-Tresor für Passwörter, Dokumente und Dateien. Pro-Kauf auch offline nutzbar.
+Verschlüsselter Tresor. Entferne das Banner auf dem Entsperrbildschirm in der App.
 
 **Vollständige Beschreibung:**
 
@@ -31,15 +31,12 @@ App betreibt weder ein Konto noch eine eigene Cloud.
 - Füge Bilder, Dateianhänge und mehrseitige Dokumentenscans als verschlüsselte Daten
   hinzu.
 
-**SecureVault Pro**
-Alle Funktionen sind in Free eingeschränkt verfügbar: eine Datei, ein Dokument, bis zu
-zwei frühere Passwörter pro Eintrag und bis zu fünf Einträge pro erweitertem Import- oder
-CSV-Exportvorgang. Pro ermöglicht weitere Dateien und Dokumente, speichert bis zu fünf
-frühere Passwörter pro Eintrag und hebt das Free-Limit von fünf Einträgen pro Vorgang auf.
-Vollständige verschlüsselte Tresor-Backups sind nicht begrenzt. Pro wird durch einen
-einmaligen Google-Play-Kauf freigeschaltet. Den Kauf kannst du in den Einstellungen
-wiederherstellen. Die zuletzt bestätigte Berechtigung wird auf diesem Gerät gespeichert,
-damit Pro auch offline verfügbar bleibt.
+**Kostenlose App mit Werbung**
+Alle SecureVault-Funktionen sind kostenlos und ohne Tariflimits nutzbar. Ein Banner
+erscheint nur auf dem Entsperrbildschirm — niemals im Tresor oder beim Autofill. Ein
+optionaler einmaliger Google-Play-Kauf entfernt die Werbung und kann in den Einstellungen
+wiederhergestellt werden. Das Banner erhält keine Tresordaten; Passwörter und Tresorinhalte
+werden nie an das Werbenetzwerk gesendet.
 
 SecureVault synchronisiert deinen Tresor nicht mit einem Server des Anbieters. Du wählst
 den Speicherort für Sicherungen selbst. Beim Export eines einzelnen Anhangs oder einer

@@ -1,53 +1,53 @@
-# Free / Pro feature matrix
+# Feature availability and advertising model
 
-This document is the product scope for the first monetization version. Security and
-recovery are never paywalled.
+All implemented vault features are available without purchase. The only optional paid
+product removes the AdMob banner on the unlock screen. Security, recovery, attachments,
+history, import/export and backups are not paywalled.
 
-**Release entitlement note:** Google Play Billing is integrated for a one-time Pro
-purchase with product ID `pro_unlock`. The product must be configured in Play Console.
-Release access comes from an owned Play purchase and is cached locally for offline use;
-the debug Free/Pro switch remains limited to debug builds.
+**Release entitlement note:** Google Play Billing is integrated for a one-time ad-removal
+purchase with product ID `pro_unlock`. The purchase is cached locally so the app remains
+ad-free offline. Debug builds use Google's test ad IDs and expose an ad-free test switch;
+release builds require AdMob app and banner IDs through user-level Gradle properties.
+Use Google's test IDs only for internal-test bundles and real IDs for production.
 
 ## Implemented today
 
-| Feature | Status | Free | Pro |
-|---|---|---:|---:|
-| VLT3 hybrid encrypted vault | Implemented | Yes | Yes |
-| Argon2id passphrase + independent QR recovery | Implemented | Yes | Yes |
-| Hardware-backed device unlock (strong biometric or Android screen credential) | Implemented | Yes | Yes |
-| Auto-lock and lock-on-background | Implemented | Yes | Yes |
-| Password entries | Implemented | Yes | Yes |
-| Google Play Billing purchase and restore | Implemented; Play Console product setup required | No | One-time `pro_unlock` purchase |
-| Offline Pro entitlement cache | Implemented | No | Cached on this device; reconciled with Play when Settings opens |
-| Password history (up to 5 previous distinct passwords) | Implemented | No | Yes; automatic capture on change, view and copy |
-| File attachments up to 10 MiB | Implemented | No | Yes |
-| Advanced import/export | Implemented | No | CSV/XLSX mapping (including password-protected XLSX), Bitwarden JSON, KeePass XML and 1Password 1PUX import, standard CSV export |
-| Favorites, folders, tags and search | Implemented | Yes | Yes |
-| Password generator | Implemented | Yes | Yes |
-| TOTP codes | Implemented | Yes | Yes |
-| Local weak/reused password health | Implemented | Yes | Yes |
-| Android Autofill and Credential Manager password provider | Implemented | Yes | Yes |
-| Named JPG image entries in the common list | Implemented | Yes, with VLT3 limits | Yes, same VLT3 limits |
-| Multi-page JPG document scans | Implemented | No | Yes; up to 20 pages, 10 MiB per page and 60 MiB per document |
-| Manual encrypted export/import | Implemented | Yes | Yes |
-| User-selected automatic encrypted backup | Implemented | Yes; refreshed after each successful save | Same behavior; no separate scheduling |
-| Recovery QR and passphrase QR printing/sharing | Implemented | Yes | Yes |
-| OCR review/crop flow | Implemented as optional code path | Not part of password Add flow | Not a paid security feature |
-| Polish/English/German/French UI | Implemented | Yes | Yes |
-| In-app user guide | Implemented | Yes | Yes |
+| Feature | Status | Available without purchase |
+|---|---|---:|
+| VLT3 hybrid encrypted vault | Implemented | Yes |
+| Argon2id passphrase + independent QR recovery | Implemented | Yes |
+| Hardware-backed device unlock (strong biometric or Android screen credential) | Implemented | Yes |
+| Auto-lock and lock-on-background | Implemented | Yes |
+| Password entries and up to 5 previous passwords per entry | Implemented | Yes |
+| File attachments up to 10 MiB | Implemented | Yes |
+| Advanced import/export | Implemented | CSV/XLSX mapping (including password-protected XLSX), Bitwarden JSON, KeePass XML, 1Password 1PUX import and CSV export |
+| Favorites, folders, tags and search | Implemented | Yes |
+| Password generator | Implemented | Yes |
+| TOTP codes | Implemented | Yes |
+| Local weak/reused password health | Implemented | Yes |
+| Android Autofill and Credential Manager password provider | Implemented | Yes |
+| Named JPG image entries in the common list | Implemented | Yes, within VLT3 limits |
+| Multi-page JPG document scans | Implemented | Yes; up to 20 pages, 10 MiB per page and 60 MiB per document |
+| Manual encrypted export/import | Implemented | Yes |
+| User-selected automatic encrypted backup | Implemented | Yes; refreshed after each successful save |
+| Recovery QR and passphrase QR printing/sharing | Implemented | Yes |
+| OCR review/crop flow | Implemented as optional code path | Yes |
+| Polish/English/German/French UI | Implemented | Yes |
+| In-app user guide | Implemented | Yes |
+| Unlock-screen AdMob banner | Implemented | Removed by one-time `pro_unlock` purchase |
 
-## Planned Pro features
+## Not implemented
 
-| Feature                                         | Current status | Proposed Pro behavior                               |
+| Feature                                         | Current status | Notes |
 |-------------------------------------------------|---|-----------------------------------------------------|
-| Scheduled backup retries                        | Not implemented | Background scheduling and retry policy |
-| Passkeys                                        | Not implemented | Android Credential Provider/WebAuthn                |
-| Advanced Autofill                               | Not implemented | Advanced save/update workflows; basic password retrieval remains Free |
-| Multiple vaults                                 | Not implemented | Separate VLT3 vaults and device bindings            |
-| Encrypted sharing                               | Not implemented | Recipient-key encrypted item packages               |
-| Emergency access                                | Not implemented | Requires a backend, recipients and approval workflow |
-| Breach intelligence                             | Not implemented | Optional privacy-reviewed k-anonymity service       |
-| Advanced reports                                | Basic local health exists | History, age and actionable health dashboard        |
+| Scheduled backup retries | Not implemented | Background scheduling and retry policy |
+| Passkeys | Not implemented | Android Credential Provider/WebAuthn |
+| Advanced Autofill | Not implemented | Save/update workflows |
+| Multiple vaults | Not implemented | Separate VLT3 vaults and device bindings |
+| Encrypted sharing | Not implemented | Recipient-key encrypted item packages |
+| Emergency access | Not implemented | Requires a backend, recipients and approval workflow |
+| Breach intelligence | Not implemented | Optional privacy-reviewed k-anonymity service |
+| Advanced reports | Basic local health exists | History, age and actionable health dashboard |
 
 ## Autofill implementation and constraints
 
@@ -69,9 +69,10 @@ Android supplies the username and password to the requesting app.
 
 Implementation reference: [Android Autofill services](https://developer.android.com/identity/autofill/autofill-services).
 
-## Features that stay Free
+## Features available regardless of purchase
 
-The following are core trust and safety features and must not depend on Pro:
+These core trust and safety features, along with every other implemented vault feature,
+do not depend on the ad-removal purchase:
 
 - encryption and DEK protection;
 - passphrase policy;
@@ -87,11 +88,11 @@ The following are core trust and safety features and must not depend on Pro:
 
 ## Debug testing
 
-Debug builds expose a **Free / Pro test mode** in Settings. It is guarded by
-`BuildConfig.DEBUG` and is absent from release builds. It only changes the entitlement
-reported by `PremiumManager`; it never changes cryptographic keys or vault access.
+Debug builds expose an **ads / ad-free test mode** in Settings. It is guarded by
+`BuildConfig.DEBUG` and is absent from release builds. It only changes whether the unlock
+screen banner is shown; it never changes cryptographic keys or vault access.
 
-Release builds use the Play Billing purchase entitlement, not the debug switch. The
-device-local cache preserves an owned Pro entitlement while offline; a successful Play
-purchase query clears it if there is neither a purchased nor a pending Pro item. The
-cache is not transferred on reinstall, so the purchase must be queried from Play again.
+Release builds use the Play Billing ad-removal entitlement, not the debug switch. The
+device-local cache preserves the ad-free state while offline; a successful Play purchase
+query clears it if there is neither a purchased nor a pending item. The cache is not
+transferred on reinstall, so the purchase must be restored from Play again.

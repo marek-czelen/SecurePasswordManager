@@ -33,9 +33,12 @@ import android.view.LayoutInflater;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Gravity;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
@@ -78,6 +81,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputEditText;
@@ -126,6 +134,11 @@ public final class MainActivity extends AppCompatActivity {
 
     private VaultV3Repository repository;
     private PremiumManager premiumManager;
+    private GoogleAdsConsentManager adsConsentManager;
+    private AdView unlockBanner;
+    private boolean activityResumed;
+    private boolean unlockAdConsentAllowsRequest;
+    private boolean unlockBannerLoadStarted;
     private char[] sessionTruePin;
     private byte[] sessionDek;
     private boolean deviceAuthenticatedSession;
@@ -381,6 +394,7 @@ public final class MainActivity extends AppCompatActivity {
         try {
             repository = new VaultV3Repository(this);
             premiumManager = new PremiumManager(this);
+            adsConsentManager = new GoogleAdsConsentManager(this);
             if (Session.isActive()) {
                 restoreSession();
             } else if (!repository.exists()
@@ -397,12 +411,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addScannedDocument(ArrayList<Uri> pages, String title) {
-        if (!PremiumLimits.canAddDocument(
-                premiumManager.isPro(), countDocuments(currentData))) {
-            deleteTemporaryDocumentPages(pages);
-            toast(R.string.msg_document_free_limit);
-            return;
-        }
         if (pages.isEmpty() || pages.size() > VaultItem.MAX_DOCUMENT_PAGES) {
             deleteTemporaryDocumentPages(pages);
             toast(R.string.document_max_pages);
@@ -549,6 +557,13 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        activityResumed = true;
+        if (unlockBanner != null) {
+            unlockBanner.resume();
+            requestUnlockBannerIfReady();
+        } else if (!unlocked && findViewById(R.id.unlockAdContainer) != null) {
+            loadUnlockBanner();
+        }
         if (pendingPreviewFile != null) {
             cleanupPendingPreview();
             awaitingResult = false;
@@ -558,6 +573,15 @@ public final class MainActivity extends AppCompatActivity {
                 notifyPreviousResourceRecovered();
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        activityResumed = false;
+        if (unlockBanner != null) {
+            unlockBanner.pause();
+        }
+        super.onPause();
     }
 
     @Override
@@ -588,6 +612,7 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         Log.d(IMAGE_LOG, "MainActivity.onDestroy finishing=" + isFinishing());
+        destroyUnlockBanner();
         super.onDestroy();
         ioExecutor.shutdownNow();
     }
@@ -672,6 +697,9 @@ public final class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnUnlock).setVisibility(View.GONE);
         findViewById(R.id.btnBiometric).setOnClickListener(view -> authenticateDevice());
         findViewById(R.id.btnRecovery).setOnClickListener(view -> showRecoveryImport());
+        if (activityResumed) {
+            loadUnlockBanner();
+        }
     }
 
     private boolean ensureDeviceCredentialConfigured() {
@@ -875,11 +903,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void requestDocumentScan() {
-        if (!PremiumLimits.canAddDocument(
-                premiumManager.isPro(), countDocuments(currentData))) {
-            toast(R.string.msg_document_free_limit);
-            return;
-        }
         if (awaitingResult || saveInProgress) {
             toast(R.string.err_save);
             return;
@@ -983,17 +1006,11 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void warnBeforeCsvExport() {
-        List<VaultItem> exportItems =
-                PremiumLimits.csvExportEntries(currentData.items, premiumManager.isPro());
-        if (exportItems.isEmpty()) {
+        if (countLoginEntries(currentData) == 0) {
             toast(R.string.msg_csv_nothing_to_export);
             return;
         }
         String warning = getString(R.string.csv_plaintext_warning);
-        if (!premiumManager.isPro()) {
-            warning += "\n\n" + getString(R.string.csv_free_limit_warning,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
-        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.csv_plaintext_title)
                 .setMessage(warning)
@@ -1258,12 +1275,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showImportPreview(List<VaultItem> items, int ignoredRows, String warning) {
-        boolean isPro = premiumManager.isPro();
-        int skippedByFreeLimit = isPro ? 0 : Math.max(0,
-                items.size() - PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
-        List<VaultItem> importItems =
-                PremiumLimits.limitImportExportEntries(items, isPro);
-        if (importItems.isEmpty()) {
+        if (items.isEmpty()) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.import_preview_title)
                     .setMessage(getString(R.string.import_empty, ignoredRows))
@@ -1272,41 +1284,32 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         int capacity = VaultTextDataCodec.MAX_ITEMS - currentData.items.size();
-        if (importItems.size() > capacity) {
+        if (items.size() > capacity) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.import_preview_title)
-                    .setMessage(getString(R.string.import_capacity, importItems.size(), capacity))
+                    .setMessage(getString(R.string.import_capacity, items.size(), capacity))
                     .setPositiveButton(R.string.action_close, null)
                     .show();
             return;
         }
         StringBuilder preview = new StringBuilder();
-        preview.append(getString(R.string.import_preview_count, importItems.size()));
-        if (!isPro) {
-            preview.append("\n").append(getString(R.string.import_free_limit,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT));
-        }
+        preview.append(getString(R.string.import_preview_count, items.size()));
         if (ignoredRows > 0) {
             preview.append("\n").append(getString(R.string.import_ignored_rows, ignoredRows));
-        }
-        if (skippedByFreeLimit > 0) {
-            preview.append("\n").append(getString(R.string.import_free_limit_skipped,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT, skippedByFreeLimit));
         }
         if (!warning.isEmpty()) {
             preview.append("\n\n").append(warning);
         }
         preview.append("\n\n");
-        int visible = Math.min(importItems.size(), 40);
+        int visible = Math.min(items.size(), 40);
         for (int i = 0; i < visible; i++) {
-            VaultItem item = importItems.get(i);
+            VaultItem item = items.get(i);
             preview.append("• ").append(item.username.isEmpty() ? item.title
                     : getString(R.string.import_preview_login, item.title, item.username))
                     .append('\n');
         }
-        if (importItems.size() > visible) {
-            preview.append(getString(R.string.import_more_titles,
-                    importItems.size() - visible));
+        if (items.size() > visible) {
+            preview.append(getString(R.string.import_more_titles, items.size() - visible));
         }
         preview.append("\n").append(getString(R.string.import_append_confirm));
         new MaterialAlertDialogBuilder(this)
@@ -1315,7 +1318,7 @@ public final class MainActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.import_append, (dialog, which) -> {
                     List<VaultItem> appended = new ArrayList<>(currentData.items);
-                    appended.addAll(importItems);
+                    appended.addAll(items);
                     importSavePending = true;
                     saveData(new VaultData(appended));
                 })
@@ -1331,9 +1334,7 @@ public final class MainActivity extends AppCompatActivity {
                     if (output == null) {
                         throw new IOException("Unable to open export destination");
                     }
-                    AdvancedImportExport.writeCsv(output,
-                            PremiumLimits.csvExportEntries(snapshot.items,
-                                    premiumManager.isPro()));
+                    AdvancedImportExport.writeCsv(output, snapshot.items);
                     runOnUiThread(() -> {
                         awaitingResult = false;
                         toast(R.string.msg_csv_exported);
@@ -1472,8 +1473,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void showPasswordHistory(VaultItem item) {
-        int visibleCount = Math.min(item.passwordHistory.size(),
-                PremiumLimits.passwordHistoryLimit(premiumManager.isPro()));
+        int visibleCount = item.passwordHistory.size();
         if (visibleCount == 0) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.password_history_title)
@@ -2054,8 +2054,7 @@ public final class MainActivity extends AppCompatActivity {
                     } else {
                         String newPassword = str(password);
                         List<String> passwordHistory = replaceTarget.passwordHistoryAfterChange(
-                                newPassword, true,
-                                PremiumLimits.passwordHistoryLimit(premiumManager.isPro()));
+                                newPassword, true);
                         edited = new VaultItem(replaceTarget.entryId, str(title), str(username),
                                 newPassword, str(url), str(notes), str(tags), str(folder),
                                 str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
@@ -2161,7 +2160,8 @@ public final class MainActivity extends AppCompatActivity {
                         : getString(R.string.remote_status_none))
                 .putExtra(SettingsActivity.EXTRA_DEBUG_OVERRIDE,
                         premiumManager.isDebugOverrideAvailable())
-                .putExtra(SettingsActivity.EXTRA_DEBUG_PRO, premiumManager.isDebugPro());
+                .putExtra(SettingsActivity.EXTRA_DEBUG_AD_FREE,
+                        premiumManager.isDebugAdFree());
         awaitingResult = true;
         settingsLauncher.launch(intent);
     }
@@ -2980,6 +2980,16 @@ public final class MainActivity extends AppCompatActivity {
         return count;
     }
 
+    private static int countLoginEntries(VaultData data) {
+        int count = 0;
+        for (VaultItem item : data.items) {
+            if (VaultItem.TYPE_LOGIN.equals(item.type)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private static int countDocuments(VaultData data) {
         int count = 0;
         for (VaultItem item : data.items) {
@@ -3074,13 +3084,8 @@ public final class MainActivity extends AppCompatActivity {
                 } else if (option == 1) {
                     showImageSourceChooser();
                 } else if (option == 2) {
-                    if (!PremiumLimits.canAddFile(
-                            premiumManager.isPro(), countFiles(currentData))) {
-                        toast(R.string.msg_file_free_limit);
-                    } else {
-                        awaitingResult = true;
-                        pickFileLauncher.launch(new String[]{"*/*"});
-                    }
+                    awaitingResult = true;
+                    pickFileLauncher.launch(new String[]{"*/*"});
                 } else {
                     requestDocumentScan();
                 }
@@ -3218,11 +3223,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addSelectedFile(Uri uri) {
-        if (!PremiumLimits.canAddFile(
-                premiumManager.isPro(), countFiles(currentData))) {
-            toast(R.string.msg_file_free_limit);
-            return;
-        }
         awaitingResult = true;
         ioExecutor.execute(() -> {
             byte[] contents = null;
@@ -3472,6 +3472,7 @@ public final class MainActivity extends AppCompatActivity {
      * navigation bar (edge-to-edge is enabled by default on modern Android).
      */
     private void setScreen(int layoutRes) {
+        destroyUnlockBanner();
         setContentView(layoutRes);
         final View content = findViewById(android.R.id.content);
         ViewCompat.setOnApplyWindowInsetsListener(content, (view, insets) -> {
@@ -3481,6 +3482,90 @@ public final class MainActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
         ViewCompat.requestApplyInsets(content);
+    }
+
+    private void loadUnlockBanner() {
+        if (!activityResumed || unlocked || premiumManager.isAdFree()
+                || unlockBanner != null) {
+            return;
+        }
+        FrameLayout container = findViewById(R.id.unlockAdContainer);
+        if (container == null) {
+            return;
+        }
+        float density = getResources().getDisplayMetrics().density;
+        int widthDp = Math.max(1, (int) (getResources().getDisplayMetrics().widthPixels
+                / density));
+        AdView banner = new AdView(this);
+        unlockBanner = banner;
+        banner.setAdUnitId(BuildConfig.ADMOB_UNLOCK_BANNER_ID);
+        banner.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, widthDp));
+        banner.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                if (unlockBanner == banner && !unlocked) {
+                    container.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError error) {
+                Log.w(IMAGE_LOG, "unlock banner failed to load, code=" + error.getCode());
+                if (unlockBanner == banner) {
+                    container.setVisibility(View.GONE);
+                }
+            }
+        });
+        container.setVisibility(View.GONE);
+        container.addView(banner, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER));
+
+        if (BuildConfig.DEBUG) {
+            // Debug builds use Google's test IDs; production consent is tested with AdMob setup.
+            unlockAdConsentAllowsRequest = true;
+            requestUnlockBannerIfReady();
+        } else {
+            adsConsentManager.gatherConsent(this, (canRequestAds, error) -> {
+                if (error != null) {
+                    Log.w(IMAGE_LOG, "ad consent update failed: " + error.getMessage());
+                }
+                unlockAdConsentAllowsRequest = canRequestAds;
+                requestUnlockBannerIfReady();
+            });
+        }
+    }
+
+    private void requestUnlockBannerIfReady() {
+        AdView banner = unlockBanner;
+        if (!activityResumed || unlocked || !unlockAdConsentAllowsRequest
+                || unlockBannerLoadStarted || banner == null || isFinishing()) {
+            return;
+        }
+        unlockBannerLoadStarted = true;
+        GoogleAdsConsentManager.initializeAdsIfNeeded(this, () -> {
+            if (unlockBanner != banner) {
+                return;
+            }
+            if (!activityResumed || unlocked || isFinishing()) {
+                unlockBannerLoadStarted = false;
+                return;
+            }
+            banner.loadAd(new AdRequest.Builder().build());
+        });
+    }
+
+    private void destroyUnlockBanner() {
+        if (unlockBanner == null) {
+            return;
+        }
+        if (unlockBanner.getParent() instanceof ViewGroup) {
+            ((ViewGroup) unlockBanner.getParent()).removeView(unlockBanner);
+        }
+        unlockBanner.destroy();
+        unlockBanner = null;
+        unlockAdConsentAllowsRequest = false;
+        unlockBannerLoadStarted = false;
     }
 
     private void lock() {

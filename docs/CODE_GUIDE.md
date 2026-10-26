@@ -38,10 +38,11 @@ derives a domain-separated key from the DEK, vault ID, object ID, generation, ty
 schema. AAD authenticates that context; each object generation uses a fresh ID, key and
 96-bit nonce.
 
-The encrypted text block also stores each login's Pro password history, capped at five
-distinct previous passwords and updated only when a password changes while Pro is active.
-Text schema version 2 adds this field; schema version 1 remains readable and migrates with
-an empty history. History values are viewable and copyable but cannot be restored from the UI.
+The encrypted text block stores each login's password history, capped at five distinct
+previous passwords and updated whenever the password changes. This is available without
+purchase. Text schema version 2 adds this field; schema version 1 remains readable and
+migrates with an empty history. History values are viewable and copyable but cannot be
+restored from the UI.
 
 `AdvancedImportExport` parses CSV and XLSX worksheets for user-selected column mapping,
 plus Bitwarden JSON, KeePass XML and 1Password 1PUX exports. Password-protected XLSX files
@@ -54,13 +55,14 @@ limit. CSV export uses the fixed
 only to a user-selected SAF destination. Images and file attachments are not represented in
 this CSV schema.
 
-Pro entitlement is supplied by `PremiumManager`. `GooglePlayBillingManager` handles the
-one-time `pro_unlock` Play product, purchase acknowledgement and restore queries from
-Settings. The last known Play entitlement is cached locally so Pro-gated flows continue
-to work offline; a successful query with no purchased or pending Pro item clears the
-cache. The Free/Pro override remains debug-only. Linking an automatic backup location is
-not Pro-gated: the app writes an encrypted copy after each successful vault save, without
-a scheduled background job.
+The optional ad-removal entitlement is supplied by `PremiumManager`.
+`GooglePlayBillingManager` handles the one-time `pro_unlock` Play product, purchase
+acknowledgement and restore queries from Settings. The last known purchase is cached
+locally so the app remains ad-free offline; vault features are available regardless of
+purchase. The ads/ad-free override remains debug-only. `GoogleAdsConsentManager` uses
+Google UMP before requesting the AdMob banner, and the banner is loaded only on the
+unlock screen. Linking an automatic backup location is not paywalled: the app writes an
+encrypted copy after each successful vault save, without a scheduled background job.
 
 ## Persistence and failure handling
 

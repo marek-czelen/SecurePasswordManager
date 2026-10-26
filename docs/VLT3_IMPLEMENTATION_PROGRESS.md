@@ -1,6 +1,6 @@
 # VLT3 implementation status
 
-**Review date:** 2026-10-02
+**Review date:** 2026-10-26
 
 **Scope:** current application source, not a security certification.
 
@@ -9,7 +9,8 @@
 VLT3 is the only vault format used by the application. VLT2 files are not opened or
 migrated; users must export data from the previous app version before creating a VLT3
 vault. Core vault, backup and recovery code is implemented. Hardware-specific behavior,
-release readiness and Pro monetization still need work.
+release readiness, AdMob production IDs and the related privacy declarations still need
+verification.
 
 ## Implemented
 
@@ -28,15 +29,15 @@ release readiness and Pro monetization still need work.
 - On-device OCR review, camera-based image capture and multi-page document scanning.
 - User-selected automatic encrypted backup location, refreshed after successful saves.
 
-## Limits and product gates
+## Limits and advertising model
 
 - 10,000 entries; 32 MiB text block; 100 MiB active vault.
 - JPG images and document pages: 10 MiB each; thumbnails: 256 KiB; file attachment:
   10 MiB. A scanned document is limited to 20 pages and 60 MiB total.
-- Pro-gated: password-history capture/view, file attachments, advanced import/export,
-  document scanning and camera calibration.
-- Google Play Billing is not implemented. A Free/Pro switch exists in debug only; release
-  builds report Free, so Pro-gated flows are unavailable in release builds.
+- All implemented vault functions are available without purchase. The optional one-time
+  Google Play purchase `pro_unlock` removes the AdMob banner shown on the unlock screen.
+- AdMob and UMP are configured with Google's test IDs in debug; release builds require
+  real app and banner IDs in user-level Gradle properties.
 - No WorkManager schedule/retry for automatic backup; a selected destination is refreshed
   after a successful vault save.
 - No VLT2 migration, cloud vault backend, multiple vaults, passkeys or rollback prevention.
@@ -44,9 +45,8 @@ release readiness and Pro monetization still need work.
 ## Validation and remaining release work
 
 - `testDebugUnitTest` completed successfully; Gradle reported the task up-to-date.
-- The latest `lintDebug` run failed with 21 errors and 81 warnings. The errors include
-  CameraX experimental API opt-in usage, an AppCompat tint attribute and missing German
-  and French translations.
+- The latest `lintDebug` run failed with 5 errors and 86 warnings: an AppCompat tint
+  attribute and missing German/French XLSX translations.
 - Run Android instrumentation tests on physical devices, including verification of
   biometric/Keystore behavior, camera flows, interrupted writes, SAF providers and
   restore after device change.

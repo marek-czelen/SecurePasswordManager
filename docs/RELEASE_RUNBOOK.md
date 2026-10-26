@@ -3,10 +3,14 @@
 ## Pre-release
 
 1. Review `SECURITY_DESIGN.md`, `docs/SECURITY_AUDIT.md` and this checklist.
-2. Replace all placeholders in `docs/PRIVACY_POLICY.md`.
-3. Review third-party licenses and include required notices in the release.
-4. Confirm no secrets, test vaults, QR payloads or local properties are in the source.
-5. Test VLT3 first run, RQR2 generation, biometric and device-PIN unlock,
+2. Update the public privacy policy and `docs/PRIVACY_POLICY.md` for AdMob/UMP and
+   confirm the Play Data Safety form matches the final SDK disclosures.
+3. Create the AdMob app and unlock-banner unit; publish the EEA/UK consent message and
+   set `ADMOB_APP_ID` and `ADMOB_UNLOCK_BANNER_ID` in user-level Gradle properties.
+4. Review third-party licenses and include required notices in the release.
+5. Confirm no secrets, test vaults, QR payloads, signing keys or local properties are in
+   the source.
+6. Test VLT3 first run, RQR2 generation, biometric and device-PIN unlock,
    passphrase+QR recovery,
    unsupported VLT2 messaging, import/export, OCR, auto-lock, clipboard clearing and
    delete-vault.
@@ -25,7 +29,8 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 ```
 
 Do not build a release with `local.properties`, signing keys, debug keystores or
-production recovery material in the repository.
+production recovery material in the repository. Use the existing upload key to create
+the signed AAB; release tasks fail until the two production AdMob IDs are configured.
 
 ## Artifact review
 

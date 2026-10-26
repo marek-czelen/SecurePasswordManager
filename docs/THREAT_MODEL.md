@@ -55,7 +55,7 @@ provider. A provider failure during the final copy may leave an incomplete exter
 document; the VLT3 importer rejects incomplete containers.
 
 Advanced import accepts bounded plaintext files and parses them locally before showing
-a preview; it adds entries without overwriting existing records. The optional Pro CSV
+a preview; it adds entries without overwriting existing records. The optional CSV
 export is unencrypted and exposes login fields at the user-selected destination. The
 export warns the user before opening the destination picker, omits media attachments,
 and warns that spreadsheet applications can interpret formula-like values as formulas.
@@ -70,5 +70,5 @@ to writing it on paper; it is not sufficient without RQR2.
 ## Out of scope
 
 VLT2 migration, server synchronization, deliberate rollback prevention and chunked
-attachments are not implemented. Generic file attachment creation is Pro-gated; manual
-encrypted backup and recovery are not.
+attachments are not implemented. File attachments, manual encrypted backup and recovery
+are available without purchase.

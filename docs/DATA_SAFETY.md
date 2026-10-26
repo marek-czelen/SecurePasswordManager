@@ -7,15 +7,21 @@ on the exact release artifact and the current SDK privacy documentation.
 
 ### Collection by the developer
 
-The current build has no publisher-controlled backend, analytics, advertising or
-telemetry service. It does not collect passwords, passphrases, QR secrets, TOTP seeds,
-notes or vault plaintext.
+The current build has no publisher-controlled backend, analytics or telemetry service.
+It does not collect passwords, passphrases, QR secrets, TOTP seeds, notes or vault
+plaintext. Google Mobile Ads (AdMob) is used for one banner shown only on the unlock
+screen; Google UMP presents consent and privacy options.
 
-Google Play Billing handles the optional one-time Pro purchase. The app receives the
-product ID, purchase state and purchase token for acknowledgement/restore; it stores only
-a boolean Pro entitlement in private local preferences and does not send purchase tokens
-to a publisher backend. Payment card details are handled by Google Play, not the app.
-Review the current Play Billing SDK disclosures when completing the final Data Safety form.
+Google Play Billing handles the optional one-time ad-removal purchase. The app receives
+the product ID, purchase state and purchase token for acknowledgement/restore; it stores
+only a boolean ad-removal entitlement in private local preferences and does not send
+purchase tokens to a publisher backend. Payment card details are handled by Google Play,
+not the app. Review the current Play Billing SDK disclosures when completing the final
+Data Safety form.
+
+AdMob may process advertising identifiers, IP address/approximate location, ad
+interactions and diagnostics. Confirm the exact categories in Google's current SDK
+disclosure and declare them in Play Console; no vault content is included in ad requests.
 
 ### Local processing
 
@@ -40,7 +46,7 @@ The user can explicitly export one complete encrypted `vault.vlt3` container or 
 a document-provider location that is refreshed after each successful vault save. The
 location is selected by the user; the application writes the encrypted header, manifest
 and object ciphertexts, not vault plaintext. An explicit export of an individual attachment writes
-that file's plaintext to the user-selected destination. Pro CSV export writes login
+that file's plaintext to the user-selected destination. CSV export writes login
 fields, including passwords and TOTP secrets, as unencrypted UTF-8 CSV to a destination
 explicitly selected by the user. CSV export excludes images and file attachments. The app
 warns that spreadsheet programs may interpret formula-like cell values when opening CSV.
@@ -62,8 +68,8 @@ no background camera access.
   separate media objects, and for exported `vault.vlt3` containers.
 - Can users request deletion? Provide the local delete-vault flow and explain that
   provider copies are deleted by the user at the provider.
-- Is data shared? Declare any actual third-party SDK collection according to the final
-  dependency versions. Do not assume “on device” without reviewing each SDK.
+- Is data shared? Declare Google Mobile Ads and UMP data processing according to their
+  current SDK disclosures and the final dependency versions.
 
 ## SDK review required before submission
 

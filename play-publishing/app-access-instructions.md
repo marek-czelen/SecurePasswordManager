@@ -21,23 +21,15 @@ Nie ma gotowych danych logowania ani zdalnego konta demonstracyjnego.
    urządzenia.
 5. W sejfie użyj przycisku **Dodaj** i twórz wyłącznie syntetyczne dane testowe.
 
-Po utworzeniu sejfu wszystkie funkcje są dostępne bez konta zewnętrznego i zakupu,
-z limitami Free:
+Po utworzeniu sejfu wszystkie funkcje są dostępne bez konta zewnętrznego i bez zakupu.
+Recenzent może przetestować dodawanie wielu plików i dokumentów, historię haseł,
+zaawansowany import/eksport oraz pełne zaszyfrowane kopie sejfu. Baner reklamowy jest
+wyświetlany wyłącznie na ekranie odblokowania, przed dostępem do sejfu; nie pojawia się
+w sejfie ani podczas autouzupełniania.
 
-- Jeden plik i jeden dokument w sejfie.
-- Do dwóch poprzednich haseł w historii każdego wpisu logowania. Aby zobaczyć historię,
-  dodaj wpis, zmień jego hasło, zapisz, a następnie zmień je ponownie.
-- Do pięciu wpisów na pojedynczą operację zaawansowanego importu lub eksportu CSV.
-  Pozostałe rekordy z większego importu są jawnie pokazane jako pominięte.
-- Import można sprawdzić plikiem UTF-8 CSV z kolumnami `name,username,password,url`
-  i pięcioma syntetycznymi wierszami. Eksport CSV zapisuje dane jawnie do miejsca
-  wybranego przez recenzenta; należy używać wyłącznie danych testowych.
-- Pozostałe funkcje aplikacji są dostępne do testowania bez zakupu.
-
-Pro zwiększa limity plików i dokumentów, historię do pięciu poprzednich haseł na wpis
-oraz usuwa limit pięciu wpisów na operację zaawansowanego importu/eksportu. Pełne,
-zaszyfrowane kopie sejfu i ich odzyskiwanie nie są ograniczone w Free; limit dotyczy
-wyłącznie importu/eksportu rekordów haseł, a nie kopii `vault.vlt3`.
+Opcjonalny, jednorazowy zakup Google Play o identyfikatorze `pro_unlock` usuwa baner.
+Zakup nie odblokowuje żadnych funkcji ani danych. Nie trzeba go wykonywać, aby
+przetestować funkcje aplikacji.
 
 ## Test autouzupełniania (opcjonalnie)
 
@@ -51,10 +43,8 @@ wyłącznie importu/eksportu rekordów haseł, a nie kopii `vault.vlt3`.
   i producenta urządzenia.
 - Otwórz testową stronę logowania, wybierz podpowiedź SecureVault i uwierzytelnij się.
 
-## Zakup Pro
+## Usunięcie reklam
 
-Pro jest jednorazowym zakupem Google Play o identyfikatorze produktu `pro_unlock`.
-Wersja produkcyjna nie zawiera przełącznika testowego ani obejścia płatności. Każdy
-rodzaj funkcji można przetestować w podanych limitach Free; zakup Pro zwiększa limity.
-Zakup i przywracanie należy zweryfikować w sklepowym środowisku testowym Google Play
-przed wysłaniem wersji produkcyjnej.
+`pro_unlock` to opcjonalny jednorazowy zakup Google Play usuwający reklamy. Można go
+przywrócić z Ustawień. Wszystkie funkcje są dostępne bez zakupu, więc recenzent nie musi
+realizować płatności, aby sprawdzić aplikację.

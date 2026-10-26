@@ -3,7 +3,7 @@
 **Tytuł (29/30):** SecureVault: Passwords & Docs
 
 **Krótki opis (maks. 80 znaków):**  
-Szyfrowany sejf na hasła, dokumenty i pliki. Zakupione Pro działa offline.
+Szyfrowany sejf haseł. Usuń baner z ekranu odblokowania w aplikacji.
 
 **Pełny opis:**
 
@@ -28,14 +28,12 @@ własnej chmury.
   udanym zapisie; nie jest to harmonogram działający w tle.
 - Dodawaj obrazy, załączniki i wielostronicowe skany dokumentów jako zaszyfrowane dane.
 
-**SecureVault Pro**
-Wszystkie funkcje są dostępne w Free z limitami: jeden plik, jeden dokument, do dwóch
-poprzednich haseł na wpis oraz do pięciu wpisów na operację zaawansowanego importu lub
-eksportu CSV. Pro pozwala dodawać więcej plików i dokumentów, przechowywać do pięciu
-poprzednich haseł na wpis oraz usuwa limit Free pięciu wpisów na operację zaawansowanego
-importu/eksportu. Pełna zaszyfrowana kopia sejfu nie jest limitowana. Pro odblokowuje
-jednorazowy zakup Google Play; można go przywrócić z ustawień, a ostatnio potwierdzony
-dostęp jest zapamiętywany na urządzeniu i działa offline.
+**Bezpłatna aplikacja i reklamy**
+Wszystkie funkcje SecureVault są bezpłatne i nie mają limitów planu. Baner reklamowy
+pojawia się wyłącznie na ekranie odblokowania — nigdy w sejfie ani podczas
+autouzupełniania. Opcjonalny, jednorazowy zakup Google Play usuwa reklamy i można go
+przywrócić z ustawień. Baner nie otrzymuje danych sejfu; żadne hasła ani zawartość
+magazynu nie są wysyłane do sieci reklamowej.
 
 SecureVault nie synchronizuje sejfu z serwerem wydawcy. Użytkownik sam wybiera miejsce
 kopii zapasowej. Eksport pojedynczego załącznika lub CSV może zapisać odszyfrowane dane
