@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -10,22 +11,30 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:paddingHorizontal="28dp"
-        android:paddingTop="56dp"
-        android:paddingBottom="32dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="28dp">
 
-        <ImageView
-            android:layout_width="88dp"
-            android:layout_height="88dp"
-            android:src="@drawable/ic_logo"
-            android:contentDescription="@string/cd_logo" />
+        <FrameLayout
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:background="@drawable/bg_hero_logo">
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_logo_white"
+                android:contentDescription="@string/cd_logo" />
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:gravity="center"
             android:text="@string/first_run_title"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
             android:textColor="?attr/colorOnBackground" />
 
         <TextView
@@ -33,70 +42,80 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
+            android:lineSpacingMultiplier="1.1"
             android:text="@string/first_run_subtitle"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilPin"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:hint="@string/hint_true_pin"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:endIconMode="password_toggle">
+            android:layout_marginTop="28dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editPin"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:maxLength="24" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:orientation="vertical"
+                android:padding="18dp">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilConfirm"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:hint="@string/hint_confirm_pin"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:endIconMode="password_toggle">
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilPin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_true_pin"
+                    app:startIconDrawable="@drawable/ic_lock"
+                    app:endIconMode="password_toggle">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/editConfirm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:maxLength="24" />
-        </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editPin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:maxLength="24" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCreate"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="24dp"
-            android:text="@string/action_create_vault"
-            app:cornerRadius="16dp" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilConfirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="@string/hint_confirm_pin"
+                    app:startIconDrawable="@drawable/ic_lock"
+                    app:endIconMode="password_toggle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editConfirm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:imeOptions="actionDone"
+                        android:maxLength="24" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCreate"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/action_create_vault"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRecovery"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="14dp"
             android:text="@string/action_recovery"
-            app:icon="@drawable/ic_restore"
-            app:iconGravity="textStart"
-            app:cornerRadius="16dp" />
+            app:icon="@drawable/ic_restore" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="20dp"
             android:padding="16dp"
             android:background="@drawable/bg_info_card"
             android:gravity="center_vertical">

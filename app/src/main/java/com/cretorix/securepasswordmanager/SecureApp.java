@@ -2,14 +2,13 @@ package com.cretorix.securepasswordmanager;
 
 import android.app.Application;
 
-import com.google.android.material.color.DynamicColors;
-
-/** Enables Material You dynamic colors app-wide when the device supports them. */
-/** Application object responsible for global Material You setup only. */
+/**
+ * Application object. The app intentionally uses its own fixed brand palette (light and dark)
+ * instead of wallpaper-based dynamic colors, so the UI looks consistent on every device.
+ */
 public final class SecureApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        DynamicColors.applyToActivitiesIfAvailable(this);
     }
 }

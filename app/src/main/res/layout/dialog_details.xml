@@ -8,45 +8,60 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingHorizontal="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
-        <!-- Username -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_field_tile"
             android:gravity="center_vertical"
-            android:paddingVertical="10dp">
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_person"
-                app:tint="?attr/colorOnSurfaceVariant"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/hint_username"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/valueUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
@@ -58,40 +73,53 @@
                 app:iconTint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@string/cd_copy" />
         </LinearLayout>
-
-        <!-- Password -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_field_tile"
             android:gravity="center_vertical"
-            android:paddingVertical="10dp">
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_lock"
-                app:tint="?attr/colorOnSurfaceVariant"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_lock"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/hint_password"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/valuePassword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:fontFamily="monospace"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOnSurface" />
@@ -115,50 +143,65 @@
                 app:iconTint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@string/cd_copy" />
         </LinearLayout>
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPasswordHistory"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Spm.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text="@string/action_password_history" />
-
+            android:text="@string/action_password_history"
+            app:icon="@drawable/ic_restore" />
         <LinearLayout
             android:id="@+id/rowTotp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_field_tile"
             android:gravity="center_vertical"
-            android:paddingVertical="10dp">
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_sync"
-                app:tint="?attr/colorOnSurfaceVariant"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_sync"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/totp_label"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/valueTotp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:fontFamily="monospace"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:letterSpacing="0.08"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
                     android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
 
@@ -178,85 +221,110 @@
                 app:iconTint="?attr/colorOnSurfaceVariant"
                 android:contentDescription="@string/action_copy_totp" />
         </LinearLayout>
-
-        <!-- URL -->
         <LinearLayout
             android:id="@+id/rowUrl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_field_tile"
             android:gravity="center_vertical"
-            android:paddingVertical="10dp">
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_link"
-                app:tint="?attr/colorOnSurfaceVariant"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_link"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/hint_url"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/valueUrl"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
         </LinearLayout>
-
-        <!-- Notes -->
         <LinearLayout
             android:id="@+id/rowNotes"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_field_tile"
             android:gravity="top"
-            android:paddingVertical="10dp">
+            android:minHeight="64dp"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:paddingVertical="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_note"
-                app:tint="?attr/colorOnSurfaceVariant"
-                android:contentDescription="@null" />
+            <FrameLayout
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_note"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="4dp"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/hint_notes"
-                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/valueNotes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textIsSelectable="true" />
+                    android:textIsSelectable="true"
+                    android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
+        </LinearLayout>    </LinearLayout>
 </ScrollView>

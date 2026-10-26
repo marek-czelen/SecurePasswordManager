@@ -10,678 +10,1067 @@
         android:id="@+id/settingsToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorSurface"
+        android:background="?android:attr/colorBackground"
         app:navigationIcon="@drawable/ic_arrow_back"
         app:navigationIconTint="?attr/colorOnSurface"
         app:title="@string/settings_title"
         app:titleCentered="false"
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
         app:titleTextColor="?attr/colorOnSurface" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:clipToPadding="false"
         android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="20dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="10dp"
-        android:paddingHorizontal="4dp"
-        android:text="@string/settings_security"
-        android:textAppearance="?attr/textAppearanceLabelLarge"
-        android:textColor="?attr/colorPrimary" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="18dp"
-        app:cardBackgroundColor="?attr/colorSurfaceContainer"
-        app:cardCornerRadius="20dp"
-        app:strokeColor="?attr/colorOutlineVariant"
-        app:strokeWidth="1dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-    <LinearLayout
-        android:id="@+id/rowAdRemoval"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
-        <TextView
-            android:layout_width="wrap_content"
+        android:paddingTop="4dp"
+        android:paddingBottom="28dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_premium_title"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
+            app:cardCornerRadius="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
+
+        <LinearLayout
+            android:id="@+id/rowAdRemoval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_hero_logo"
+                    android:importantForAccessibility="no">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_block"
+                        app:tint="@android:color/white"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_premium_title"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:id="@+id/adsStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textAppearance="?attr/textAppearanceLabelMedium"
+                        android:textColor="?attr/colorPrimary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/settings_premium_desc"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRemoveAds"
+                style="@style/Widget.Spm.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:enabled="false"
+                android:text="@string/premium_action_buy" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRestoreAds"
+                style="@style/Widget.Spm.Button.Text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/premium_action_restore" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonAdsPrivacyOptions"
+                style="@style/Widget.Spm.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/settings_ads_privacy_options"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowAdRemovalDebug"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_premium_debug"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:id="@+id/adRemovalDebugStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchAdFreeDebug"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/settings_premium_desc"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant" />
-        <TextView
-            android:id="@+id/adsStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            android:paddingHorizontal="6dp"
+            android:text="@string/settings_security"
+            android:textAppearance="@style/TextAppearance.Spm.SectionLabel"
             android:textColor="?attr/colorPrimary" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonRemoveAds"
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:enabled="false"
-            android:text="@string/premium_action_buy" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonRestoreAds"
+            app:cardCornerRadius="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
+
+        <LinearLayout
+            android:id="@+id/rowAutofill"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/premium_action_restore" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonAdsPrivacyOptions"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_key"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_autofill"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_autofill_desc"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/autofillStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorPrimary" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowRecovery"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/settings_ads_privacy_options"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowAdRemovalDebug"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_qr_code"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/settings_premium_debug"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-            <TextView
-                android:id="@+id/adRemovalDebugStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-        </LinearLayout>
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchAdFreeDebug"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowAutofill"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_key"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_autofill"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_autofill_desc"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-            <TextView
-                android:id="@+id/autofillStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorPrimary" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowRecovery"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_qr_code"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_show_recovery"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowPassphraseQr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_lock"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/action_show_passphrase_qr"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowChangePin"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_lock"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_change_pin"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowLockBackground"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_lock"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_lock_background"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_lock_background_desc"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_show_recovery"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
         </LinearLayout>
 
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchLockBackground"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowAutoLock"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_lock"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_autolock"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-
-            <TextView
-                android:id="@+id/autoLockValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-        </LinearLayout>
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchAutoLock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowLock"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_restore"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_lock"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowPrivacy"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_note"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_privacy"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowTutorial"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_help"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_tutorial"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <TextView
+            android:id="@+id/rowPassphraseQr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:paddingHorizontal="4dp"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_lock"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/action_show_passphrase_qr"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowChangePin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_key"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_change_pin"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowLockBackground"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_shield"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_lock_background"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_lock_background_desc"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchLockBackground"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowAutoLock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_timer"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_autolock"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:id="@+id/autoLockValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switchAutoLock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowLock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_lock"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_lock"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            android:paddingHorizontal="6dp"
+            android:text="@string/menu_section_app"
+            android:textAppearance="@style/TextAppearance.Spm.SectionLabel"
+            android:textColor="?attr/colorPrimary" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="22dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
+
+        <LinearLayout
+            android:id="@+id/rowPrivacy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_policy"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_privacy"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowTutorial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_help"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_tutorial"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            android:paddingHorizontal="6dp"
             android:text="@string/settings_sync"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textAppearance="@style/TextAppearance.Spm.SectionLabel"
             android:textColor="?attr/colorPrimary" />
 
-    <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="18dp"
-            app:cardBackgroundColor="?attr/colorSurfaceContainer"
-            app:cardCornerRadius="20dp"
-            app:strokeColor="?attr/colorOutlineVariant"
-            app:strokeWidth="1dp">
+            app:cardCornerRadius="22dp">
 
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
 
-    <TextView
+        <TextView
             android:id="@+id/remoteStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
             android:background="@drawable/bg_settings_status"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="8dp"
-        android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant" />
-
-    <LinearLayout
-        android:id="@+id/rowLinkRemote"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_cloud_upload"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
+            android:drawablePadding="10dp"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSecondaryContainer" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/rowLinkRemote"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_cloud_upload"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/settings_link_remote"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_link_remote_desc"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_link_remote"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_link_remote_desc"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
         </LinearLayout>
-    </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/rowSyncNow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_sync"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_sync_now"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowBackup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_backup"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_backup"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/rowImportBackup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_import"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/rowSyncNow"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_sync"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/settings_import_backup"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOnSurface" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_import_backup_desc"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_sync_now"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
         </LinearLayout>
-    </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/rowUnlinkRemote"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_cloud_off"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="@string/settings_unlink"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurface" />
-    </LinearLayout>
-
-    </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        app:cardBackgroundColor="?attr/colorErrorContainer"
-        app:cardCornerRadius="20dp"
-        app:strokeColor="?attr/colorError"
-        app:strokeWidth="1dp">
-
-    <LinearLayout
-        android:id="@+id/rowDeleteVault"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="14dp"
-        android:clickable="true"
-        android:focusable="true">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_cloud_off"
-            app:tint="?attr/colorError"
-            android:contentDescription="@null" />
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/rowBackup"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_backup"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/settings_delete_vault"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorError" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/settings_delete_vault_desc"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_backup"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
         </LinearLayout>
-    </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowImportBackup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_import"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_import_backup"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_import_backup_desc"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowUnlinkRemote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_menu_icon"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_cloud_off"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_unlink"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorOnSurface" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorOnSurfaceVariant"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="22dp"
+            android:layout_marginTop="20dp"
+            app:strokeColor="?attr/colorErrorContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="6dp">
+
+        <LinearLayout
+            android:id="@+id/rowDeleteVault"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="68dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp"
+            android:paddingVertical="10dp"
+            android:clickable="true"
+            android:focusable="true">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_icon_tile_error"
+                android:importantForAccessibility="no">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_delete"
+                    app:tint="?attr/colorError"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_delete_vault"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textSize="15sp"
+                    android:textColor="?attr/colorError" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/settings_delete_vault_desc"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:alpha="0.7"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="?attr/colorError"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null" />
         </LinearLayout>
-</ScrollView>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

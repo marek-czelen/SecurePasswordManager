@@ -48,7 +48,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogin"
-                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                style="@style/Widget.Spm.Button.Tonal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/ocr_mark_login"
@@ -57,7 +57,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPassword"
-                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                style="@style/Widget.Spm.Button.Tonal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -67,7 +67,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnName"
-                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                style="@style/Widget.Spm.Button.Tonal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -77,7 +77,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
-                style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+                style="@style/Widget.Spm.Button.Outlined"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -97,7 +97,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Spm.Button.Text"
             android:layout_width="0dp"
             android:layout_height="52dp"
             android:layout_weight="1"

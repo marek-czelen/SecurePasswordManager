@@ -4,69 +4,84 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true"
-    android:maxHeight="560dp"
-    android:scrollbars="vertical"
     android:overScrollMode="ifContentScrolls">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:paddingHorizontal="24dp"
-    android:paddingTop="8dp">
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@color/white">
-
-        <ImageView
-            android:id="@+id/qrImage"
-            android:layout_width="220dp"
-            android:layout_height="220dp"
-            android:layout_margin="16dp"
-            android:contentDescription="@string/cd_qr" />
-    </com.google.android.material.card.MaterialCardView>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:text="@string/recovery_qr_note"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="4dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCopyPayload"
-            style="@style/Widget.Material3.Button.TonalButton.Icon"
-            android:layout_width="0dp"
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Spm.Card"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/action_copy"
-            app:icon="@drawable/ic_copy"
-            app:iconGravity="textStart" />
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp">
+
+            <ImageView
+                android:id="@+id/qrImage"
+                android:layout_width="184dp"
+                android:layout_height="184dp"
+                android:layout_margin="12dp"
+                android:contentDescription="@string/cd_qr" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_field_tile"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginTop="1dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_shield"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:text="@string/recovery_qr_note"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareQr"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            style="@style/Widget.Spm.Button.Tonal"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="14dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/action_share_jpg"
             app:icon="@drawable/ic_image"
             app:iconGravity="textStart" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopyPayload"
+            style="@style/Widget.Spm.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/action_copy"
+            app:icon="@drawable/ic_copy"
+            app:iconGravity="textStart" />
     </LinearLayout>
-</LinearLayout>
 </ScrollView>

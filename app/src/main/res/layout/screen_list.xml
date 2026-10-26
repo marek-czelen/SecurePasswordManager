@@ -3,42 +3,48 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:liftOnScroll="true">
+        android:background="?android:attr/colorBackground"
+        app:liftOnScroll="true"
+        app:liftOnScrollColor="?attr/colorSurfaceContainer">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:title="@string/list_title"
+            android:layout_height="64dp"
+            android:paddingStart="4dp"
+            app:contentInsetStart="16dp"
+            app:logo="@drawable/ic_logo_toolbar"
+            app:titleMarginStart="12dp"
+            app:title="@string/list_title"
             app:titleCentered="false"
             app:menu="@menu/menu_toolbar" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSearch"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+            style="@style/Widget.Spm.SearchField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="8dp"
-            android:hint="@string/hint_search"
-            app:boxCornerRadiusBottomEnd="18dp"
-            app:boxCornerRadiusBottomStart="18dp"
-            app:boxCornerRadiusTopEnd="18dp"
-            app:boxCornerRadiusTopStart="18dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="12dp"
+            app:endIconMode="clear_text"
             app:startIconDrawable="@drawable/ic_search">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editSearch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
+                android:hint="@string/hint_search"
                 android:inputType="text"
                 android:imeOptions="actionSearch"
-                android:maxLines="1" />
+                android:maxLines="1"
+                android:paddingVertical="0dp" />
         </com.google.android.material.textfield.TextInputLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -48,8 +54,9 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingHorizontal="16dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="96dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="104dp"
+        android:scrollbarStyle="outsideOverlay"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <LinearLayout
@@ -58,29 +65,39 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
+        android:paddingHorizontal="40dp"
+        android:paddingBottom="96dp"
         android:visibility="gone"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ImageView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:src="@drawable/ic_key"
-            android:alpha="0.5"
-            app:tint="?attr/colorOnSurfaceVariant"
-            android:contentDescription="@null" />
+        <FrameLayout
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_key"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="@null" />
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
             android:text="@string/empty_title"
-            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textAppearance="?attr/textAppearanceTitleLarge"
             android:textColor="?attr/colorOnBackground" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
             android:text="@string/empty_subtitle"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
@@ -93,5 +110,8 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="20dp"
         android:text="@string/action_add"
-        app:icon="@drawable/ic_add" />
+        android:textColor="?attr/colorOnPrimary"
+        app:backgroundTint="?attr/colorPrimary"
+        app:icon="@drawable/ic_add"
+        app:iconTint="?attr/colorOnPrimary" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

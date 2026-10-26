@@ -1,5 +1,6 @@
 package com.cretorix.securepasswordmanager;
 
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,10 +8,12 @@ import android.widget.TextView;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cretorix.securepasswordmanager.crypto.VaultItem;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.color.MaterialColors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +78,7 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
         holder.avatar.setVisibility(attachment ? View.GONE : View.VISIBLE);
         holder.typeIcon.setVisibility(attachment ? View.VISIBLE : View.GONE);
         holder.typeIcon.setTag(item.entryId);
+        resetTypeIconStyle(holder.typeIcon);
         if (item.isImage()) {
             holder.typeIcon.setImageResource(R.drawable.ic_image);
             if (item.thumbnailId != null) {
@@ -86,7 +90,11 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
             holder.typeIcon.setImageResource(R.drawable.ic_note);
         }
         holder.avatar.setText(initial(title));
-        holder.favorite.setAlpha(item.favorite ? 1f : 0.25f);
+        holder.favorite.setIconTint(ColorStateList.valueOf(item.favorite
+                ? holder.itemView.getContext().getColor(R.color.spm_favorite)
+                : MaterialColors.getColor(holder.favorite,
+                com.google.android.material.R.attr.colorOutline)));
+        holder.favorite.setAlpha(item.favorite ? 1f : 0.6f);
         holder.itemView.setOnClickListener(view -> listener.onOpen(item));
         holder.copy.setOnClickListener(view -> listener.onCopyPassword(item));
         holder.favorite.setOnClickListener(view -> listener.onToggleFavorite(item));
@@ -95,6 +103,21 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    /** Restores the icon look of a recycled tile that may previously have shown a thumbnail. */
+    private static void resetTypeIconStyle(ImageView icon) {
+        int padding = Math.round(12 * icon.getResources().getDisplayMetrics().density);
+        icon.setPadding(padding, padding, padding, padding);
+        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        ImageViewCompat.setImageTintList(icon, ColorStateList.valueOf(MaterialColors.getColor(
+                icon, androidx.appcompat.R.attr.colorPrimary)));
+    }
+
+    /** Lets a decrypted thumbnail fill the whole rounded tile. */
+    static void applyThumbnailStyle(ImageView icon) {
+        icon.setPadding(0, 0, 0, 0);
+        icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
     }
 
     private static String initial(String title) {

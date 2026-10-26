@@ -21,7 +21,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScan"
-            style="@style/Widget.Material3.Button.TonalButton.Icon"
+            style="@style/Widget.Spm.Button.Tonal"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="16dp"
@@ -32,7 +32,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScanPassphrase"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="10dp"
@@ -43,7 +43,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPickFile"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:layout_marginTop="10dp"
@@ -63,7 +63,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPayload"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.Spm.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -80,7 +80,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPin"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Widget.Spm.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"

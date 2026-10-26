@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Soft halo -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="?attr/colorPrimaryContainer" />
+        </shape>
+    </item>
+    <!-- Gradient badge -->
+    <item android:bottom="14dp" android:left="14dp" android:right="14dp" android:top="14dp">
+        <shape android:shape="oval">
+            <gradient
+                android:angle="315"
+                android:endColor="@color/spm_hero_end"
+                android:startColor="@color/spm_hero_start"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

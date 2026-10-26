@@ -870,6 +870,8 @@ public final class MainActivity extends AppCompatActivity {
         LinearLayout appActions = content.findViewById(R.id.menuAppActions);
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(content);
+        dialog.getBehavior().setSkipCollapsed(true);
+        dialog.getBehavior().setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
 
         androidx.appcompat.widget.PopupMenu menuSource =
                 new androidx.appcompat.widget.PopupMenu(this, findViewById(R.id.toolbar));
@@ -889,6 +891,7 @@ public final class MainActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.action_favorites) {
                 MaterialSwitch toggle = row.findViewById(R.id.menuToggle);
                 toggle.setVisibility(View.VISIBLE);
+                row.findViewById(R.id.menuChevron).setVisibility(View.GONE);
                 toggle.setChecked(favoritesOnly);
                 item.setChecked(favoritesOnly);
             }
@@ -1715,6 +1718,7 @@ public final class MainActivity extends AppCompatActivity {
                     Object tag = target.getTag();
                     if (unlocked && item.entryId.equals(tag)) {
                         androidx.core.widget.ImageViewCompat.setImageTintList(target, null);
+                        PasswordAdapter.applyThumbnailStyle(target);
                         target.setImageBitmap(decoded);
                         if (resource.recoveredPrevious) {
                             notifyPreviousResourceRecovered();
@@ -2043,6 +2047,9 @@ public final class MainActivity extends AppCompatActivity {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle(replaceTarget == null ? R.string.entry_new : R.string.entry_edit)
                 .setView(view)
+                // Wider than the default dialog so the form fields have more room.
+                .setBackgroundInsetStart(Math.round(8 * getResources().getDisplayMetrics().density))
+                .setBackgroundInsetEnd(Math.round(8 * getResources().getDisplayMetrics().density))
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_save, (d, w) -> {
                     VaultItem edited;
@@ -3058,6 +3065,8 @@ public final class MainActivity extends AppCompatActivity {
         LinearLayout actions = content.findViewById(R.id.addChooserActions);
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(content);
+        dialog.getBehavior().setSkipCollapsed(true);
+        dialog.getBehavior().setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
 
         int[] titles = {
                 R.string.add_manual,

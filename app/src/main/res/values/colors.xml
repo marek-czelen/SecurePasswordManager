@@ -1,36 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Brand seed used for the launcher icon and splash. -->
-    <color name="brand_primary">#4E5BD9</color>
-    <color name="brand_primary_dark">#3742B0</color>
+    <color name="brand_primary">#2B50D8</color>
+    <color name="brand_primary_dark">#1B36A6</color>
+    <color name="brand_primary_light">#4C74F5</color>
 
-    <!-- Material 3 light scheme. -->
-    <color name="md_primary">#4E5BD9</color>
+    <!-- SecureVault brand scheme (light). -->
+    <color name="md_primary">#2B50D8</color>
     <color name="md_on_primary">#FFFFFF</color>
-    <color name="md_primary_container">#E1E0FF</color>
-    <color name="md_on_primary_container">#03006E</color>
-    <color name="md_secondary">#5B5D72</color>
+    <color name="md_primary_container">#DFE6FF</color>
+    <color name="md_on_primary_container">#001652</color>
+    <color name="md_secondary">#525E7A</color>
     <color name="md_on_secondary">#FFFFFF</color>
-    <color name="md_secondary_container">#E0E1F9</color>
-    <color name="md_on_secondary_container">#181A2C</color>
-    <color name="md_tertiary">#006A6A</color>
+    <color name="md_secondary_container">#E3E8F6</color>
+    <color name="md_on_secondary_container">#0F1B33</color>
+    <color name="md_tertiary">#00796B</color>
     <color name="md_on_tertiary">#FFFFFF</color>
-    <color name="md_tertiary_container">#9CF1F0</color>
-    <color name="md_on_tertiary_container">#002020</color>
-    <color name="md_error">#BA1A1A</color>
+    <color name="md_tertiary_container">#B5F2E6</color>
+    <color name="md_on_tertiary_container">#00201B</color>
+    <color name="md_error">#C62828</color>
     <color name="md_on_error">#FFFFFF</color>
-    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_error_container">#FDE3E1</color>
     <color name="md_on_error_container">#410002</color>
-    <color name="md_background">#FBF8FF</color>
-    <color name="md_on_background">#1B1B21</color>
-    <color name="md_surface">#FBF8FF</color>
-    <color name="md_on_surface">#1B1B21</color>
-    <color name="md_surface_variant">#E3E1EC</color>
-    <color name="md_on_surface_variant">#46464F</color>
-    <color name="md_surface_container">#F0EDF7</color>
-    <color name="md_surface_container_high">#EAE7F1</color>
-    <color name="md_outline">#767680</color>
-    <color name="md_outline_variant">#C7C5D0</color>
+    <color name="md_background">#F4F6FB</color>
+    <color name="md_on_background">#141A26</color>
+    <color name="md_surface">#F4F6FB</color>
+    <color name="md_on_surface">#141A26</color>
+    <color name="md_surface_variant">#E1E6F0</color>
+    <color name="md_on_surface_variant">#4A5366</color>
+    <color name="md_surface_container_lowest">#FFFFFF</color>
+    <color name="md_surface_container_low">#F9FAFD</color>
+    <color name="md_surface_container">#EEF1F8</color>
+    <color name="md_surface_container_high">#E8ECF5</color>
+    <color name="md_surface_container_highest">#E2E7F1</color>
+    <color name="md_outline">#7A8396</color>
+    <color name="md_outline_variant">#D5DBE7</color>
+
+    <!-- App-specific surfaces. -->
+    <color name="spm_card">#FFFFFF</color>
+    <color name="spm_card_stroke">#E3E8F1</color>
+    <color name="spm_sheet">#F4F6FB</color>
+    <color name="spm_dialog">#FFFFFF</color>
+    <color name="spm_field_tile">#EEF2F9</color>
+    <color name="spm_input_stroke_default">#C3CAD8</color>
+    <color name="spm_favorite">#F2A900</color>
+    <color name="spm_hero_start">#3D63F0</color>
+    <color name="spm_hero_end">#1B36A6</color>
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>

@@ -31,10 +31,14 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSharePassphraseQr"
-        style="@style/Widget.Material3.Button.OutlinedButton.Icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        style="@style/Widget.Spm.Button.Tonal"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="14dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:text="@string/action_share_jpg"
         app:icon="@drawable/ic_image"
         app:iconGravity="textStart" />

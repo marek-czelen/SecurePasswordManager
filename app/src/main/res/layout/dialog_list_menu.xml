@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
+        android:paddingHorizontal="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="28dp">
 
@@ -18,31 +18,62 @@
             android:layout_width="36dp"
             android:layout_height="4dp"
             android:layout_gravity="center_horizontal"
+            android:alpha="0.5"
             android:background="@drawable/bg_menu_handle" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="@string/app_name"
-            android:textAppearance="?attr/textAppearanceHeadlineSmall"
-            android:textColor="?attr/colorOnSurface" />
+            android:layout_marginTop="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="4dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/app_tagline"
-            android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            <FrameLayout
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_hero_logo">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_logo_white"
+                    android:contentDescription="@null" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textAppearance="?attr/textAppearanceTitleLarge"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/app_tagline"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="8dp"
+            android:paddingHorizontal="4dp"
             android:text="@string/menu_section_vault"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textAppearance="@style/TextAppearance.Spm.SectionLabel"
             android:textColor="?attr/colorPrimary" />
 
         <LinearLayout
@@ -54,10 +85,11 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:paddingHorizontal="4dp"
             android:text="@string/menu_section_app"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textAppearance="@style/TextAppearance.Spm.SectionLabel"
             android:textColor="?attr/colorPrimary" />
 
         <LinearLayout

@@ -21,7 +21,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/documentPreviousPage"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Spm.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/document_previous_page" />
@@ -36,7 +36,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/documentNextPage"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/Widget.Spm.Button.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/document_next_page" />

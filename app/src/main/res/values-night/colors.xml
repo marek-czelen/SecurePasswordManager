@@ -1,30 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Material 3 dark scheme. -->
-    <color name="md_primary">#C0C1FF</color>
-    <color name="md_on_primary">#1B2478</color>
-    <color name="md_primary_container">#353E90</color>
-    <color name="md_on_primary_container">#E1E0FF</color>
-    <color name="md_secondary">#C4C5DD</color>
-    <color name="md_on_secondary">#2D2F42</color>
-    <color name="md_secondary_container">#434559</color>
-    <color name="md_on_secondary_container">#E0E1F9</color>
-    <color name="md_tertiary">#80D4D3</color>
-    <color name="md_on_tertiary">#003736</color>
-    <color name="md_tertiary_container">#004F4F</color>
-    <color name="md_on_tertiary_container">#9CF1F0</color>
+    <!-- SecureVault brand scheme (dark). -->
+    <color name="md_primary">#B3C5FF</color>
+    <color name="md_on_primary">#002780</color>
+    <color name="md_primary_container">#1F3BA8</color>
+    <color name="md_on_primary_container">#DFE6FF</color>
+    <color name="md_secondary">#BAC6E3</color>
+    <color name="md_on_secondary">#243049</color>
+    <color name="md_secondary_container">#2A3448</color>
+    <color name="md_on_secondary_container">#D8E2FF</color>
+    <color name="md_tertiary">#6FDAC5</color>
+    <color name="md_on_tertiary">#00382F</color>
+    <color name="md_tertiary_container">#005144</color>
+    <color name="md_on_tertiary_container">#B5F2E6</color>
     <color name="md_error">#FFB4AB</color>
     <color name="md_on_error">#690005</color>
-    <color name="md_error_container">#93000A</color>
+    <color name="md_error_container">#5C1414</color>
     <color name="md_on_error_container">#FFDAD6</color>
-    <color name="md_background">#121318</color>
-    <color name="md_on_background">#E4E1E9</color>
-    <color name="md_surface">#121318</color>
-    <color name="md_on_surface">#E4E1E9</color>
-    <color name="md_surface_variant">#46464F</color>
-    <color name="md_on_surface_variant">#C7C5D0</color>
-    <color name="md_surface_container">#1F1F25</color>
-    <color name="md_surface_container_high">#292930</color>
-    <color name="md_outline">#90909A</color>
-    <color name="md_outline_variant">#46464F</color>
+    <color name="md_background">#0D1016</color>
+    <color name="md_on_background">#E3E7F0</color>
+    <color name="md_surface">#0D1016</color>
+    <color name="md_on_surface">#E3E7F0</color>
+    <color name="md_surface_variant">#2A303D</color>
+    <color name="md_on_surface_variant">#B9C1D2</color>
+    <color name="md_surface_container_lowest">#080A0F</color>
+    <color name="md_surface_container_low">#131720</color>
+    <color name="md_surface_container">#181D27</color>
+    <color name="md_surface_container_high">#20252F</color>
+    <color name="md_surface_container_highest">#2A303B</color>
+    <color name="md_outline">#8A93A6</color>
+    <color name="md_outline_variant">#313847</color>
+
+    <!-- App-specific surfaces. -->
+    <color name="spm_card">#161A23</color>
+    <color name="spm_card_stroke">#252B38</color>
+    <color name="spm_sheet">#12161E</color>
+    <color name="spm_dialog">#181D27</color>
+    <color name="spm_field_tile">#20252F</color>
+    <color name="spm_input_stroke_default">#444D5F</color>
+    <color name="spm_favorite">#FFC83D</color>
+    <color name="spm_hero_start">#3354D6</color>
+    <color name="spm_hero_end">#142A85</color>
 </resources>

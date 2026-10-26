@@ -34,7 +34,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpAdd"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Spm.Button.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -56,7 +56,7 @@
             android:textColor="?attr/colorOnSurface" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpImages"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -79,14 +79,14 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpGenerator"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="@string/help_generator_action" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpSettings"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/help_settings_action" />
@@ -107,14 +107,14 @@
             android:textColor="?attr/colorOnSurface" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpRecoveryQr"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="@string/help_recovery_qr_action" />
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpRecovery"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Spm.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/help_recovery_action" />
@@ -191,7 +191,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/helpAutofillSettings"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Spm.Button.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
