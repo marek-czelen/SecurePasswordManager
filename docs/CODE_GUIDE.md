@@ -50,19 +50,23 @@ are supported after the user enters the workbook password; encrypted password-ma
 database formats are not. Imports are size-bounded, previewed, and appended as new entries
 through `saveData`; 1Password attachments are not imported. Raw imports are limited to
 20 MiB, archive expansion is capped, and imports cannot exceed the vault's 10,000-entry
-limit. CSV export uses the fixed
+limit. Free accounts import/export at most five entries per advanced operation; Pro has
+no per-operation quota. CSV export uses the fixed
 `name, username, password, url, notes, folder, tags, totp` column order and writes plaintext
 only to a user-selected SAF destination. Images and file attachments are not represented in
 this CSV schema.
 
-The optional ad-removal entitlement is supplied by `PremiumManager`.
-`GooglePlayBillingManager` handles the one-time `pro_unlock` Play product, purchase
-acknowledgement and restore queries from Settings. The last known purchase is cached
-locally so the app remains ad-free offline; vault features are available regardless of
-purchase. The ads/ad-free override remains debug-only. `GoogleAdsConsentManager` uses
-Google UMP before requesting the AdMob banner, and the banner is loaded only on the
-unlock screen. Linking an automatic backup location is not paywalled: the app writes an
-encrypted copy after each successful vault save, without a scheduled background job.
+`PremiumManager` supplies the Free/Pro entitlement. `GooglePlayBillingManager` handles
+the one-time `pro_unlock` Play product, purchase acknowledgement and restore queries from
+Settings. Its locally cached `play_pro` entitlement remains compatible with prior
+versions and works offline. Free permits one file, one scanned document, two previous
+passwords per entry and five entries per advanced import/export operation. Pro removes
+the file, document and import/export quotas and retains up to five previous passwords
+per entry. Existing history and attachments above a Free quota remain accessible and are
+not trimmed during the tier change. These plan limits do not change the VLT3 technical
+size/count caps. The Free/Pro override remains debug-only. Linking an automatic backup
+location is not paywalled: the app writes an encrypted copy after each successful vault
+save, without a scheduled background job.
 
 ## Persistence and failure handling
 

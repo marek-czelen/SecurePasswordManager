@@ -9,19 +9,14 @@ on the exact release artifact and the current SDK privacy documentation.
 
 The current build has no publisher-controlled backend, analytics or telemetry service.
 It does not collect passwords, passphrases, QR secrets, TOTP seeds, notes or vault
-plaintext. Google Mobile Ads (AdMob) is used for one banner shown only on the unlock
-screen; Google UMP presents consent and privacy options.
+plaintext. The app does not include advertising or ad-consent SDKs.
 
-Google Play Billing handles the optional one-time ad-removal purchase. The app receives
+Google Play Billing handles the optional one-time Pro purchase. The app receives
 the product ID, purchase state and purchase token for acknowledgement/restore; it stores
-only a boolean ad-removal entitlement in private local preferences and does not send
+only a boolean Pro entitlement in private local preferences and does not send
 purchase tokens to a publisher backend. Payment card details are handled by Google Play,
 not the app. Review the current Play Billing SDK disclosures when completing the final
 Data Safety form.
-
-AdMob may process advertising identifiers, IP address/approximate location, ad
-interactions and diagnostics. Confirm the exact categories in Google's current SDK
-disclosure and declare them in Play Console; no vault content is included in ad requests.
 
 ### Local processing
 
@@ -68,8 +63,8 @@ no background camera access.
   separate media objects, and for exported `vault.vlt3` containers.
 - Can users request deletion? Provide the local delete-vault flow and explain that
   provider copies are deleted by the user at the provider.
-- Is data shared? Declare Google Mobile Ads and UMP data processing according to their
-  current SDK disclosures and the final dependency versions.
+- Is data shared? Review Google Play Billing and each remaining SDK against the final
+  dependency versions. The app no longer includes Google Mobile Ads or UMP.
 
 ## SDK review required before submission
 

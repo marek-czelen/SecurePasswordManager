@@ -3,7 +3,7 @@
 **Titre (29/30) :** SecureVault: Passwords & Docs
 
 **Description courte (80 caractères max.) :**  
-Coffre chiffré. Supprimez la bannière de déverrouillage dans l’application.
+Coffre chiffré. Limites Free ; passez à Pro pour plus.
 
 **Description complète :**
 
@@ -31,12 +31,13 @@ aucun compte ni service cloud propre.
   arrière-plan.
 - Ajoutez des images, pièces jointes et numérisations multipages comme données chiffrées.
 
-**Application gratuite avec publicités**
-Toutes les fonctions de SecureVault sont gratuites, sans limite de forfait. Une bannière
-apparaît uniquement sur l’écran de déverrouillage — jamais dans le coffre ni pendant le
-remplissage automatique. Un achat unique facultatif sur Google Play supprime les
-publicités et peut être restauré dans les paramètres. La bannière ne reçoit aucune donnée
-du coffre ; les mots de passe et son contenu ne sont jamais transmis au réseau publicitaire.
+**Free et Pro**
+Free inclut un fichier et un document numérisé, jusqu’à deux anciens mots de passe par
+entrée et jusqu’à cinq entrées par opération d’import/export. Un achat Pro unique supprime
+les limites de forfait sur le nombre de fichiers/documents et d’entrées par opération ;
+Pro conserve jusqu’à cinq anciens mots de passe par entrée. Les sauvegardes chiffrées
+complètes du coffre n’ont pas de limite de forfait. Les limites techniques du format VLT3
+restent applicables.
 
 SecureVault ne synchronise pas votre coffre avec un serveur de l’éditeur. Vous choisissez
 l’emplacement des sauvegardes. L’export d’une pièce jointe ou d’un fichier CSV peut

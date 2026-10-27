@@ -3,7 +3,7 @@
 **Title (29/30):** SecureVault: Passwords & Docs
 
 **Short description (max 80 characters):**  
-Encrypted password vault. Remove the unlock-screen banner in-app.
+Encrypted password vault. Free quotas; upgrade to Pro for more.
 
 **Full description:**
 
@@ -28,11 +28,12 @@ its own cloud service.
   successful save; it is not a background schedule.
 - Add images, file attachments and multi-page document scans as encrypted vault data.
 
-**Free app with ads**
-All SecureVault features are free with no plan limits. A banner appears only on the
-unlock screen — never in the vault or during autofill. An optional one-time Google Play
-purchase removes ads and can be restored in Settings. The banner does not receive vault
-data; passwords and vault contents are never sent to the ad network.
+**Free and Pro**
+Free includes one file and one scanned document, up to two previous passwords per entry,
+and up to five entries per import/export operation. A one-time Pro purchase removes the
+plan quotas for file/document counts and entries per import/export operation; Pro keeps
+up to five previous passwords per entry. Full encrypted vault backups have no plan quota.
+Technical VLT3 format limits still apply.
 
 SecureVault does not sync your vault to a publisher server. You choose where to store
 backups. Exporting an individual attachment or CSV can write decrypted data to the

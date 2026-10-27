@@ -39,8 +39,8 @@
 - The latest local `lintDebug` run failed with 5 errors and 86 warnings: an AppCompat
   tint attribute and missing German/French XLSX translations. Resolve and rerun lint
   before release.
-- The public privacy policy must be updated to describe AdMob/UMP before release.
-  Confirm the live policy, Play listing and Data Safety answers against the configured SDKs.
+- Confirm the live privacy policy, Play listing and Data Safety answers against the
+  final release SDKs and Free/Pro purchase model.
 
 ## Release gates
 

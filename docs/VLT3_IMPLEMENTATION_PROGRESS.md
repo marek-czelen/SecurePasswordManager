@@ -8,9 +8,8 @@
 
 VLT3 is the only vault format used by the application. VLT2 files are not opened or
 migrated; users must export data from the previous app version before creating a VLT3
-vault. Core vault, backup and recovery code is implemented. Hardware-specific behavior,
-release readiness, AdMob production IDs and the related privacy declarations still need
-verification.
+vault. Core vault, backup and recovery code is implemented. Hardware-specific behavior
+and release readiness still need verification.
 
 ## Implemented
 
@@ -29,15 +28,16 @@ verification.
 - On-device OCR review, camera-based image capture and multi-page document scanning.
 - User-selected automatic encrypted backup location, refreshed after successful saves.
 
-## Limits and advertising model
+## Technical limits and Free/Pro model
 
 - 10,000 entries; 32 MiB text block; 100 MiB active vault.
 - JPG images and document pages: 10 MiB each; thumbnails: 256 KiB; file attachment:
   10 MiB. A scanned document is limited to 20 pages and 60 MiB total.
-- All implemented vault functions are available without purchase. The optional one-time
-  Google Play purchase `pro_unlock` removes the AdMob banner shown on the unlock screen.
-- AdMob and UMP are configured with Google's test IDs in debug; release builds require
-  real app and banner IDs in user-level Gradle properties.
+- Free allows one file, one scanned document, two previous passwords per entry and five
+  entries per advanced import/export operation. Pro removes the file/document count and
+  import/export per-operation quotas, and retains up to five previous passwords per
+  entry. The existing one-time `pro_unlock` Google Play product remains the Pro purchase.
+- Advertising, AdMob and UMP are not included.
 - No WorkManager schedule/retry for automatic backup; a selected destination is refreshed
   after a successful vault save.
 - No VLT2 migration, cloud vault backend, multiple vaults, passkeys or rollback prevention.

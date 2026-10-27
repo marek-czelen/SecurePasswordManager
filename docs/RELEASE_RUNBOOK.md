@@ -3,10 +3,11 @@
 ## Pre-release
 
 1. Review `SECURITY_DESIGN.md`, `docs/SECURITY_AUDIT.md` and this checklist.
-2. Update the public privacy policy and `docs/PRIVACY_POLICY.md` for AdMob/UMP and
-   confirm the Play Data Safety form matches the final SDK disclosures.
-3. Create the AdMob app and unlock-banner unit; publish the EEA/UK consent message and
-   set `ADMOB_APP_ID` and `ADMOB_UNLOCK_BANNER_ID` in user-level Gradle properties.
+2. Update the public privacy policy and `docs/PRIVACY_POLICY.md` to state that the app
+   has no advertisements; confirm the Play Data Safety form matches the remaining SDKs.
+3. Keep the existing `pro_unlock` Play product ID and update its title/description to
+   describe the Free/Pro limits. Test purchase, acknowledgement, restore and offline
+   entitlement behavior with a licensed tester.
 4. Review third-party licenses and include required notices in the release.
 5. Confirm no secrets, test vaults, QR payloads, signing keys or local properties are in
    the source.
@@ -30,7 +31,7 @@ $env:Path="$env:JAVA_HOME\bin;$env:Path"
 
 Do not build a release with `local.properties`, signing keys, debug keystores or
 production recovery material in the repository. Use the existing upload key to create
-the signed AAB; release tasks fail until the two production AdMob IDs are configured.
+the signed AAB.
 
 ## Artifact review
 

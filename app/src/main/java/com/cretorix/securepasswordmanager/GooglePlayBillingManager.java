@@ -19,9 +19,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Connects Play's one-time ad-removal product to the local offline entitlement cache. */
+/** Connects Play's one-time Pro product to the local offline entitlement cache. */
 public final class GooglePlayBillingManager {
-    public static final String AD_FREE_PRODUCT_ID = "pro_unlock";
+    public static final String PRO_PRODUCT_ID = "pro_unlock";
 
     public interface Listener {
         void onProductAvailable(String formattedPrice);
@@ -30,7 +30,7 @@ public final class GooglePlayBillingManager {
 
         void onEntitlementChanged();
 
-        void onRestoreCompleted(boolean hasAdFreePurchase);
+        void onRestoreCompleted(boolean hasProPurchase);
 
         void onPurchasePending();
 
@@ -152,7 +152,7 @@ public final class GooglePlayBillingManager {
     private void queryProductDetails() {
         QueryProductDetailsParams.Product product =
                 QueryProductDetailsParams.Product.newBuilder()
-                        .setProductId(AD_FREE_PRODUCT_ID)
+                        .setProductId(PRO_PRODUCT_ID)
                         .setProductType(BillingClient.ProductType.INAPP)
                         .build();
         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
@@ -169,7 +169,7 @@ public final class GooglePlayBillingManager {
             }
             productDetails = null;
             for (ProductDetails details : result.getProductDetailsList()) {
-                if (AD_FREE_PRODUCT_ID.equals(details.getProductId())) {
+                if (PRO_PRODUCT_ID.equals(details.getProductId())) {
                     productDetails = details;
                     break;
                 }
@@ -200,7 +200,7 @@ public final class GooglePlayBillingManager {
             }
             processPurchases(purchases, true);
             if (isRestore) {
-                listener.onRestoreCompleted(premiumManager.isPlayAdFree());
+                listener.onRestoreCompleted(premiumManager.isPlayPro());
             }
         });
     }
@@ -211,14 +211,14 @@ public final class GooglePlayBillingManager {
         }
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                 && purchases != null) {
-            boolean hasAdFreePurchase = false;
+            boolean hasProPurchase = false;
             for (Purchase purchase : purchases) {
-                if (purchase.getProducts().contains(AD_FREE_PRODUCT_ID)) {
-                    hasAdFreePurchase = true;
+                if (purchase.getProducts().contains(PRO_PRODUCT_ID)) {
+                    hasProPurchase = true;
                     break;
                 }
             }
-            if (hasAdFreePurchase) {
+            if (hasProPurchase) {
                 processPurchases(purchases, false);
             } else {
                 listener.onBillingUnavailable();
@@ -232,19 +232,19 @@ public final class GooglePlayBillingManager {
     }
 
     private void processPurchases(List<Purchase> purchases, boolean authoritativeQuery) {
-        boolean hasAdFreePurchase = false;
-        boolean hasPendingAdFreePurchase = false;
+        boolean hasProPurchase = false;
+        boolean hasPendingProPurchase = false;
         for (Purchase purchase : purchases) {
-            if (!purchase.getProducts().contains(AD_FREE_PRODUCT_ID)) {
+            if (!purchase.getProducts().contains(PRO_PRODUCT_ID)) {
                 continue;
             }
             if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
-                hasPendingAdFreePurchase = true;
+                hasPendingProPurchase = true;
             } else if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                hasAdFreePurchase = true;
+                hasProPurchase = true;
                 String token = purchase.getPurchaseToken();
                 if (purchase.isAcknowledged() || acknowledgedTokens.contains(token)) {
-                    premiumManager.setPlayAdFree(true);
+                    premiumManager.setPlayPro(true);
                     listener.onEntitlementChanged();
                 } else {
                     acknowledge(purchase);
@@ -252,10 +252,10 @@ public final class GooglePlayBillingManager {
             }
         }
 
-        if (!hasAdFreePurchase && !hasPendingAdFreePurchase && authoritativeQuery) {
-            premiumManager.setPlayAdFree(false);
+        if (!hasProPurchase && !hasPendingProPurchase && authoritativeQuery) {
+            premiumManager.setPlayPro(false);
             listener.onEntitlementChanged();
-        } else if (hasPendingAdFreePurchase) {
+        } else if (hasPendingProPurchase) {
             listener.onPurchasePending();
         }
     }
@@ -275,7 +275,7 @@ public final class GooglePlayBillingManager {
             }
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                 acknowledgedTokens.add(token);
-                premiumManager.setPlayAdFree(true);
+                premiumManager.setPlayPro(true);
                 listener.onEntitlementChanged();
             } else {
                 listener.onBillingUnavailable();

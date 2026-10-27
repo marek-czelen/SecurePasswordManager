@@ -30,22 +30,11 @@ The app may process the following data locally at the user’s direction:
 This data is sensitive. It is stored in the encrypted local vault and is not used for
 advertising, profiling or sale.
 
-## Advertising and consent
+## Advertising
 
-The app uses Google Mobile Ads (AdMob) to show a banner only on the unlock screen, before
-the vault is opened. The ad request does not include passwords, vault entries, the
-passphrase, Recovery QR, TOTP secrets or attachment contents. Google may process
-advertising-related data such as device or advertising identifiers, IP address,
-approximate location, ad interactions and diagnostics as described in Google's current
-privacy disclosures. Ad personalization depends on the user's consent and settings.
-Google UMP is used to present consent choices and, when required, a privacy-options
-entry point. Users can remove the banner with an optional one-time Google Play purchase.
-The confirmed ad-removal entitlement is stored locally.
-
-Before publication, confirm the exact data categories and retention practices against
-the current AdMob/UMP SDK disclosures and update this draft and the Play Console Data
-Safety answers accordingly. The public privacy policy must be updated before the ad SDK
-is included in a production release.
+The app does not display advertisements and does not include Google Mobile Ads or Google
+UMP SDKs. It does not collect advertising identifiers or use vault data for advertising
+or profiling.
 
 ## Camera and OCR
 
@@ -83,11 +72,11 @@ enrollment is optional.
 
 ## Google Play purchases
 
-The optional ad-removal entitlement is sold as a one-time purchase through Google Play
-Billing. Google Play handles payment processing; the app does not receive payment card
-details. The app processes the purchased product ID, purchase state and purchase token
-on-device to acknowledge and restore the purchase. It stores only a device-local
-ad-removal entitlement flag for offline access; the token is not sent to a
+The optional Pro entitlement is sold as a one-time purchase through Google Play Billing.
+Google Play handles payment processing; the app does not receive payment card details.
+The app processes the purchased product ID, purchase state and purchase token on-device
+to acknowledge and restore the purchase. It stores only a device-local Pro entitlement
+flag for offline access; the token is not sent to a
 publisher-controlled server. When Settings is opened, the app queries Google Play to
 reconcile the cached entitlement.
 
@@ -109,10 +98,9 @@ selection can be changed in Android settings.
 ## Sharing and retention
 
 The app does not operate a publisher-controlled account, analytics service or
-server-side vault. Google provides the advertising service through AdMob. Local vault
-data remains until the user deletes the vault, clears app data or uninstalls the app.
-External backup copies remain wherever the user saved them and must be deleted by the
-user.
+server-side vault. Local vault data remains until the user deletes the vault, clears app
+data or uninstalls the app. External backup copies remain wherever the user saved them
+and must be deleted by the user.
 
 ## Security limitations
 

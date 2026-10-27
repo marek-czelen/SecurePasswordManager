@@ -32,19 +32,18 @@ konfigurację Play Console. Szczegółowa mapa pól znajduje się w
 2. **Skonfiguruj podpis i AAB.** Włącz Play App Signing, przechowuj klucz uploadu poza
    repozytorium, zwiększaj `versionCode` w `app/build.gradle.kts` przy każdym wydaniu
    i przesyłaj podpisany plik `.aab`, nie debug APK.
-3. **Skonfiguruj AdMob i Billing.** Utwórz aplikację SecureVault i jednostkę banerową
-   w AdMob, skonfiguruj komunikat zgody EOG/UK, a identyfikatory produkcyjne ustaw w
-   user-level `%USERPROFILE%\.gradle\gradle.properties` jako `ADMOB_APP_ID` i
-   `ADMOB_UNLOCK_BANNER_ID`. W Play Console ustaw `pro_unlock` jako jednorazowy zakup
-   usunięcia reklam; zakup/przywracanie sprawdź jako licencjonowany tester.
+3. **Skonfiguruj Billing.** Zachowaj istniejący produkt `pro_unlock` jako jednorazowy
+   zakup SecureVault Pro. Zaktualizuj jego tytuł i opis w Play Console, nie zmieniając
+   identyfikatora produktu, aby dotychczasowe zakupy nadal przyznawały Pro. Zakup,
+   przywracanie i działanie offline sprawdź jako licencjonowany tester.
 4. **Potwierdź dane wydawcy i politykę.** Opublikowana polityka jest pod adresem
    `https://www.cretorix.eu/securevault-privacy.html`; według wydawcy zawiera nazwę
    Cretorix, datę 1 października 2023 r. i kontakt `talk@cretorix.eu`. Potwierdź, że
    te dane są aktualne, a następnie podaj osobny, monitorowany kontakt pomocy w Play
    Console.
-5. **Uzupełnij deklaracje Play.** Zaznacz, że aplikacja zawiera reklamy. Zweryfikuj
-   Data Safety względem finalnego AAB i
-   ujawnionych praktyk SDK; wypełnij formularze Ads, Content rating, Target audience,
+5. **Uzupełnij deklaracje Play.** Zaznacz, że aplikacja nie zawiera reklam. Zweryfikuj
+   Data Safety względem finalnego AAB, Google Play Billing i
+   ujawnionych praktyk pozostałych SDK; wypełnij formularze Content rating, Target audience,
    App access, kraje dostępności i pozostałe wymagane sekcje. Instrukcja App access
    znajduje się w `app-access-instructions.md`.
 6. **Przetestuj uwierzytelnianie na sprzęcie.** Na fizycznym urządzeniu z hardware-backed

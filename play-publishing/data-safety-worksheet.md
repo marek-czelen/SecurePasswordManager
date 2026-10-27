@@ -9,13 +9,12 @@ on the exact release artifact and the current SDK privacy documentation.
 
 The current build has no publisher-controlled backend, analytics or telemetry service.
 It does not collect passwords, passphrases, QR secrets, TOTP seeds, notes or vault
-plaintext. The app integrates Google Mobile Ads (AdMob) for a single banner shown only
-on the unlock screen; Google UMP manages consent and privacy options. This SDK can
-collect advertising-related data independently of the publisher.
+plaintext. The app does not display advertisements and does not include Google Mobile
+Ads or UMP SDKs.
 
-Google Play Billing handles an optional one-time ad-removal purchase. The app receives the
+Google Play Billing handles an optional one-time Pro purchase. The app receives the
 product ID, purchase state and purchase token for acknowledgement/restore; it stores only
-a boolean ad-removal entitlement in private local preferences and does not send purchase tokens
+a boolean Pro entitlement in private local preferences and does not send purchase tokens
 to a publisher backend. Payment card details are handled by Google Play, not the app.
 Review the current Play Billing SDK disclosures when completing the final Data Safety form.
 
@@ -66,9 +65,8 @@ no background camera access.
   separate media objects, and for exported `vault.vlt3` containers.
 - Can users request deletion? Provide the local delete-vault flow and explain that
   provider copies are deleted by the user at the provider.
-- Is data shared? Review the current Google Mobile Ads and UMP SDK data disclosures and
-  declare the data collected/shared by those SDKs. Do not assume “on device” without
-  reviewing each SDK.
+- Is data shared? Review Google Play Billing and each remaining SDK against the final
+  dependency versions. The app no longer includes Google Mobile Ads or UMP.
 
 ## SDK review required before submission
 
@@ -81,13 +79,10 @@ Review current privacy/data practices for:
 - AndroidX and Material libraries;
 - AndroidX Credential Manager;
 - Bouncy Castle;
-- Google Mobile Ads SDK and Google UMP (verify current data categories in their SDK
-  disclosures);
 - any future passkey or cloud SDK.
 
-Before production, configure the AdMob app and banner unit IDs, publish an appropriate
-EEA/UK consent message in AdMob Privacy & messaging, and confirm that the public privacy
-policy and Play Console Data Safety form describe the resulting SDK behavior.
+Before production, confirm that the public privacy policy and Play Console Data Safety
+form describe the final release artifact and its remaining SDK behavior.
 
 Keep a dated export/screenshot of the completed Data Safety form with the release
 artifacts.

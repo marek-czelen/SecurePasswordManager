@@ -114,6 +114,24 @@ public final class VaultTextDataCodecTest {
                 item.passwordHistoryAfterChange("older", true));
         assertEquals(Collections.singletonList("oldest"),
                 item.passwordHistoryAfterChange("older", false));
+        assertEquals(Arrays.asList("current", "older"),
+                item.passwordHistoryAfterChange("new", true, 2));
+        assertEquals(Arrays.asList("current", "older", "oldest"),
+                item.passwordHistoryAfterChange("new", true,
+                        VaultItem.MAX_PASSWORD_HISTORY_ENTRIES));
+    }
+
+    @Test
+    public void preservesExistingHistoryAboveFreeQuota() {
+        List<String> existingHistory = Arrays.asList("older", "oldest", "third");
+        VaultItem item = new VaultItem(repeat("03", 16), "Example", "user", "current",
+                "", "", "", "", "", false, VaultItem.TYPE_LOGIN,
+                null, null, "", 0, existingHistory);
+
+        assertEquals(existingHistory,
+                item.passwordHistoryAfterChange("changed", true, 2));
+        assertEquals(Arrays.asList("older", "third"),
+                item.passwordHistoryAfterChange("oldest", true, 2));
     }
 
     @Test

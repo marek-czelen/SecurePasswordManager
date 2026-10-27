@@ -21,15 +21,15 @@ Nie ma gotowych danych logowania ani zdalnego konta demonstracyjnego.
    urządzenia.
 5. W sejfie użyj przycisku **Dodaj** i twórz wyłącznie syntetyczne dane testowe.
 
-Po utworzeniu sejfu wszystkie funkcje są dostępne bez konta zewnętrznego i bez zakupu.
-Recenzent może przetestować dodawanie wielu plików i dokumentów, historię haseł,
-zaawansowany import/eksport oraz pełne zaszyfrowane kopie sejfu. Baner reklamowy jest
-wyświetlany wyłącznie na ekranie odblokowania, przed dostępem do sejfu; nie pojawia się
-w sejfie ani podczas autouzupełniania.
+Po utworzeniu sejfu można testować funkcje bez konta zewnętrznego. Plan Free pozwala
+dodać jeden plik i jeden skan dokumentu, przechowuje do dwóch poprzednich haseł na wpis
+i pozwala na pięć wpisów na zaawansowaną operację importu/eksportu. Pełne zaszyfrowane
+kopie sejfu nie mają limitu planowego. Aplikacja nie wyświetla reklam.
 
-Opcjonalny, jednorazowy zakup Google Play o identyfikatorze `pro_unlock` usuwa baner.
-Zakup nie odblokowuje żadnych funkcji ani danych. Nie trzeba go wykonywać, aby
-przetestować funkcje aplikacji.
+Jednorazowy zakup Google Play `pro_unlock` aktywuje Pro: usuwa limity planowe liczby
+plików/dokumentów i liczby wpisów na operację importu/eksportu, a historię zwiększa do
+pięciu poprzednich haseł na wpis. Test zakupu wymaga licencjonowanego konta Google Play;
+nie jest wymagany do sprawdzenia limitów Free.
 
 ## Test autouzupełniania (opcjonalnie)
 
@@ -43,8 +43,7 @@ przetestować funkcje aplikacji.
   i producenta urządzenia.
 - Otwórz testową stronę logowania, wybierz podpowiedź SecureVault i uwierzytelnij się.
 
-## Usunięcie reklam
+## Przywrócenie zakupu Pro
 
-`pro_unlock` to opcjonalny jednorazowy zakup Google Play usuwający reklamy. Można go
-przywrócić z Ustawień. Wszystkie funkcje są dostępne bez zakupu, więc recenzent nie musi
-realizować płatności, aby sprawdzić aplikację.
+Zakup Pro można przywrócić z Ustawień na tym samym koncie Google Play. Dotychczasowy
+zakup usunięcia reklam pod tym samym identyfikatorem `pro_unlock` nadal przyznaje Pro.

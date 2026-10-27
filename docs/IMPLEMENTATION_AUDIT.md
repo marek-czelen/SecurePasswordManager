@@ -21,11 +21,11 @@ test penetracyjny ani certyfikacja bezpieczeństwa.
 
 ## Istotne ograniczenia wydania
 
-1. **Reklamy wymagają konfiguracji wydawniczej.** Debug używa oficjalnych testowych ID
-   AdMob; build release wymaga `ADMOB_APP_ID` i `ADMOB_UNLOCK_BANNER_ID` w
-   właściwościach Gradle użytkownika. Testowe ID są dozwolone wyłącznie dla testów
-   wewnętrznych; do produkcji trzeba użyć ID z własnego konta AdMob. `pro_unlock` usuwa
-   wyłącznie baner; nie ogranicza funkcji sejfu.
+1. **Model Free/Pro.** Free pozwala na 1 plik, 1 dokument, 2 poprzednie hasła na wpis
+   i 5 wpisów na zaawansowaną operację importu/eksportu. Pro znosi limity liczby plików,
+   dokumentów i rekordów na operację; historia Pro ma formatowy limit 5 haseł.
+   `pro_unlock` pozostaje istniejącym jednorazowym zakupem. Limity techniczne VLT3
+   obowiązują oba plany.
 2. **Lint nie przechodzi.** Ostatni `lintDebug` zgłosił 5 błędów i 86 ostrzeżeń:
    atrybut `android:tint` zamiast `app:tint` oraz brak czterech tłumaczeń tekstów XLSX
    na niemiecki i francuski.
@@ -43,8 +43,9 @@ test penetracyjny ani certyfikacja bezpieczeństwa.
 Dokumentację repozytorium i wbudowane komunikaty polityki prywatności uzupełniono o
 wielostronicowe skany i ich limity, import chronionych hasłem
 arkuszy XLSX, pomijanie załączników 1Password, automatyczne kopie po zapisie, różnicę
-między zaszyfrowanym backupem a eksportami plaintext oraz nowy model: wszystkie funkcje
-sejfu są bezpłatne, a zakup `pro_unlock` usuwa wyłącznie reklamę. Publiczną politykę
-prywatności i deklarację Data Safety trzeba zsynchronizować z wdrożonymi SDK AdMob/UMP.
+między zaszyfrowanym backupem a eksportami plaintext oraz przywrócony model Free/Pro.
+Reklamy i SDK AdMob/UMP zostały usunięte; przed wydaniem należy potwierdzić, że publiczna
+polityka prywatności i deklaracja Data Safety odpowiadają finalnemu AAB oraz pozostałym
+SDK.
 Stan walidacji i pozostałe bramki wydania zapisano w [statusie VLT3](VLT3_IMPLEMENTATION_PROGRESS.md)
 i [audycie bezpieczeństwa](SECURITY_AUDIT.md).

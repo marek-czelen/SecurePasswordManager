@@ -2,7 +2,6 @@ package com.cretorix.securepasswordmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -23,7 +22,7 @@ public final class SettingsActivity extends AppCompatActivity {
     public static final String EXTRA_REMOTE_LINKED = "settings_remote_linked";
     public static final String EXTRA_REMOTE_STATUS = "settings_remote_status";
     public static final String EXTRA_DEBUG_OVERRIDE = "settings_debug_override";
-    public static final String EXTRA_DEBUG_AD_FREE = "settings_debug_ad_free";
+    public static final String EXTRA_DEBUG_PRO = "settings_debug_pro";
 
     public static final String ACTION_SHOW_RECOVERY = "show_recovery";
     public static final String ACTION_SHOW_PASSPHRASE_QR = "show_passphrase_qr";
@@ -42,11 +41,9 @@ public final class SettingsActivity extends AppCompatActivity {
     private MaterialSwitch autoLockSwitch;
     private PremiumManager premiumManager;
     private GooglePlayBillingManager billingManager;
-    private GoogleAdsConsentManager adsConsentManager;
-    private TextView adsStatus;
-    private MaterialButton removeAdsButton;
-    private MaterialButton adsPrivacyOptionsButton;
-    private boolean adRemovalProductAvailable;
+    private TextView playPremiumStatus;
+    private MaterialButton buyProButton;
+    private boolean proProductAvailable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,36 +67,22 @@ public final class SettingsActivity extends AppCompatActivity {
                 getOnBackPressedDispatcher().onBackPressed());
 
         premiumManager = new PremiumManager(this);
-        View premiumRow = findViewById(R.id.rowAdRemovalDebug);
+        View premiumRow = findViewById(R.id.rowPremiumDebug);
         boolean debugOverrideAvailable =
                 getIntent().getBooleanExtra(EXTRA_DEBUG_OVERRIDE, false);
         premiumRow.setVisibility(debugOverrideAvailable ? View.VISIBLE : View.GONE);
         if (debugOverrideAvailable) {
-            MaterialSwitch premiumSwitch = findViewById(R.id.switchAdFreeDebug);
-            TextView premiumStatus = findViewById(R.id.adRemovalDebugStatus);
-            boolean isAdFree = getIntent().getBooleanExtra(EXTRA_DEBUG_AD_FREE, false);
-            premiumSwitch.setChecked(isAdFree);
-            updatePremiumStatus(premiumStatus, isAdFree);
+            MaterialSwitch premiumSwitch = findViewById(R.id.switchPremiumDebug);
+            TextView premiumStatus = findViewById(R.id.premiumDebugStatus);
+            boolean isPro = getIntent().getBooleanExtra(EXTRA_DEBUG_PRO, false);
+            premiumSwitch.setChecked(isPro);
+            updatePremiumStatus(premiumStatus, isPro);
             premiumSwitch.setOnCheckedChangeListener((button, checked) -> {
-                premiumManager.setDebugAdFree(checked);
+                premiumManager.setDebugPro(checked);
                 updatePremiumStatus(premiumStatus, checked);
             });
         }
         initializePlayBilling();
-        adsConsentManager = new GoogleAdsConsentManager(this);
-        adsPrivacyOptionsButton = findViewById(R.id.buttonAdsPrivacyOptions);
-        adsPrivacyOptionsButton.setOnClickListener(view -> {
-            adsPrivacyOptionsButton.setEnabled(false);
-            adsConsentManager.showPrivacyOptions(this, (canRequestAds, error) -> {
-                if (error != null) {
-                    Log.w("SPM_AD_PRIVACY", "Could not show ad privacy options: "
-                            + error.getMessage());
-                }
-                adsPrivacyOptionsButton.setEnabled(true);
-                updateAdsPrivacyOptionsButton();
-            });
-        });
-        updateAdsPrivacyOptionsButton();
 
         findViewById(R.id.rowRecovery).setOnClickListener(view ->
                 returnAction(ACTION_SHOW_RECOVERY));
@@ -150,7 +133,6 @@ public final class SettingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateAutofillStatus();
-        updateAdsPrivacyOptionsButton();
     }
 
     @Override
@@ -162,17 +144,17 @@ public final class SettingsActivity extends AppCompatActivity {
     }
 
     private void initializePlayBilling() {
-        adsStatus = findViewById(R.id.adsStatus);
-        removeAdsButton = findViewById(R.id.buttonRemoveAds);
-        MaterialButton restoreButton = findViewById(R.id.buttonRestoreAds);
-        updateAdRemovalStatus();
-        if (!premiumManager.isPlayAdFree()) {
-            adsStatus.setText(R.string.premium_status_connecting);
+        playPremiumStatus = findViewById(R.id.premiumPlayStatus);
+        buyProButton = findViewById(R.id.buttonBuyPro);
+        MaterialButton restoreButton = findViewById(R.id.buttonRestorePro);
+        updatePlayPremiumStatus();
+        if (!premiumManager.isPlayPro()) {
+            playPremiumStatus.setText(R.string.premium_status_connecting);
         }
 
-        removeAdsButton.setOnClickListener(view -> billingManager.launchPurchase(this));
+        buyProButton.setOnClickListener(view -> billingManager.launchPurchase(this));
         restoreButton.setOnClickListener(view -> {
-            adsStatus.setText(R.string.premium_status_connecting);
+            playPremiumStatus.setText(R.string.premium_status_connecting);
             billingManager.restorePurchases();
         });
 
@@ -180,62 +162,55 @@ public final class SettingsActivity extends AppCompatActivity {
                 new GooglePlayBillingManager.Listener() {
                     @Override
                     public void onProductAvailable(String formattedPrice) {
-                        adRemovalProductAvailable = true;
-                        removeAdsButton.setText(getString(
+                        proProductAvailable = true;
+                        buyProButton.setText(getString(
                                 R.string.premium_action_buy_price, formattedPrice));
-                        updateAdRemovalStatus();
+                        updatePlayPremiumStatus();
                     }
 
                     @Override
                     public void onProductUnavailable() {
-                        adRemovalProductAvailable = false;
-                        removeAdsButton.setEnabled(false);
-                        if (!premiumManager.isPlayAdFree()) {
-                            adsStatus.setText(R.string.premium_status_product_unavailable);
+                        proProductAvailable = false;
+                        buyProButton.setEnabled(false);
+                        if (!premiumManager.isPlayPro()) {
+                            playPremiumStatus.setText(R.string.premium_status_product_unavailable);
                         }
                     }
 
                     @Override
                     public void onEntitlementChanged() {
-                        updateAdRemovalStatus();
+                        updatePlayPremiumStatus();
                     }
 
                     @Override
-                    public void onRestoreCompleted(boolean hasAdFreePurchase) {
-                        adsStatus.setText(hasAdFreePurchase
+                    public void onRestoreCompleted(boolean hasProPurchase) {
+                        playPremiumStatus.setText(hasProPurchase
                                 ? R.string.premium_status_restore_found
                                 : R.string.premium_status_restore_not_found);
                     }
 
                     @Override
                     public void onPurchasePending() {
-                        adsStatus.setText(R.string.premium_status_pending);
+                        playPremiumStatus.setText(R.string.premium_status_pending);
                     }
 
                     @Override
                     public void onPurchaseCanceled() {
-                        updateAdRemovalStatus();
+                        updatePlayPremiumStatus();
                     }
 
                     @Override
                     public void onBillingUnavailable() {
-                        adsStatus.setText(R.string.premium_status_billing_unavailable);
+                        playPremiumStatus.setText(R.string.premium_status_billing_unavailable);
                     }
                 });
         billingManager.start();
     }
 
-    private void updateAdRemovalStatus() {
-        adsStatus.setText(premiumManager.isPlayAdFree()
+    private void updatePlayPremiumStatus() {
+        playPremiumStatus.setText(premiumManager.isPlayPro()
                 ? R.string.premium_status_pro : R.string.premium_status_free);
-        removeAdsButton.setEnabled(adRemovalProductAvailable && !premiumManager.isPlayAdFree());
-    }
-
-    private void updateAdsPrivacyOptionsButton() {
-        if (adsPrivacyOptionsButton != null) {
-            adsPrivacyOptionsButton.setVisibility(
-                    adsConsentManager.isPrivacyOptionsRequired() ? View.VISIBLE : View.GONE);
-        }
+        buyProButton.setEnabled(proProductAvailable && !premiumManager.isPlayPro());
     }
 
     private void requestAutofillService() {
@@ -259,9 +234,9 @@ public final class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private void updatePremiumStatus(TextView status, boolean isAdFree) {
+    private void updatePremiumStatus(TextView status, boolean isPro) {
         status.setText(getString(R.string.premium_debug_status,
-                isAdFree ? getString(R.string.premium_pro) : getString(R.string.premium_free)));
+                isPro ? getString(R.string.premium_pro) : getString(R.string.premium_free)));
     }
 
     private void updateAutoLockStatus() {

@@ -16,8 +16,6 @@ cameraX = "1.4.2"
 opencv = "4.12.0"
 apachePoi = "5.4.1"
 playBilling = "9.1.0"
-googleMobileAds = "25.5.0"
-googleUmp = "4.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,8 +36,6 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 opencv = { group = "org.opencv", name = "opencv", version.ref = "opencv" }
 apache-poi = { group = "org.apache.poi", name = "poi", version.ref = "apachePoi" }
 play-billing = { group = "com.android.billingclient", name = "billing", version.ref = "playBilling" }
-google-mobile-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "googleMobileAds" }
-google-ump = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "googleUmp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -18,8 +18,10 @@ hybrid encrypted vault.
 - Small bounded encrypted text block plus separately encrypted immutable image,
   thumbnail, document-page and file objects.
 - Password entries, named images, multi-page scanned documents and files appear in the
-  same searchable list. Media is loaded only when needed. All vault features are free;
-  file, document, history and advanced import/export features have no subscription gate.
+  same searchable list. Media is loaded only when needed. Free includes one file, one
+  scanned document, two previous passwords per entry and five entries per advanced
+  import/export operation; the one-time Pro purchase lifts those plan quotas, subject to
+  VLT3 technical limits.
 - Copy-on-write saves with `manifest.current` as the commit point and
   `manifest.previous` for recovery.
 - Encrypted backup/export, passphrase+Recovery-QR import, and an optional
@@ -28,11 +30,10 @@ hybrid encrypted vault.
 - On-device OCR review, document scanning, clipboard timeout and `FLAG_SECURE`.
 - Polish, English, German and French UI resources.
 
-An optional one-time Google Play Billing product (`pro_unlock`) removes the AdMob banner
-shown only on the unlock screen. The ad-free entitlement is cached locally for offline
-use. Debug builds include test ads and a debug-only ad-free override. Release builds
-require AdMob app and banner IDs in user-level Gradle properties; use Google's test IDs
-only for internal-test bundles and real IDs for production.
+The app does not show ads. The one-time Google Play Billing product `pro_unlock` grants
+Pro; its entitlement is cached locally for offline use. The product ID and `play_pro`
+entitlement key remain compatible with previous purchases. Debug builds expose a
+debug-only Free/Pro override.
 
 VLT2 is not supported or migrated. If an old `vault.vlt` exists, use the previous app
 version to export its data before creating a VLT3 vault.
@@ -90,11 +91,10 @@ SECURITY_DESIGN.md                VLT3 key hierarchy, storage and transaction mo
 ## Privacy and release
 
 The app has no publisher-controlled account, analytics or vault backend. OCR runs
-on-device. AdMob requests are made only on the unlock screen and never include vault
-contents; Google may process advertising-related data under its own privacy terms.
-Google UMP manages consent and privacy options. Vault backups are encrypted; explicitly
-exported attachments and CSV exports contain plaintext at the user-selected destination.
-External document providers apply their own storage and privacy terms.
+on-device. The app contains no advertising or ad-consent SDKs. Vault backups are
+encrypted; explicitly exported attachments and CSV exports contain plaintext at the
+user-selected destination. External document providers apply their own storage and
+privacy terms.
 
 Before publication, replace placeholders in `docs/PRIVACY_POLICY.md`, review SDK
 privacy practices and complete `docs/GOOGLE_PLAY_RELEASE_CHECKLIST.md`. The

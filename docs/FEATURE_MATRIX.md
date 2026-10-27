@@ -1,14 +1,9 @@
-# Feature availability and advertising model
+# Feature availability and Free/Pro model
 
-All implemented vault features are available without purchase. The only optional paid
-product removes the AdMob banner on the unlock screen. Security, recovery, attachments,
-history, import/export and backups are not paywalled.
-
-**Release entitlement note:** Google Play Billing is integrated for a one-time ad-removal
-purchase with product ID `pro_unlock`. The purchase is cached locally so the app remains
-ad-free offline. Debug builds use Google's test ad IDs and expose an ad-free test switch;
-release builds require AdMob app and banner IDs through user-level Gradle properties.
-Use Google's test IDs only for internal-test bundles and real IDs for production.
+The app has no advertisements. Free provides the core vault with quantitative limits;
+the optional one-time Google Play product `pro_unlock` upgrades the user to Pro. Pro
+entitlement is cached locally for offline use. The existing entitlement preference key
+is retained so previous purchasers keep Pro access.
 
 ## Implemented today
 
@@ -18,23 +13,24 @@ Use Google's test IDs only for internal-test bundles and real IDs for production
 | Argon2id passphrase + independent QR recovery | Implemented | Yes |
 | Hardware-backed device unlock (strong biometric or Android screen credential) | Implemented | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes |
-| Password entries and up to 5 previous passwords per entry | Implemented | Yes |
-| File attachments up to 10 MiB | Implemented | Yes |
-| Advanced import/export | Implemented | CSV/XLSX mapping (including password-protected XLSX), Bitwarden JSON, KeePass XML, 1Password 1PUX import and CSV export |
+| Password entries and password history | Implemented | Yes; Free retains/shows up to 2 previous passwords per entry, Pro up to 5 |
+| File attachments up to 10 MiB | Implemented | Free: 1 file; Pro: no plan count limit |
+| Scanned documents | Implemented | Free: 1 document; Pro: no plan count limit |
+| Advanced import/export | Implemented | Free: up to 5 entries per operation; Pro: no per-operation plan limit |
 | Favorites, folders, tags and search | Implemented | Yes |
 | Password generator | Implemented | Yes |
 | TOTP codes | Implemented | Yes |
 | Local weak/reused password health | Implemented | Yes |
 | Android Autofill and Credential Manager password provider | Implemented | Yes |
 | Named JPG image entries in the common list | Implemented | Yes, within VLT3 limits |
-| Multi-page JPG document scans | Implemented | Yes; up to 20 pages, 10 MiB per page and 60 MiB per document |
+| Multi-page JPG document scans | Implemented | Yes; plan quota above, plus technical limits of 20 pages, 10 MiB per page and 60 MiB per document |
 | Manual encrypted export/import | Implemented | Yes |
 | User-selected automatic encrypted backup | Implemented | Yes; refreshed after each successful save |
 | Recovery QR and passphrase QR printing/sharing | Implemented | Yes |
 | OCR review/crop flow | Implemented as optional code path | Yes |
 | Polish/English/German/French UI | Implemented | Yes |
 | In-app user guide | Implemented | Yes |
-| Unlock-screen AdMob banner | Implemented | Removed by one-time `pro_unlock` purchase |
+| Advertising | Removed | No ads SDK or advertising requests |
 
 ## Not implemented
 
@@ -71,9 +67,6 @@ Implementation reference: [Android Autofill services](https://developer.android.
 
 ## Features available regardless of purchase
 
-These core trust and safety features, along with every other implemented vault feature,
-do not depend on the ad-removal purchase:
-
 - encryption and DEK protection;
 - passphrase policy;
 - device-authenticated unlock;
@@ -84,15 +77,22 @@ do not depend on the ad-removal purchase:
 - screenshot protection;
 - Android Autofill and Credential Manager password retrieval, including safe site matching;
 - accessibility and localization;
-- access to existing user data.
+- access to existing vault entries and attachments, including content already above
+  Free's file/document quotas and password history already above its new-history quota.
+
+The plan quotas affect adding additional files/documents and the number of records in a
+single advanced import/export operation. They never delete existing data or limit a full
+encrypted vault backup. VLT3 technical caps (such as 10,000 entries and 100 MiB active
+vault size) remain in effect for all plans.
 
 ## Debug testing
 
-Debug builds expose an **ads / ad-free test mode** in Settings. It is guarded by
-`BuildConfig.DEBUG` and is absent from release builds. It only changes whether the unlock
-screen banner is shown; it never changes cryptographic keys or vault access.
+Debug builds expose a **Free / Pro test mode** in Settings. It is guarded by
+`BuildConfig.DEBUG` and is absent from release builds. It only changes tier quotas; it
+never changes cryptographic keys or vault access.
 
-Release builds use the Play Billing ad-removal entitlement, not the debug switch. The
-device-local cache preserves the ad-free state while offline; a successful Play purchase
-query clears it if there is neither a purchased nor a pending item. The cache is not
-transferred on reinstall, so the purchase must be restored from Play again.
+Release builds use the Play Billing Pro entitlement, not the debug switch. The existing
+`pro_unlock` product and locally cached `play_pro` entitlement preserve Pro access for
+previous purchasers. A successful Play purchase query clears the cache only if there is
+neither a purchased nor a pending item. The cache is not transferred on reinstall, so a
+purchase may need to be restored from Play again.
