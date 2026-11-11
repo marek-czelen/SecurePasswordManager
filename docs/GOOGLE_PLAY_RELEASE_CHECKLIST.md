@@ -11,16 +11,9 @@ before submitting the app.
 - [ ] Build and upload an Android App Bundle (`.aab`), not a debug APK.
 - [ ] Increment `versionCode` and set a production `versionName`.
 - [ ] Confirm the release build is not debuggable and has release signing.
-- [ ] Keep/activate the one-time in-app product `pro_unlock` as the Pro purchase. Update
-  its Play Console title and description to explain the Free/Pro quotas. Previous buyers
-  retain Pro entitlement.
-- [ ] Add Google accounts as license testers, publish an internal testing release, and
-  install it from the Play Store opt-in link. Test purchase, acknowledgement, restore,
-  pending purchase and offline cached access with a Play test payment method; test
-  purchases do not charge the tester.
-- [ ] Confirm restored purchases are queried from Play after reinstall/device transfer;
-  the cached Pro entitlement is device-local and is cleared after an authoritative
-  successful query reports no purchased or pending Pro item.
+- [ ] Set the Play listing to free distribution and verify no in-app purchase is offered.
+- [ ] Retire the legacy `pro_unlock` product from the active Play Console listing; all
+  app features are now available without purchase or entitlement restoration.
 - [ ] Keep the Play upload key separate from vault/recovery secrets.
 
 ## Technical requirements
@@ -49,9 +42,8 @@ before submitting the app.
 - [ ] App name, short description, full description and screenshots are truthful.
 - [ ] Do not claim “unbreakable”, “anonymous”, or guaranteed plausible deniability.
 - [ ] Explain that the app is local-first and that a Recovery QR is a secret.
-- [ ] Explain the Free quotas (one file, one document, two previous passwords per entry,
-  five imported/exported entries per operation) and that Pro removes those plan quotas,
-  subject to technical VLT3 limits.
+- [ ] State that all features are free with no plan quotas, ads or in-app purchases;
+  disclose that technical VLT3 format and data-size limits still apply.
 - [ ] Explain that unlock requires a secure Android screen credential and hardware-backed
   Android Keystore/KeyMint; biometric enrollment is optional.
 - [ ] Provide a support email: `<support email>`.
@@ -64,8 +56,8 @@ before submitting the app.
 ## App content and data declarations
 
 - [ ] Complete the Data safety form from the actual release build and SDK behavior.
-- [ ] Confirm that the release contains no advertising or AdMob/UMP SDKs and review
-  current Data Safety disclosures for Google Play Billing and remaining SDKs.
+- [ ] Confirm that the release contains no advertising, AdMob/UMP or Google Play Billing
+  SDKs and review current Data Safety disclosures for remaining SDKs.
 - [ ] Declare camera access for user-triggered OCR, image capture, document scanning
   and calibration.
 - [ ] Declare local processing of authentication information, passwords, notes and

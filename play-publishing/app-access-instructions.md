@@ -21,15 +21,10 @@ Nie ma gotowych danych logowania ani zdalnego konta demonstracyjnego.
    urządzenia.
 5. W sejfie użyj przycisku **Dodaj** i twórz wyłącznie syntetyczne dane testowe.
 
-Po utworzeniu sejfu można testować funkcje bez konta zewnętrznego. Plan Free pozwala
-dodać jeden plik i jeden skan dokumentu, przechowuje do dwóch poprzednich haseł na wpis
-i pozwala na pięć wpisów na zaawansowaną operację importu/eksportu. Pełne zaszyfrowane
-kopie sejfu nie mają limitu planowego. Aplikacja nie wyświetla reklam.
-
-Jednorazowy zakup Google Play `pro_unlock` aktywuje Pro: usuwa limity planowe liczby
-plików/dokumentów i liczby wpisów na operację importu/eksportu, a historię zwiększa do
-pięciu poprzednich haseł na wpis. Test zakupu wymaga licencjonowanego konta Google Play;
-nie jest wymagany do sprawdzenia limitów Free.
+Po utworzeniu sejfu wszystkie funkcje można testować bez konta zewnętrznego, zakupów ani
+specjalnego konta Google Play. Aplikacja jest całkowicie bezpłatna i nie wyświetla
+reklam. Nie ma limitów planowych; obowiązują wyłącznie techniczne limity formatu i
+rozmiaru danych.
 
 ## Test autouzupełniania (opcjonalnie)
 
@@ -42,8 +37,3 @@ nie jest wymagany do sprawdzenia limitów Free.
   Autouzupełnianie z innej usługi**. Nazwy i położenie ustawień zależą od wersji Chrome
   i producenta urządzenia.
 - Otwórz testową stronę logowania, wybierz podpowiedź SecureVault i uwierzytelnij się.
-
-## Przywrócenie zakupu Pro
-
-Zakup Pro można przywrócić z Ustawień na tym samym koncie Google Play. Dotychczasowy
-zakup usunięcia reklam pod tym samym identyfikatorem `pro_unlock` nadal przyznaje Pro.

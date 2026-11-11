@@ -3,7 +3,9 @@ package com.cretorix.securepasswordmanager.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.DocumentsContract;
 import com.cretorix.securepasswordmanager.crypto.Crypto;
 import com.cretorix.securepasswordmanager.crypto.KdfParameters;
 import com.cretorix.securepasswordmanager.crypto.PassphraseQrPayload;
@@ -39,8 +41,10 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.crypto.Cipher;
@@ -53,11 +57,25 @@ public final class VaultV3Repository {
         }
     }
 
+    public static final class RemoteSyncResult {
+        public final VaultData data;
+        public final boolean localChanged;
+        public final Exception remoteWriteFailure;
+
+        private RemoteSyncResult(VaultData data, boolean localChanged,
+                                 Exception remoteWriteFailure) {
+            this.data = data;
+            this.localChanged = localChanged;
+            this.remoteWriteFailure = remoteWriteFailure;
+        }
+    }
+
     private static final String PREFS = "local_vault_state_v3";
     private static final String PREF_FAILED = "failed_attempts";
     private static final String PREF_LOCKED_UNTIL = "locked_until";
     private static final String PREF_QR_WRAPPED_PREFIX = "qr_wrapped_";
     private static final String PREF_REMOTE_URI = "remote_uri";
+    private static final String PREF_REMOTE_SYNC_BASELINE = "remote_sync_baseline";
     private static final int MAX_FAILURES_BEFORE_DELAY = 5;
     private final Context context;
     private final File root;
@@ -482,9 +500,11 @@ public final class VaultV3Repository {
             throw new IOException("Cannot persist access to the selected location", exception);
         }
         exportCopy(uri, dek);
-        if (!state.edit().putString(PREF_REMOTE_URI, uri.toString()).commit()) {
+        if (!state.edit().putString(PREF_REMOTE_URI, uri.toString())
+                .remove(PREF_REMOTE_SYNC_BASELINE).commit()) {
             throw new IOException("Could not save the backup location");
         }
+        recordRemoteWrite(uri);
     }
 
     public boolean hasRemote() {
@@ -503,13 +523,276 @@ public final class VaultV3Repository {
     }
 
     public void unlinkRemote() {
-        state.edit().remove(PREF_REMOTE_URI).apply();
+        state.edit().remove(PREF_REMOTE_URI)
+                .remove(PREF_REMOTE_SYNC_BASELINE)
+                .apply();
     }
 
     public void pushRemote(byte[] dek) throws IOException, GeneralSecurityException {
         String value = state.getString(PREF_REMOTE_URI, null);
         if (value != null) {
-            exportCopy(Uri.parse(value), dek);
+            Uri uri = Uri.parse(value);
+            exportCopy(uri, dek);
+            recordRemoteWrite(uri);
+        }
+    }
+
+    public synchronized RemoteSyncResult syncRemoteIfNewer(byte[] dek, VaultData localData)
+            throws IOException, GeneralSecurityException {
+        if (dek == null || dek.length != Crypto.KEY_SIZE || localData == null) {
+            throw new IllegalArgumentException("Invalid remote synchronization input");
+        }
+        String remoteValue = state.getString(PREF_REMOTE_URI, null);
+        if (remoteValue == null) {
+            return new RemoteSyncResult(localData, false, null);
+        }
+        Uri uri = Uri.parse(remoteValue);
+        long remoteModified = remoteLastModified(uri);
+        long baseline = state.getLong(PREF_REMOTE_SYNC_BASELINE, 0);
+        if (baseline <= 0) {
+            long localModified = new File(root, "manifest.current").lastModified();
+            if (localModified <= 0 || remoteModified <= localModified) {
+                storeRemoteSyncBaseline(remoteModified);
+                return new RemoteSyncResult(localData, false, null);
+            }
+            baseline = localModified;
+            storeRemoteSyncBaseline(baseline);
+        }
+        if (remoteModified <= baseline) {
+            return new RemoteSyncResult(localData, false, null);
+        }
+
+        VaultHeaderV3 localHeader = headerStore.read();
+        VaultManifest localManifest = readManifest(localHeader, dek, false);
+        Map<String, VaultObjectRef> localResources = new HashMap<>();
+        for (VaultObjectRef ref : localManifest.resources) {
+            localResources.put(VaultObjectIds.toHex(ref.objectId), ref);
+        }
+
+        File stagingRoot = Files.createTempDirectory(context.getCacheDir().toPath(),
+                "vlt3-sync-").toFile();
+        List<VaultObjectRef> importedResources = new ArrayList<>();
+        ItemMergeResult mergeResult;
+        VaultData remoteData;
+        byte[] encodedHeader = null;
+        byte[] encodedManifest = null;
+        byte[] encodedText = null;
+        try {
+            try (InputStream input = context.getContentResolver().openInputStream(uri)) {
+                if (input == null) {
+                    throw new IOException("Automatic backup stream is unavailable");
+                }
+                VaultBackupV3.BackupReader reader = VaultBackupV3.open(input);
+                encodedHeader = reader.encodedHeader();
+                encodedManifest = reader.encodedManifest();
+
+                VaultHeaderV3 remoteHeader = VaultHeaderV3.decode(encodedHeader);
+                if (!Crypto.constantTimeEquals(localHeader.vaultId, remoteHeader.vaultId)) {
+                    throw new GeneralSecurityException(
+                            "Automatic backup belongs to a different vault");
+                }
+                VaultManifest remoteManifest = VaultManifestCodec.open(
+                        encodedManifest, dek, remoteHeader.vaultId);
+                VaultObjectStore stagingObjects = new VaultObjectStore(
+                        new File(stagingRoot, "objects"), remoteHeader.vaultId);
+                reader.importObjects(remoteManifest, stagingObjects);
+                encodedText = stagingObjects.read(remoteManifest.textBlock, dek);
+                remoteData = VaultTextDataCodec.decode(encodedText);
+                validateResourceLinks(remoteData, remoteManifest.resources);
+                if (remoteLastModified(uri) != remoteModified) {
+                    throw new IOException("Automatic backup changed during synchronization");
+                }
+                mergeResult = mergeRemoteItems(localData, remoteData);
+
+                if (mergeResult.changed) {
+                    VaultObjectStore localObjects = objectStore(localHeader);
+                    for (VaultObjectRef ref : remoteManifest.resources) {
+                        String id = VaultObjectIds.toHex(ref.objectId);
+                        VaultObjectRef localRef = localResources.get(id);
+                        if (localRef != null) {
+                            if (!sameObjectReference(localRef, ref)) {
+                                throw new IOException(
+                                        "Remote backup contains a conflicting object reference");
+                            }
+                            continue;
+                        }
+                        File localObject = localObjects.fileFor(ref.objectId);
+                        if (localObject.isFile()) {
+                            byte[] validated = localObjects.read(ref, dek);
+                            Crypto.wipe(validated);
+                        } else {
+                            try (InputStream objectInput =
+                                         new FileInputStream(stagingObjects.fileFor(ref.objectId))) {
+                                localObjects.importObject(ref, objectInput,
+                                        VaultObjectStore.encodedLength(ref));
+                            }
+                        }
+                        importedResources.add(ref);
+                    }
+                }
+            }
+        } finally {
+            Crypto.wipe(encodedHeader);
+            Crypto.wipe(encodedManifest);
+            Crypto.wipe(encodedText);
+            cleanupRemoteSyncStaging(stagingRoot);
+        }
+
+        if (mergeResult.changed) {
+            commitUpdated(localHeader, dek, mergeResult.data,
+                    java.util.Collections.emptyList(), importedResources);
+        }
+
+        Exception remoteWriteFailure = null;
+        try {
+            if (sameVaultData(mergeResult.data, remoteData)) {
+                storeRemoteSyncBaseline(remoteModified);
+            } else {
+                if (remoteLastModified(uri) != remoteModified) {
+                    throw new IOException("Automatic backup changed during synchronization");
+                }
+                exportCopy(uri, dek);
+                storeRemoteSyncBaseline(remoteLastModified(uri));
+            }
+        } catch (IOException | GeneralSecurityException | RuntimeException exception) {
+            remoteWriteFailure = exception;
+        }
+        return new RemoteSyncResult(mergeResult.data, mergeResult.changed, remoteWriteFailure);
+    }
+
+    static ItemMergeResult mergeRemoteItems(VaultData localData, VaultData remoteData) {
+        if (localData == null || remoteData == null) {
+            throw new IllegalArgumentException("Vault data is required for merging");
+        }
+        Map<String, VaultItem> merged = new LinkedHashMap<>();
+        for (VaultItem item : localData.items) {
+            merged.put(item.entryId, item);
+        }
+        boolean changed = false;
+        for (VaultItem remoteItem : remoteData.items) {
+            VaultItem localItem = merged.get(remoteItem.entryId);
+            if (localItem == null || !sameVaultItem(localItem, remoteItem)) {
+                merged.put(remoteItem.entryId, remoteItem);
+                changed = true;
+            }
+        }
+        return new ItemMergeResult(new VaultData(new ArrayList<>(merged.values())), changed);
+    }
+
+    static boolean sameVaultData(VaultData first, VaultData second) {
+        if (first == null || second == null || first.items.size() != second.items.size()) {
+            return false;
+        }
+        Map<String, VaultItem> indexed = new HashMap<>();
+        for (VaultItem item : first.items) {
+            indexed.put(item.entryId, item);
+        }
+        for (VaultItem item : second.items) {
+            VaultItem match = indexed.get(item.entryId);
+            if (match == null || !sameVaultItem(match, item)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean sameVaultItem(VaultItem first, VaultItem second) {
+        return Objects.equals(first.entryId, second.entryId)
+                && Objects.equals(first.title, second.title)
+                && Objects.equals(first.username, second.username)
+                && Objects.equals(first.password, second.password)
+                && Objects.equals(first.url, second.url)
+                && Objects.equals(first.appPackageName, second.appPackageName)
+                && Objects.equals(first.notes, second.notes)
+                && Objects.equals(first.tags, second.tags)
+                && Objects.equals(first.folder, second.folder)
+                && Objects.equals(first.totpSecret, second.totpSecret)
+                && first.favorite == second.favorite
+                && Objects.equals(first.type, second.type)
+                && Objects.equals(first.attachmentId, second.attachmentId)
+                && Objects.equals(first.thumbnailId, second.thumbnailId)
+                && Objects.equals(first.contentType, second.contentType)
+                && first.attachmentSize == second.attachmentSize
+                && first.documentPageIds.equals(second.documentPageIds)
+                && first.passwordHistory.equals(second.passwordHistory);
+    }
+
+    private static boolean sameObjectReference(VaultObjectRef first, VaultObjectRef second) {
+        return first.type == second.type
+                && Crypto.constantTimeEquals(first.objectId, second.objectId)
+                && Crypto.constantTimeEquals(first.generationId, second.generationId)
+                && ((first.ownerEntryId == null && second.ownerEntryId == null)
+                || (first.ownerEntryId != null && second.ownerEntryId != null
+                && Crypto.constantTimeEquals(first.ownerEntryId, second.ownerEntryId)))
+                && first.plaintextLength == second.plaintextLength
+                && first.ciphertextLength == second.ciphertextLength
+                && Crypto.constantTimeEquals(first.ciphertextSha256, second.ciphertextSha256)
+                && first.objectSchemaVersion == second.objectSchemaVersion
+                && first.contentType.equals(second.contentType);
+    }
+
+    private long remoteLastModified(Uri uri) throws IOException {
+        try (Cursor cursor = context.getContentResolver().query(uri,
+                new String[]{DocumentsContract.Document.COLUMN_LAST_MODIFIED},
+                null, null, null)) {
+            if (cursor == null || !cursor.moveToFirst()) {
+                throw new IOException("Automatic backup modification time is unavailable");
+            }
+            int column = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
+            if (column < 0 || cursor.isNull(column)) {
+                throw new IOException("Automatic backup provider does not expose modification time");
+            }
+            long modified = cursor.getLong(column);
+            if (modified <= 0) {
+                throw new IOException("Automatic backup modification time is invalid");
+            }
+            return modified;
+        } catch (IllegalArgumentException | SecurityException
+                 | UnsupportedOperationException exception) {
+            throw new IOException("Could not read automatic backup modification time",
+                    exception);
+        }
+    }
+
+    private void storeRemoteSyncBaseline(long modified) throws IOException {
+        if (modified <= 0 || !state.edit().putLong(PREF_REMOTE_SYNC_BASELINE, modified).commit()) {
+            throw new IOException("Could not store automatic backup synchronization state");
+        }
+    }
+
+    private void recordRemoteWrite(Uri uri) {
+        try {
+            storeRemoteSyncBaseline(remoteLastModified(uri));
+        } catch (IOException exception) {
+            android.util.Log.w("SPM_SYNC", "Could not record automatic backup modification time",
+                    exception);
+        }
+    }
+
+    private static void cleanupRemoteSyncStaging(File stagingRoot) throws IOException {
+        if (!stagingRoot.exists()) {
+            return;
+        }
+        File objects = new File(stagingRoot, "objects");
+        if (objects.exists()) {
+            VaultObjectStore.deleteAllInDirectory(objects);
+            if (!objects.delete()) {
+                throw new IOException("Could not remove remote sync staging objects");
+            }
+        }
+        File[] leftovers = stagingRoot.listFiles();
+        if (leftovers == null || leftovers.length != 0 || !stagingRoot.delete()) {
+            throw new IOException("Could not clean remote sync staging directory");
+        }
+    }
+
+    static final class ItemMergeResult {
+        final VaultData data;
+        final boolean changed;
+
+        ItemMergeResult(VaultData data, boolean changed) {
+            this.data = data;
+            this.changed = changed;
         }
     }
 
@@ -714,7 +997,14 @@ public final class VaultV3Repository {
     private synchronized void commitUpdated(VaultHeaderV3 header, byte[] dek, VaultData updated,
                                             List<PendingVaultAsset> pending)
             throws IOException, GeneralSecurityException {
-        if (updated == null || pending == null) {
+        commitUpdated(header, dek, updated, pending, java.util.Collections.emptyList());
+    }
+
+    private synchronized void commitUpdated(VaultHeaderV3 header, byte[] dek, VaultData updated,
+                                            List<PendingVaultAsset> pending,
+                                            List<VaultObjectRef> importedResources)
+            throws IOException, GeneralSecurityException {
+        if (updated == null || pending == null || importedResources == null) {
             throw new IOException("Invalid VLT3 update");
         }
         byte[] encodedText = VaultTextDataCodec.encode(updated);
@@ -725,11 +1015,18 @@ public final class VaultV3Repository {
             for (VaultObjectRef ref : current.resources) {
                 available.put(VaultObjectIds.toHex(ref.objectId), ref);
             }
-            Set<String> pendingIds = new HashSet<>();
+            Set<String> newObjectIds = new HashSet<>();
             try {
+                for (VaultObjectRef ref : importedResources) {
+                    String id = VaultObjectIds.toHex(ref.objectId);
+                    if (!newObjectIds.add(id) || available.containsKey(id)) {
+                        throw new IOException("Duplicate VLT3 resource ID");
+                    }
+                    available.put(id, ref);
+                }
                 for (PendingVaultAsset asset : pending) {
                     String id = VaultObjectIds.toHex(asset.objectId);
-                    if (!pendingIds.add(id) || available.containsKey(id)) {
+                    if (!newObjectIds.add(id) || available.containsKey(id)) {
                         throw new IOException("Duplicate VLT3 resource ID");
                     }
                     VaultObjectRef ref = objectStore.writeWithId(dek, asset.objectId,
@@ -737,7 +1034,7 @@ public final class VaultV3Repository {
                     available.put(id, ref);
                 }
 
-                List<VaultObjectRef> resources = referencesFor(updated, available, pendingIds);
+                List<VaultObjectRef> resources = referencesFor(updated, available, newObjectIds);
                 long activeBytes = encodedText.length;
                 for (VaultObjectRef ref : resources) {
                     activeBytes = Math.addExact(activeBytes, ref.plaintextLength);

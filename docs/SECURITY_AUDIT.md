@@ -34,13 +34,13 @@
   guaranteed.
 - Keystore/biometric/AtomicFile/fsync behavior still needs physical-device verification;
   no connected-device result is included in this audit.
-- Google Play Billing handles the one-time `pro_unlock` purchase that removes the
-  unlock-screen ad; no vault feature is gated by that purchase.
+- All features are available without payment. The app includes no Google Play Billing
+  integration, entitlement checks or in-app purchase flow.
 - The latest local `lintDebug` run failed with 5 errors and 86 warnings: an AppCompat
   tint attribute and missing German/French XLSX translations. Resolve and rerun lint
   before release.
-- Confirm the live privacy policy, Play listing and Data Safety answers against the
-  final release SDKs and Free/Pro purchase model.
+- Confirm the live privacy policy and Play listing state that all features are free, and
+  verify the Data Safety answers against the final release SDKs.
 
 ## Release gates
 

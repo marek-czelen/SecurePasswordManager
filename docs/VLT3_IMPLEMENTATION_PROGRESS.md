@@ -28,15 +28,14 @@ and release readiness still need verification.
 - On-device OCR review, camera-based image capture and multi-page document scanning.
 - User-selected automatic encrypted backup location, refreshed after successful saves.
 
-## Technical limits and Free/Pro model
+## Technical limits and free availability
 
 - 10,000 entries; 32 MiB text block; 100 MiB active vault.
 - JPG images and document pages: 10 MiB each; thumbnails: 256 KiB; file attachment:
   10 MiB. A scanned document is limited to 20 pages and 60 MiB total.
-- Free allows one file, one scanned document, two previous passwords per entry and five
-  entries per advanced import/export operation. Pro removes the file/document count and
-  import/export per-operation quotas, and retains up to five previous passwords per
-  entry. The existing one-time `pro_unlock` Google Play product remains the Pro purchase.
+- All features are available for free. There are no plan-based file, document, password
+  history or import/export quotas; Google Play Billing and the `pro_unlock` purchase are
+  not included. Technical format, input-size and storage limits above still apply.
 - Advertising, AdMob and UMP are not included.
 - No WorkManager schedule/retry for automatic backup; a selected destination is refreshed
   after a successful vault save.

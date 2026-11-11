@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault\nPasswords &amp; Docs</string>
+    <string name="app_name">Password manager</string>
     <string name="app_tagline">Szyfrowany sejf na hasła i dokumenty</string>
 
     <!-- First run -->
@@ -24,6 +24,9 @@
 
     <!-- List -->
     <string name="list_title">Hasła</string>
+    <string name="category_passwords">Hasła</string>
+    <string name="category_files_images">Pliki i obrazy</string>
+    <string name="category_documents">Dokumenty</string>
     <string name="hint_search">Szukaj</string>
     <string name="action_add">Dodaj</string>
     <string name="menu_images">Kontener obrazów</string>
@@ -40,6 +43,11 @@
     <string name="menu_advanced_import_export">Import/eksport zaawansowany</string>
     <string name="advanced_import_export_title">Import/eksport zaawansowany</string>
     <string name="advanced_import">Importuj hasła</string>
+    <string name="progress_import_title">Importowanie</string>
+    <string name="progress_import_message">Odczytywanie pliku i przygotowywanie wpisów…</string>
+    <string name="progress_import_saving">Zapisywanie zaimportowanych wpisów…</string>
+    <string name="progress_recovery_title">Odzyskiwanie kopii zapasowej</string>
+    <string name="progress_recovery_message">Przywracanie danych z kopii zapasowej…</string>
     <string name="advanced_export_csv">Eksportuj do CSV</string>
     <string name="csv_plaintext_title">Eksport CSV nie jest szyfrowany</string>
     <string name="csv_plaintext_warning">Plik CSV zawiera hasła i sekrety TOTP w postaci jawnej i może zostać odczytany przez inne aplikacje. Arkusze kalkulacyjne mogą potraktować wartości zaczynające się od =, +, - lub @ jako formuły. Eksport obejmuje tylko wpisy haseł; obrazy i załączniki nie zostaną wyeksportowane. Kontynuować?</string>
@@ -191,6 +199,8 @@
     <string name="settings_sync">Kopia zapasowa</string>
     <string name="settings_link_remote">Ustaw automatyczną kopię</string>
     <string name="settings_link_remote_desc">Dysk Google, Dropbox, OneDrive, plik lokalny…</string>
+    <string name="settings_sync_backup">Synchronizuj kopię</string>
+    <string name="settings_sync_backup_desc">Przy otwarciu aplikacja scala zmiany z nowszej kopii, zachowując wpisy tylko lokalne.</string>
     <string name="settings_sync_now">Zrób kopię teraz</string>
     <string name="settings_backup">Kopia jednorazowo w inne miejsce</string>
     <string name="settings_import_backup">Importuj kopię na tym urządzeniu</string>
@@ -201,6 +211,9 @@
     <string name="msg_remote_linked">Ustawiono automatyczną kopię</string>
     <string name="msg_backup_done">Utworzono kopię</string>
     <string name="msg_synced">Kopia zaktualizowana</string>
+    <string name="msg_remote_sync_merged">Scalono zmiany z nowszą kopią.</string>
+    <string name="progress_sync_title">Sprawdzanie kopii</string>
+    <string name="progress_sync_message">Sprawdzanie i scalanie nowszej kopii…</string>
     <string name="msg_saved_local_sync_failed">Zapisano lokalnie, kopia nie powiodła się</string>
     <string name="err_remote_link">Nie udało się ustawić automatycznej kopii</string>
     <string name="err_backup">Nie udało się utworzyć kopii</string>
@@ -321,25 +334,6 @@
     <string name="cd_copy">Kopiuj</string>
     <string name="cd_qr">Kod odzyskiwania QR</string>
     <string name="settings_tutorial">Pomoc i FAQ</string>
-    <string name="settings_premium_debug">Tryb testowy Free / Pro</string>
-    <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">Free: 1 plik, 1 dokument, 2 poprzednie hasła na wpis i 5 wpisów na operację importu/eksportu. Pro znosi limity liczby plików i dokumentów oraz limit 5 wpisów na operację, a historię zwiększa do 5 haseł. Zmiana planu nie usuwa zapisanych danych. Jednorazowy zakup działa offline; obowiązują techniczne limity VLT3.</string>
-    <string name="premium_action_buy">Kup Pro</string>
-    <string name="premium_action_buy_price">Kup Pro — %1$s</string>
-    <string name="premium_action_restore">Przywróć zakup</string>
-    <string name="premium_status_free">Aktywny plan: Free</string>
-    <string name="premium_status_pro">Aktywny plan: Pro (dostęp offline)</string>
-    <string name="premium_status_connecting">Sprawdzanie Google Play…</string>
-    <string name="premium_status_pending">Zakup oczekuje na potwierdzenie Google Play.</string>
-    <string name="premium_status_restore_found">Zakup Pro został przywrócony.</string>
-    <string name="premium_status_restore_not_found">Nie znaleziono zakupu Pro na tym koncie Google Play.</string>
-    <string name="premium_status_product_unavailable">Produkt Pro jest obecnie niedostępny w Google Play.</string>
-    <string name="premium_status_billing_unavailable">Google Play Billing jest niedostępny. Zapisany wcześniej dostęp Pro pozostaje dostępny offline.</string>
-    <string name="msg_file_free_limit">W wersji Free możesz dodać jeden plik. Dodawanie kolejnych wymaga Pro.</string>
-    <string name="msg_document_free_limit">W wersji Free możesz dodać jeden dokument. Dodawanie kolejnych wymaga Pro.</string>
-    <string name="csv_free_limit_warning">W wersji Free eksport obejmuje pierwszych %1$d wpisów haseł na operację. Pro eksportuje wszystkie wpisy.</string>
-    <string name="import_free_limit">W wersji Free można zaimportować do %1$d wpisów na operację.</string>
-    <string name="import_free_limit_skipped">Limit Free: zaimportowanych zostanie pierwszych %1$d wpisów; pominięto dodatkowe wpisy: %2$d. Pro usuwa limit Free pięciu wpisów na operację.</string>
     <string name="settings_autofill">Autouzupełnianie haseł i Credential Manager</string>
     <string name="settings_autofill_desc">Otwórz ustawienia Androida, włącz SecureVault jako dostawcę i wybierz go jako preferowany.</string>
     <string name="settings_autofill_enabled">Klasyczna usługa Autofill jest aktywna</string>
@@ -373,14 +367,11 @@
     <string name="autofill_unnamed_credential">Login</string>
     <string name="autofill_request_failed">Nie udało się obsłużyć żądania autouzupełniania.</string>
     <string name="autofill_save_unavailable">Zapisywanie nowych haseł z formularzy nie jest jeszcze dostępne.</string>
-    <string name="premium_debug_status">Aktywny plan: %1$s</string>
-    <string name="premium_free">Free</string>
-    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Pomiń</string>
     <string name="tutorial_next">Dalej</string>
     <string name="tutorial_done">Gotowe</string>
-    <string name="tutorial_list_title">Twoja lista</string>
-    <string name="tutorial_list_text">Tutaj znajdziesz wszystkie wpisy tekstowe i obrazy. Użyj wyszukiwarki, ulubionych i tagów, aby szybko znaleźć dane.</string>
+    <string name="tutorial_list_title">Kategorie wpisów</string>
+    <string name="tutorial_list_text">Wpisy znajdziesz na kartach: Hasła, Pliki i obrazy oraz Dokumenty. Wyszukiwarka i filtr ulubionych działają w wybranej kategorii.</string>
     <string name="tutorial_add_title">Dodawanie wpisów</string>
     <string name="tutorial_add_text">Przycisk Dodaj pozwala utworzyć hasło ręcznie albo dodać obraz. Obraz jest przycinany i zapisywany jako szyfrowany JPG.</string>
     <string name="tutorial_generator_title">Generator haseł</string>
@@ -392,8 +383,8 @@
     <string name="tutorial_end_title">Gotowe</string>
     <string name="tutorial_end_text">Dane pozostają zaszyfrowane. Recovery wymaga passphrase oraz niezależnego kodu QR.</string>
     <string name="help_intro">Instrukcja aplikacji i odpowiedzi na najczęstsze pytania. Przyciski otwierają rzeczywiste funkcje.</string>
-    <string name="help_list_title">1. Jedna lista wpisów</string>
-    <string name="help_list_text">Na jednej liście znajdują się wpisy tekstowe oraz obrazy. Każdy obraz ma własną nazwę i ikonę obrazu. Wyszukiwanie obejmuje nazwy, loginy, URL, foldery i tagi.</string>
+    <string name="help_list_title">1. Kategorie wpisów</string>
+    <string name="help_list_text">Lista jest podzielona na kategorie Hasła, Pliki i obrazy oraz Dokumenty. Wyszukiwanie obejmuje nazwy, loginy, URL, foldery i tagi w wybranej kategorii.</string>
     <string name="help_add_action">Otwórz Dodaj</string>
     <string name="help_images_title">2. Dodawanie obrazu</string>
     <string name="help_images_text">Wybierz aparat lub galerię, zaznacz fragment zdjęcia z zoomem, nadaj mu nazwę i zapisz. Tylko przycięty fragment JPG trafia do zaszyfrowanego vaultu.</string>
@@ -411,8 +402,8 @@
     <string name="help_faq_chrome_answer">1. W Ustawieniach Androida ustaw SecureVault jako preferowaną usługę: Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” &gt; SecureVault. Jeśli pojawi się taka opcja, włącz SecureVault w „Dodatkowych dostawcach”.\n2. W Chrome 135 lub nowszym otwórz ⋮ &gt; Ustawienia &gt; Usługi autouzupełniania i włącz „Autouzupełnianie z innej usługi”.\n3. Uruchom ponownie Chrome, dotknij pola logowania i wybierz podpowiedź SecureVault. Jeśli nie widzisz ustawienia, zaktualizuj Chrome. Nazwy i położenie opcji mogą różnić się zależnie od telefonu.</string>
     <string name="help_faq_default_provider_question">Jak ustawić SecureVault jako domyślnego dostawcę haseł Androida?</string>
     <string name="help_faq_default_provider_answer">Na Androidzie 14 lub nowszym otwórz Ustawienia &gt; Hasła, klucze dostępu i konta &gt; Zmień przy „Preferowana usługa” i wybierz SecureVault. W razie potrzeby najpierw włącz go w „Dodatkowych dostawcach”. Na starszym Androidzie wyszukaj w Ustawieniach „Usługa autouzupełniania” albo przejdź do System &gt; Języki i wprowadzanie &gt; Usługa autouzupełniania i wybierz SecureVault. Ścieżka może różnić się u producentów telefonów.</string>
-    <string name="help_faq_pro_question">Co zawiera wersja Pro?</string>
-    <string name="help_faq_pro_answer">Wszystkie funkcje są dostępne w Free w ograniczonym zakresie: jeden plik, jeden dokument, do 2 nowych poprzednich haseł na wpis i do 5 wpisów na operację zaawansowanego importu/eksportu. Już zapisana historia pozostaje dostępna. Pro znosi limity liczby plików i dokumentów oraz limit pięciu wpisów na operację, a nową historię przechowuje do 5 haseł na wpis. Pełna zaszyfrowana kopia sejfu nie jest ograniczona.</string>
+    <string name="help_faq_free_question">Czy aplikacja jest w pełni darmowa?</string>
+    <string name="help_faq_free_answer">Tak. Wszystkie funkcje są dostępne bez opłat, subskrypcji, zakupów w aplikacji i reklam. Pozostają jedynie techniczne limity formatu i rozmiaru danych.</string>
     <string name="help_faq_vault_reader_question">Czy mogę odczytać kopię sejfu bez aplikacji na telefonie?</string>
     <string name="help_faq_vault_reader_answer">Tak. Webowy czytnik kopii vault: https://www.cretorix.eu/apps/securevault-web/index.html. Samodzielny plik dla Windows: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Otwórz ustawienia autouzupełniania</string>

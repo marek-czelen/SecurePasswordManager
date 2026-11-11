@@ -5,9 +5,8 @@
 1. Review `SECURITY_DESIGN.md`, `docs/SECURITY_AUDIT.md` and this checklist.
 2. Update the public privacy policy and `docs/PRIVACY_POLICY.md` to state that the app
    has no advertisements; confirm the Play Data Safety form matches the remaining SDKs.
-3. Keep the existing `pro_unlock` Play product ID and update its title/description to
-   describe the Free/Pro limits. Test purchase, acknowledgement, restore and offline
-   entitlement behavior with a licensed tester.
+3. Set distribution to free and confirm the legacy `pro_unlock` product is no longer
+   offered. The app contains no purchase flow or entitlement checks.
 4. Review third-party licenses and include required notices in the release.
 5. Confirm no secrets, test vaults, QR payloads, signing keys or local properties are in
    the source.

@@ -79,7 +79,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.slider.Slider;
+import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
@@ -120,18 +122,22 @@ public final class MainActivity extends AppCompatActivity {
     private static final String KEY_PENDING_AUTOFILL_URL = "pending_autofill_url";
     private static final String KEY_PENDING_AUTOFILL_PACKAGE = "pending_autofill_package";
     private static final String KEY_AWAITING = "awaiting_result";
+    private static final int CATEGORY_PASSWORDS = 0;
+    private static final int CATEGORY_FILES_IMAGES = 1;
+    private static final int CATEGORY_DOCUMENTS = 2;
     private static boolean sImageFlowActive;
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
     private static long sBackgroundedElapsed;
 
     private VaultV3Repository repository;
-    private PremiumManager premiumManager;
     private char[] sessionTruePin;
     private byte[] sessionDek;
     private boolean deviceAuthenticatedSession;
     private boolean sessionRecoveredPrevious;
     private boolean saveInProgress;
     private boolean importSavePending;
+    private boolean remoteSyncStarted;
+    private boolean remoteSyncInProgress;
     private boolean unlocked;
     private VaultData currentData = VaultData.empty();
     private String pendingAutofillTitle;
@@ -141,6 +147,8 @@ public final class MainActivity extends AppCompatActivity {
     private PasswordAdapter adapter;
     private String searchQuery = "";
     private boolean favoritesOnly;
+    private int selectedCategory = CATEGORY_PASSWORDS;
+    private androidx.appcompat.app.AlertDialog progressDialog;
 
     private TextInputEditText recoveryPayloadField;
     private TextInputEditText recoveryPinField;
@@ -154,7 +162,7 @@ public final class MainActivity extends AppCompatActivity {
     private final Handler clipboardHandler = new Handler(Looper.getMainLooper());
     private final Handler inactivityHandler = new Handler(Looper.getMainLooper());
     private final Runnable lockRunnable = () -> {
-        if (unlocked) {
+        if (unlocked && !remoteSyncInProgress) {
             lock();
         }
     };
@@ -339,6 +347,8 @@ public final class MainActivity extends AppCompatActivity {
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                             handleSettingsAction(result.getData().getStringExtra(
                                     SettingsActivity.EXTRA_ACTION));
+                        } else if (unlocked) {
+                            checkRemoteBackupOnOpen();
                         }
                     });
 
@@ -380,7 +390,6 @@ public final class MainActivity extends AppCompatActivity {
         }
         try {
             repository = new VaultV3Repository(this);
-            premiumManager = new PremiumManager(this);
             if (Session.isActive()) {
                 restoreSession();
             } else if (!repository.exists()
@@ -397,12 +406,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addScannedDocument(ArrayList<Uri> pages, String title) {
-        if (!PremiumLimits.canAddDocument(
-                premiumManager.isPro(), countDocuments(currentData))) {
-            deleteTemporaryDocumentPages(pages);
-            toast(R.string.msg_document_free_limit);
-            return;
-        }
         if (pages.isEmpty() || pages.size() > VaultItem.MAX_DOCUMENT_PAGES) {
             deleteTemporaryDocumentPages(pages);
             toast(R.string.document_max_pages);
@@ -772,6 +775,28 @@ public final class MainActivity extends AppCompatActivity {
         });
         recycler.setAdapter(adapter);
 
+        TabLayout categoryTabs = findViewById(R.id.categoryTabs);
+        categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_passwords), false);
+        categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_files_images), false);
+        categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_documents), false);
+        categoryTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                selectedCategory = tab.getPosition();
+                toolbar.setTitle(tab.getText());
+                renderList();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
+        categoryTabs.selectTab(categoryTabs.getTabAt(selectedCategory));
+
         TextInputEditText search = findViewById(R.id.editSearch);
         search.addTextChangedListener(new SimpleWatcher(value -> {
             searchQuery = value;
@@ -793,6 +818,7 @@ public final class MainActivity extends AppCompatActivity {
             if (!showPendingAutofillEntry()) {
                 maybePromptAutofillSetup();
             }
+            checkRemoteBackupOnOpen();
         }
     }
 
@@ -878,11 +904,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void requestDocumentScan() {
-        if (!PremiumLimits.canAddDocument(
-                premiumManager.isPro(), countDocuments(currentData))) {
-            toast(R.string.msg_document_free_limit);
-            return;
-        }
         if (awaitingResult || saveInProgress) {
             toast(R.string.err_save);
             return;
@@ -985,18 +1006,60 @@ public final class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void showProgressDialog(@StringRes int title, @StringRes int message) {
+        hideProgressDialog();
+        float density = getResources().getDisplayMetrics().density;
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        int horizontalPadding = Math.round(24 * density);
+        content.setPadding(horizontalPadding, Math.round(8 * density),
+                horizontalPadding, Math.round(12 * density));
+
+        LinearProgressIndicator progress = new LinearProgressIndicator(this);
+        progress.setIndeterminate(true);
+        LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        progressParams.bottomMargin = Math.round(16 * density);
+        content.addView(progress, progressParams);
+
+        TextView status = new TextView(this);
+        status.setText(message);
+        status.setTextAppearance(
+                com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
+        content.addView(status, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        progressDialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(title)
+                .setView(content)
+                .create();
+        progressDialog.setCancelable(false);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+            progressDialog = null;
+        }
+    }
+
     private void warnBeforeCsvExport() {
-        List<VaultItem> exportItems =
-                PremiumLimits.csvExportEntries(currentData.items, premiumManager.isPro());
-        if (exportItems.isEmpty()) {
+        boolean hasLoginEntries = false;
+        for (VaultItem item : currentData.items) {
+            if (VaultItem.TYPE_LOGIN.equals(item.type)) {
+                hasLoginEntries = true;
+                break;
+            }
+        }
+        if (!hasLoginEntries) {
             toast(R.string.msg_csv_nothing_to_export);
             return;
         }
         String warning = getString(R.string.csv_plaintext_warning);
-        if (!premiumManager.isPro()) {
-            warning += "\n\n" + getString(R.string.csv_free_limit_warning,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
-        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.csv_plaintext_title)
                 .setMessage(warning)
@@ -1014,6 +1077,7 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         awaitingResult = true;
+        showProgressDialog(R.string.progress_import_title, R.string.progress_import_message);
         try {
             ioExecutor.execute(() -> {
                 byte[] bytes = null;
@@ -1029,22 +1093,28 @@ public final class MainActivity extends AppCompatActivity {
                     AdvancedImportExport.ParsedImport parsed =
                             AdvancedImportExport.parse(filename, bytes);
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         handleAdvancedImport(parsed);
                     });
                 } catch (AdvancedImportExport.PasswordRequiredException exception) {
                     byte[] encryptedBytes = bytes;
                     bytes = null;
-                    runOnUiThread(() -> requestXlsxPassword(filename, encryptedBytes));
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        requestXlsxPassword(filename, encryptedBytes);
+                    });
                 } catch (AdvancedImportExport.ImportSizeException exception) {
                     Log.w(IMAGE_LOG, "advanced import exceeded its size limit");
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_import_size);
                     });
                 } catch (AdvancedImportExport.XlsxRowWidthException exception) {
                     Log.w(IMAGE_LOG, "advanced import spreadsheet has data beyond its headers");
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_import_xlsx_row_width);
                     });
@@ -1052,6 +1122,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.w(IMAGE_LOG, "advanced import failed: "
                             + exception.getClass().getSimpleName());
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_advanced_import);
                     });
@@ -1060,6 +1131,7 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
             awaitingResult = false;
             Log.w(IMAGE_LOG, "advanced import executor is unavailable");
             toast(R.string.err_advanced_import);
@@ -1104,6 +1176,7 @@ public final class MainActivity extends AppCompatActivity {
 
     private void parseEncryptedXlsx(String filename, byte[] encryptedBytes, String password) {
         awaitingResult = true;
+        showProgressDialog(R.string.progress_import_title, R.string.progress_import_message);
         try {
             ioExecutor.execute(() -> {
                 boolean[] keepEncryptedBytes = {false};
@@ -1111,18 +1184,21 @@ public final class MainActivity extends AppCompatActivity {
                     AdvancedImportExport.ParsedImport parsed =
                             AdvancedImportExport.parse(filename, encryptedBytes, password);
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         handleAdvancedImport(parsed);
                     });
                 } catch (AdvancedImportExport.InvalidPasswordException exception) {
                     keepEncryptedBytes[0] = true;
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         toast(R.string.import_xlsx_password_incorrect);
                         requestXlsxPassword(filename, encryptedBytes);
                     });
                 } catch (AdvancedImportExport.XlsxRowWidthException exception) {
                     Log.w(IMAGE_LOG, "password-protected spreadsheet has data beyond its headers");
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_import_xlsx_row_width);
                     });
@@ -1130,6 +1206,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.w(IMAGE_LOG, "password-protected Excel import failed: "
                             + exception.getClass().getSimpleName());
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_advanced_import);
                     });
@@ -1140,6 +1217,7 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
             awaitingResult = false;
             Arrays.fill(encryptedBytes, (byte) 0);
             Log.w(IMAGE_LOG, "advanced import executor is unavailable");
@@ -1269,10 +1347,7 @@ public final class MainActivity extends AppCompatActivity {
                     .show();
             return;
         }
-        boolean isPro = premiumManager.isPro();
-        int skippedByFreeLimit = isPro ? 0 : Math.max(0,
-                items.size() - PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT);
-        List<VaultItem> importItems = PremiumLimits.limitImportExportEntries(items, isPro);
+        List<VaultItem> importItems = items;
         int capacity = VaultTextDataCodec.MAX_ITEMS - currentData.items.size();
         if (importItems.size() > capacity) {
             new MaterialAlertDialogBuilder(this)
@@ -1284,16 +1359,8 @@ public final class MainActivity extends AppCompatActivity {
         }
         StringBuilder preview = new StringBuilder();
         preview.append(getString(R.string.import_preview_count, importItems.size()));
-        if (!isPro) {
-            preview.append("\n").append(getString(R.string.import_free_limit,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT));
-        }
         if (ignoredRows > 0) {
             preview.append("\n").append(getString(R.string.import_ignored_rows, ignoredRows));
-        }
-        if (skippedByFreeLimit > 0) {
-            preview.append("\n").append(getString(R.string.import_free_limit_skipped,
-                    PremiumLimits.FREE_IMPORT_EXPORT_ENTRY_LIMIT, skippedByFreeLimit));
         }
         if (!warning.isEmpty()) {
             preview.append("\n\n").append(warning);
@@ -1333,8 +1400,7 @@ public final class MainActivity extends AppCompatActivity {
                         throw new IOException("Unable to open export destination");
                     }
                     AdvancedImportExport.writeCsv(output,
-                            PremiumLimits.csvExportEntries(snapshot.items,
-                                    premiumManager.isPro()));
+                            snapshot.items);
                     runOnUiThread(() -> {
                         awaitingResult = false;
                         toast(R.string.msg_csv_exported);
@@ -1358,7 +1424,7 @@ public final class MainActivity extends AppCompatActivity {
         List<VaultItem> filtered = new ArrayList<>();
         String query = searchQuery.trim().toLowerCase(Locale.getDefault());
         for (VaultItem item : currentData.items) {
-            if ((!favoritesOnly || item.favorite)
+            if (matchesCategory(item) && (!favoritesOnly || item.favorite)
                     && (query.isEmpty() || matches(item, query))) {
                 filtered.add(item);
             }
@@ -1369,6 +1435,19 @@ public final class MainActivity extends AppCompatActivity {
         boolean isEmpty = filtered.isEmpty();
         empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         recycler.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+    }
+
+    private boolean matchesCategory(VaultItem item) {
+        switch (selectedCategory) {
+            case CATEGORY_PASSWORDS:
+                return VaultItem.TYPE_LOGIN.equals(item.type);
+            case CATEGORY_FILES_IMAGES:
+                return item.isFile() || item.isImage();
+            case CATEGORY_DOCUMENTS:
+                return item.isDocument();
+            default:
+                return false;
+        }
     }
 
     private static boolean matches(VaultItem item, String query) {
@@ -2058,8 +2137,7 @@ public final class MainActivity extends AppCompatActivity {
                     } else {
                         String newPassword = str(password);
                         List<String> passwordHistory = replaceTarget.passwordHistoryAfterChange(
-                                newPassword, true,
-                                PremiumLimits.passwordHistoryLimit(premiumManager.isPro()));
+                                newPassword, true, VaultItem.MAX_PASSWORD_HISTORY_ENTRIES);
                         edited = new VaultItem(replaceTarget.entryId, str(title), str(username),
                                 newPassword, str(url), str(notes), str(tags), str(folder),
                                 str(totp), favorite.isChecked(), VaultItem.TYPE_LOGIN,
@@ -2162,11 +2240,7 @@ public final class MainActivity extends AppCompatActivity {
                 .putExtra(SettingsActivity.EXTRA_REMOTE_LINKED, linked)
                 .putExtra(SettingsActivity.EXTRA_REMOTE_STATUS, linked
                         ? getString(R.string.remote_status_linked, repository.remoteLabel())
-                        : getString(R.string.remote_status_none))
-                .putExtra(SettingsActivity.EXTRA_DEBUG_OVERRIDE,
-                        premiumManager.isDebugOverrideAvailable())
-                .putExtra(SettingsActivity.EXTRA_DEBUG_PRO,
-                        premiumManager.isDebugPro());
+                        : getString(R.string.remote_status_none));
         awaitingResult = true;
         settingsLauncher.launch(intent);
     }
@@ -2211,6 +2285,7 @@ public final class MainActivity extends AppCompatActivity {
                 break;
             case SettingsActivity.ACTION_UNLINK_REMOTE:
                 repository.unlinkRemote();
+                AppSettings.setSyncBackupOnOpen(this, false);
                 break;
             case SettingsActivity.ACTION_DELETE_VAULT:
                 confirmDeleteLocalVault();
@@ -2764,11 +2839,14 @@ public final class MainActivity extends AppCompatActivity {
                         CredentialProviderSession.clearAll();
                         clearSession();
                         showUnlock();
+                        showProgressDialog(R.string.progress_recovery_title,
+                                R.string.progress_recovery_message);
                         try {
                             ioExecutor.execute(() -> {
                                 try {
                                     repository.importCopy(backup, recovery, pin);
                                     runOnUiThread(() -> {
+                                        hideProgressDialog();
                                         clearSession();
                                         byte[] qrSecret = repository.copyRecoverySecret();
                                         Session.setRecoverySecret(qrSecret);
@@ -2783,6 +2861,7 @@ public final class MainActivity extends AppCompatActivity {
                                             + exception.getClass().getSimpleName());
                                     String reason = recoveryFailureMessage(exception);
                                     runOnUiThread(() -> {
+                                        hideProgressDialog();
                                         awaitingResult = false;
                                         showBackupError(getString(R.string.err_recovery), reason);
                                     });
@@ -2792,6 +2871,7 @@ public final class MainActivity extends AppCompatActivity {
                                 }
                             });
                         } catch (java.util.concurrent.RejectedExecutionException exception) {
+                            hideProgressDialog();
                             Crypto.wipe(recovery.qrSecret);
                             clear(pin);
                             awaitingResult = false;
@@ -2861,6 +2941,10 @@ public final class MainActivity extends AppCompatActivity {
             toast(R.string.err_unlock);
             lock();
         } else {
+            if (importSavePending) {
+                showProgressDialog(R.string.progress_import_title,
+                        R.string.progress_import_saving);
+            }
             char[] pin = sessionTruePin.clone();
             try {
                 ioExecutor.execute(() -> {
@@ -2882,6 +2966,7 @@ public final class MainActivity extends AppCompatActivity {
                     }
                 });
             } catch (java.util.concurrent.RejectedExecutionException exception) {
+                hideProgressDialog();
                 clear(pin);
                 clearPending(pending);
                 saveInProgress = false;
@@ -2894,6 +2979,9 @@ public final class MainActivity extends AppCompatActivity {
 
     private void finishSave(VaultData data, boolean imageAdded, boolean fileAdded,
                             boolean documentAdded) {
+        if (importSavePending) {
+            hideProgressDialog();
+        }
         currentData = data;
         Session.updateData(currentData);
         renderList();
@@ -2914,6 +3002,9 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void failSave(@StringRes int message) {
+        if (importSavePending) {
+            hideProgressDialog();
+        }
         saveInProgress = false;
         awaitingResult = false;
         importSavePending = false;
@@ -2935,24 +3026,39 @@ public final class MainActivity extends AppCompatActivity {
                         @Override
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
-                            ioExecutor.execute(() -> {
-                                try {
-                                    repository.updateWithDeviceAuth(
-                                            result.getCryptoObject().getCipher(), data, pending);
-                                    runOnUiThread(() ->
-                                            finishSave(data, imageAdded, fileAdded, documentAdded));
-                                } catch (VaultSizeLimitException exception) {
-                                    Log.e(IMAGE_LOG, "vault size limit reached");
-                                    runOnUiThread(() -> failSave(R.string.err_vault_full));
-                                } catch (GeneralSecurityException | IOException
-                                         | IllegalArgumentException exception) {
-                                    Log.e(IMAGE_LOG, "device-auth vault update failed: "
-                                            + exception.getClass().getSimpleName());
-                                    runOnUiThread(() -> failSave(R.string.err_save));
-                                } finally {
-                                    clearPending(pending);
-                                }
-                            });
+                            if (importSavePending) {
+                                showProgressDialog(R.string.progress_import_title,
+                                        R.string.progress_import_saving);
+                            }
+                            try {
+                                ioExecutor.execute(() -> {
+                                    try {
+                                        repository.updateWithDeviceAuth(
+                                                result.getCryptoObject().getCipher(), data,
+                                                pending);
+                                        runOnUiThread(() -> finishSave(
+                                                data, imageAdded, fileAdded, documentAdded));
+                                    } catch (VaultSizeLimitException exception) {
+                                        Log.e(IMAGE_LOG, "vault size limit reached");
+                                        runOnUiThread(() -> failSave(R.string.err_vault_full));
+                                    } catch (GeneralSecurityException | IOException
+                                             | IllegalArgumentException exception) {
+                                        Log.e(IMAGE_LOG, "device-auth vault update failed: "
+                                                + exception.getClass().getSimpleName());
+                                        runOnUiThread(() -> failSave(R.string.err_save));
+                                    } finally {
+                                        clearPending(pending);
+                                    }
+                                });
+                            } catch (java.util.concurrent.RejectedExecutionException exception) {
+                                hideProgressDialog();
+                                clearPending(pending);
+                                saveInProgress = false;
+                                awaitingResult = false;
+                                importSavePending = false;
+                                Log.w(IMAGE_LOG, "device-auth save executor is unavailable");
+                                toast(R.string.err_save);
+                            }
                         }
 
                         @Override
@@ -3024,6 +3130,69 @@ public final class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void checkRemoteBackupOnOpen() {
+        if (remoteSyncStarted || !unlocked || sessionRecoveredPrevious
+                || !AppSettings.syncBackupOnOpen(this) || !repository.hasRemote()
+                || sessionDek == null) {
+            return;
+        }
+        remoteSyncStarted = true;
+        remoteSyncInProgress = true;
+        inactivityHandler.removeCallbacks(lockRunnable);
+        byte[] key = sessionDek.clone();
+        VaultData snapshot = currentData;
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_sync_title, R.string.progress_sync_message);
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    VaultV3Repository.RemoteSyncResult result =
+                            repository.syncRemoteIfNewer(key, snapshot);
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        remoteSyncInProgress = false;
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        if (result.localChanged) {
+                            currentData = result.data;
+                            Session.updateData(currentData);
+                            renderList();
+                            scheduleOrphanCollection();
+                        }
+                        if (result.remoteWriteFailure != null) {
+                            showBackupError(getString(R.string.err_sync),
+                                    result.remoteWriteFailure.getMessage());
+                        } else if (result.localChanged) {
+                            toast(R.string.msg_remote_sync_merged);
+                        }
+                    });
+                } catch (IOException | GeneralSecurityException | IllegalArgumentException
+                         | SecurityException exception) {
+                    Log.e(RECOVERY_LOG, "automatic backup synchronization failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        remoteSyncInProgress = false;
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        showBackupError(getString(R.string.err_sync), exception.getMessage());
+                    });
+                } finally {
+                    Crypto.wipe(key);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            Crypto.wipe(key);
+            hideProgressDialog();
+            remoteSyncInProgress = false;
+            awaitingResult = false;
+            scheduleAutoLock();
+            Log.e(RECOVERY_LOG, "automatic backup synchronization could not be scheduled",
+                    exception);
+            showBackupError(getString(R.string.err_sync), exception.getMessage());
+        }
+    }
+
     private void scheduleOrphanCollection() {
         if (sessionDek == null) {
             return;
@@ -3081,11 +3250,6 @@ public final class MainActivity extends AppCompatActivity {
                 } else if (option == 1) {
                     showImageSourceChooser();
                 } else if (option == 2) {
-                    if (!PremiumLimits.canAddFile(
-                            premiumManager.isPro(), countFiles(currentData))) {
-                        toast(R.string.msg_file_free_limit);
-                        return;
-                    }
                     awaitingResult = true;
                     pickFileLauncher.launch(new String[]{"*/*"});
                 } else {
@@ -3225,11 +3389,6 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void addSelectedFile(Uri uri) {
-        if (!PremiumLimits.canAddFile(
-                premiumManager.isPro(), countFiles(currentData))) {
-            toast(R.string.msg_file_free_limit);
-            return;
-        }
         awaitingResult = true;
         ioExecutor.execute(() -> {
             byte[] contents = null;

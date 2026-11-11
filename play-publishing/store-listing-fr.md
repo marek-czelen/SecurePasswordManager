@@ -3,7 +3,7 @@
 **Titre (29/30) :** SecureVault: Passwords & Docs
 
 **Description courte (80 caractères max.) :**  
-Coffre chiffré. Limites Free ; passez à Pro pour plus.
+Coffre chiffré. Toutes les fonctions gratuites, sans publicité.
 
 **Description complète :**
 
@@ -31,13 +31,11 @@ aucun compte ni service cloud propre.
   arrière-plan.
 - Ajoutez des images, pièces jointes et numérisations multipages comme données chiffrées.
 
-**Free et Pro**
-Free inclut un fichier et un document numérisé, jusqu’à deux anciens mots de passe par
-entrée et jusqu’à cinq entrées par opération d’import/export. Un achat Pro unique supprime
-les limites de forfait sur le nombre de fichiers/documents et d’entrées par opération ;
-Pro conserve jusqu’à cinq anciens mots de passe par entrée. Les sauvegardes chiffrées
-complètes du coffre n’ont pas de limite de forfait. Les limites techniques du format VLT3
-restent applicables.
+**Entièrement gratuit**
+Toutes les fonctionnalités sont accessibles gratuitement, sans abonnement, achat intégré
+ni publicité. Il n’y a pas de quotas de forfait pour les fichiers, les documents ou le
+nombre d’entrées par opération d’import/export. Seules les limites techniques de format et
+de taille des données VLT3 s’appliquent.
 
 SecureVault ne synchronise pas votre coffre avec un serveur de l’éditeur. Vous choisissez
 l’emplacement des sauvegardes. L’export d’une pièce jointe ou d’un fichier CSV peut

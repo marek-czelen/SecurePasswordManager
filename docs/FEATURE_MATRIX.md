@@ -1,31 +1,29 @@
-# Feature availability and Free/Pro model
+# Feature availability and free model
 
-The app has no advertisements. Free provides the core vault with quantitative limits;
-the optional one-time Google Play product `pro_unlock` upgrades the user to Pro. Pro
-entitlement is cached locally for offline use. The existing entitlement preference key
-is retained so previous purchasers keep Pro access.
+The app is completely free, with no advertisements, in-app purchases, subscriptions or
+feature tiers. Every implemented feature is available without payment.
 
 ## Implemented today
 
-| Feature | Status | Available without purchase |
+| Feature | Status | Included at no cost |
 |---|---|---:|
 | VLT3 hybrid encrypted vault | Implemented | Yes |
 | Argon2id passphrase + independent QR recovery | Implemented | Yes |
 | Hardware-backed device unlock (strong biometric or Android screen credential) | Implemented | Yes |
 | Auto-lock and lock-on-background | Implemented | Yes |
-| Password entries and password history | Implemented | Yes; Free retains/shows up to 2 previous passwords per entry, Pro up to 5 |
-| File attachments up to 10 MiB | Implemented | Free: 1 file; Pro: no plan count limit |
-| Scanned documents | Implemented | Free: 1 document; Pro: no plan count limit |
-| Advanced import/export | Implemented | Free: up to 5 entries per operation; Pro: no per-operation plan limit |
+| Password entries and password history | Implemented | Yes; up to 5 previous passwords per entry (format limit) |
+| File attachments up to 10 MiB | Implemented | Yes; no plan count limit |
+| Scanned documents | Implemented | Yes; no plan count limit |
+| Advanced import/export | Implemented | Yes; no plan per-operation limit |
 | Favorites, folders, tags and search | Implemented | Yes |
 | Password generator | Implemented | Yes |
 | TOTP codes | Implemented | Yes |
 | Local weak/reused password health | Implemented | Yes |
 | Android Autofill and Credential Manager password provider | Implemented | Yes |
 | Named JPG image entries in the common list | Implemented | Yes, within VLT3 limits |
-| Multi-page JPG document scans | Implemented | Yes; plan quota above, plus technical limits of 20 pages, 10 MiB per page and 60 MiB per document |
+| Multi-page JPG document scans | Implemented | Yes; technical limits of 20 pages, 10 MiB per page and 60 MiB per document |
 | Manual encrypted export/import | Implemented | Yes |
-| User-selected automatic encrypted backup | Implemented | Yes; refreshed after each successful save |
+| User-selected automatic encrypted backup and on-open synchronization | Implemented | Refreshes after successful saves; sync merges newer entries and retains local-only entries |
 | Recovery QR and passphrase QR printing/sharing | Implemented | Yes |
 | OCR review/crop flow | Implemented as optional code path | Yes |
 | Polish/English/German/French UI | Implemented | Yes |
@@ -65,34 +63,9 @@ Android supplies the username and password to the requesting app.
 
 Implementation reference: [Android Autofill services](https://developer.android.com/identity/autofill/autofill-services).
 
-## Features available regardless of purchase
+## Technical limits
 
-- encryption and DEK protection;
-- passphrase policy;
-- device-authenticated unlock;
-- Recovery QR creation and recovery;
-- manual encrypted export/import;
-- vault deletion;
-- clipboard protection;
-- screenshot protection;
-- Android Autofill and Credential Manager password retrieval, including safe site matching;
-- accessibility and localization;
-- access to existing vault entries and attachments, including content already above
-  Free's file/document quotas and password history already above its new-history quota.
-
-The plan quotas affect adding additional files/documents and the number of records in a
-single advanced import/export operation. They never delete existing data or limit a full
-encrypted vault backup. VLT3 technical caps (such as 10,000 entries and 100 MiB active
-vault size) remain in effect for all plans.
-
-## Debug testing
-
-Debug builds expose a **Free / Pro test mode** in Settings. It is guarded by
-`BuildConfig.DEBUG` and is absent from release builds. It only changes tier quotas; it
-never changes cryptographic keys or vault access.
-
-Release builds use the Play Billing Pro entitlement, not the debug switch. The existing
-`pro_unlock` product and locally cached `play_pro` entitlement preserve Pro access for
-previous purchasers. A successful Play purchase query clears the cache only if there is
-neither a purchased nor a pending item. The cache is not transferred on reinstall, so a
-purchase may need to be restored from Play again.
+There are no plan-based quotas or payment gates. Technical VLT3/input safeguards still
+apply, including 10,000 entries, a 100 MiB active vault, 10 MiB per attachment/page,
+20 pages and 60 MiB per scanned document. These format and safety caps are not pricing
+tiers.

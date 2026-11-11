@@ -3,7 +3,7 @@
 **Titel (29/30):** SecureVault: Passwords & Docs
 
 **Kurzbeschreibung (max. 80 Zeichen):**  
-Verschlüsselter Tresor. Free-Limits; mit Pro mehr speichern.
+Verschlüsselter Tresor. Alle Funktionen kostenlos und werbefrei.
 
 **Vollständige Beschreibung:**
 
@@ -31,12 +31,10 @@ App betreibt weder ein Konto noch eine eigene Cloud.
 - Füge Bilder, Dateianhänge und mehrseitige Dokumentenscans als verschlüsselte Daten
   hinzu.
 
-**Free und Pro**
-Free umfasst eine Datei und ein gescanntes Dokument, bis zu zwei frühere Passwörter pro
-Eintrag und bis zu fünf Einträge pro Import-/Exportvorgang. Ein einmaliger Pro-Kauf hebt
-die Tariflimits für Datei-/Dokumentanzahl und Einträge pro Import-/Exportvorgang auf; Pro
-speichert bis zu fünf frühere Passwörter pro Eintrag. Vollständige verschlüsselte
-Tresor-Backups haben kein Tariflimit. Technische VLT3-Formatlimits gelten weiterhin.
+**Vollständig kostenlos**
+Alle Funktionen sind kostenlos und ohne Abonnement, In-App-Käufe oder Werbung verfügbar.
+Es gibt keine Tariflimits für Dateien, Dokumente oder Einträge pro Import-/Exportvorgang.
+Es gelten nur technische VLT3-Format- und Datengrößenlimits.
 
 SecureVault synchronisiert deinen Tresor nicht mit einem Server des Anbieters. Du wählst
 den Speicherort für Sicherungen selbst. Beim Export eines einzelnen Anhangs oder einer

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault: Passwords &amp; Docs</string>
+    <string name="app_name">Password manager</string>
     <string name="app_tagline">Encrypted vault for passwords and documents</string>
     <string name="first_run_title">Create vault</string>
     <string name="first_run_subtitle">Set a new 12–24 character PIN or passphrase (not digits only). Save the independent QR code too — both are required for recovery.</string>
@@ -18,6 +18,9 @@
     <string name="err_recovery_passphrase_policy">The recovery passphrase must be 12–24 characters and cannot be digits only.</string>
     <string name="err_recovery_decryption">Could not decrypt the backup. Check that the passphrase, Recovery QR and backup file belong to the same vault.</string>
     <string name="list_title">Passwords</string>
+    <string name="category_passwords">Passwords</string>
+    <string name="category_files_images">Files &amp; images</string>
+    <string name="category_documents">Documents</string>
     <string name="hint_search">Search</string>
     <string name="action_add">Add</string>
     <string name="menu_images">Image container</string>
@@ -34,6 +37,11 @@
     <string name="menu_advanced_import_export">Advanced import/export</string>
     <string name="advanced_import_export_title">Advanced import/export</string>
     <string name="advanced_import">Import passwords</string>
+    <string name="progress_import_title">Importing</string>
+    <string name="progress_import_message">Reading the file and preparing entries…</string>
+    <string name="progress_import_saving">Saving imported entries…</string>
+    <string name="progress_recovery_title">Recovering backup</string>
+    <string name="progress_recovery_message">Restoring data from the backup…</string>
     <string name="advanced_export_csv">Export to CSV</string>
     <string name="csv_plaintext_title">CSV export is not encrypted</string>
     <string name="csv_plaintext_warning">The CSV file contains passwords and TOTP secrets in plain text and can be read by other apps. Spreadsheets may treat values starting with =, +, - or @ as formulas. Only password entries are exported; images and attachments are omitted. Continue?</string>
@@ -179,6 +187,8 @@
     <string name="settings_sync">Backup</string>
     <string name="settings_link_remote">Set automatic backup</string>
     <string name="settings_link_remote_desc">Google Drive, Dropbox, OneDrive, local file…</string>
+    <string name="settings_sync_backup">Sync backup on open</string>
+    <string name="settings_sync_backup_desc">Merge newer backup entries while keeping local-only entries.</string>
     <string name="settings_sync_now">Create backup now</string>
     <string name="settings_backup">One-time copy to another location</string>
     <string name="settings_import_backup">Import backup on this device</string>
@@ -189,6 +199,9 @@
     <string name="msg_remote_linked">Automatic backup configured</string>
     <string name="msg_backup_done">Backup created</string>
     <string name="msg_synced">Backup updated</string>
+    <string name="msg_remote_sync_merged">Merged changes from a newer backup.</string>
+    <string name="progress_sync_title">Checking backup</string>
+    <string name="progress_sync_message">Checking and merging a newer backup…</string>
     <string name="msg_saved_local_sync_failed">Saved locally; backup failed</string>
     <string name="err_remote_link">Could not configure automatic backup</string>
     <string name="err_backup">Could not create backup</string>
@@ -296,25 +309,6 @@
     <string name="cd_copy">Copy</string>
     <string name="cd_qr">Recovery QR code</string>
     <string name="settings_tutorial">Help and FAQ</string>
-    <string name="settings_premium_debug">Free / Pro test mode</string>
-    <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">Free: 1 file, 1 document, 2 previous passwords per entry and 5 entries per advanced import/export operation. Pro removes file/document count and per-operation quotas and raises history to 5 previous passwords. Changing plans does not delete saved data. One-time purchase; works offline. VLT3 technical limits still apply.</string>
-    <string name="premium_action_buy">Buy Pro</string>
-    <string name="premium_action_buy_price">Buy Pro — %1$s</string>
-    <string name="premium_action_restore">Restore purchase</string>
-    <string name="premium_status_free">Active plan: Free</string>
-    <string name="premium_status_pro">Active plan: Pro (available offline)</string>
-    <string name="premium_status_connecting">Checking Google Play…</string>
-    <string name="premium_status_pending">Purchase is awaiting confirmation from Google Play.</string>
-    <string name="premium_status_restore_found">Pro purchase restored.</string>
-    <string name="premium_status_restore_not_found">No Pro purchase was found for this Google Play account.</string>
-    <string name="premium_status_product_unavailable">The Pro product is currently unavailable on Google Play.</string>
-    <string name="premium_status_billing_unavailable">Google Play Billing is unavailable. Previously cached Pro access remains available offline.</string>
-    <string name="msg_file_free_limit">Free includes one file. Adding more requires Pro.</string>
-    <string name="msg_document_free_limit">Free includes one document. Adding more requires Pro.</string>
-    <string name="csv_free_limit_warning">Free exports the first %1$d password entries per operation. Pro exports all entries.</string>
-    <string name="import_free_limit">Free can import up to %1$d entries per operation.</string>
-    <string name="import_free_limit_skipped">Free limit: the first %1$d entries will be imported; additional entries skipped: %2$d. Pro removes the Free five-entry cap per operation.</string>
     <string name="settings_autofill">Password autofill and Credential Manager</string>
     <string name="settings_autofill_desc">Open Android settings, enable SecureVault as a provider, and choose it as preferred.</string>
     <string name="settings_autofill_enabled">Classic Autofill service is active</string>
@@ -348,14 +342,11 @@
     <string name="autofill_unnamed_credential">Login</string>
     <string name="autofill_request_failed">Could not process the autofill request.</string>
     <string name="autofill_save_unavailable">Saving new passwords from forms is not available yet.</string>
-    <string name="premium_debug_status">Active plan: %1$s</string>
-    <string name="premium_free">Free</string>
-    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Skip</string>
     <string name="tutorial_next">Next</string>
     <string name="tutorial_done">Done</string>
     <string name="tutorial_list_title">Your list</string>
-    <string name="tutorial_list_text">All password and image entries appear here. Use search, favorites and tags to find data quickly.</string>
+    <string name="tutorial_list_text">Entries are organized into Passwords, Files &amp; images, and Documents tabs. Search and favorites work within the selected category.</string>
     <string name="tutorial_add_title">Adding entries</string>
     <string name="tutorial_add_text">Add creates a password manually or lets you add an image. Images are cropped and stored as encrypted JPG files.</string>
     <string name="tutorial_generator_title">Password generator</string>
@@ -367,8 +358,8 @@
     <string name="tutorial_end_title">Done</string>
     <string name="tutorial_end_text">Your data remains encrypted. Recovery requires the passphrase and the independent QR code.</string>
     <string name="help_intro">A guide to the app and answers to common questions. Buttons open the relevant features.</string>
-    <string name="help_list_title">1. One entry list</string>
-    <string name="help_list_text">Password and image entries appear in one list. Search covers names, logins, URLs, folders and tags.</string>
+    <string name="help_list_title">1. Entry categories</string>
+    <string name="help_list_text">The list is split into Passwords, Files &amp; images, and Documents. Search covers names, logins, URLs, folders and tags within the selected category.</string>
     <string name="help_add_action">Open Add</string>
     <string name="help_images_title">2. Adding an image</string>
     <string name="help_images_text">Choose the camera or gallery, crop the photo with zoom, name it and save it. Only the cropped JPG is encrypted in the vault.</string>
@@ -386,8 +377,8 @@
     <string name="help_faq_chrome_answer">1. In Android Settings, set SecureVault as the preferred service: Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” &gt; SecureVault. If shown, enable SecureVault under “Additional providers” first.\n2. In Chrome 135 or later, open ⋮ &gt; Settings &gt; Autofill services and turn on “Autofill using another service”.\n3. Restart Chrome, focus a sign-in field, and select the SecureVault suggestion. If the setting is missing, update Chrome. Menu names and locations vary by device.</string>
     <string name="help_faq_default_provider_question">How do I set SecureVault as Android’s default password provider?</string>
     <string name="help_faq_default_provider_answer">On Android 14 or later, open Settings &gt; Passwords, passkeys &amp; accounts &gt; Change under “Preferred service” and select SecureVault. Enable it under “Additional providers” first if needed. On older Android versions, search Settings for “Autofill service”, or open System &gt; Languages &amp; input &gt; Autofill service and select SecureVault. Paths vary by device manufacturer.</string>
-    <string name="help_faq_pro_question">What is included in Pro?</string>
-    <string name="help_faq_pro_answer">All features are available in Free with limits: one file, one document, up to 2 new previous passwords per entry and up to 5 entries per advanced import/export operation. Previously saved history remains accessible. Pro removes the file/document count and five-entry per-operation quotas and stores up to 5 new previous passwords per entry. Full encrypted vault backups are not limited.</string>
+    <string name="help_faq_free_question">Is the app completely free?</string>
+    <string name="help_faq_free_answer">Yes. Every feature is available at no cost, with no subscription, in-app purchases, or ads. Only technical format and data-size limits remain.</string>
     <string name="help_faq_vault_reader_question">Can I read a vault backup without the phone app?</string>
     <string name="help_faq_vault_reader_answer">Yes. Web vault reader: https://www.cretorix.eu/apps/securevault-web/index.html. Standalone Windows file: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Open autofill settings</string>

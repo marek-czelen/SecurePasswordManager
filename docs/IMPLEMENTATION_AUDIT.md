@@ -21,11 +21,9 @@ test penetracyjny ani certyfikacja bezpieczeństwa.
 
 ## Istotne ograniczenia wydania
 
-1. **Model Free/Pro.** Free pozwala na 1 plik, 1 dokument, 2 poprzednie hasła na wpis
-   i 5 wpisów na zaawansowaną operację importu/eksportu. Pro znosi limity liczby plików,
-   dokumentów i rekordów na operację; historia Pro ma formatowy limit 5 haseł.
-   `pro_unlock` pozostaje istniejącym jednorazowym zakupem. Limity techniczne VLT3
-   obowiązują oba plany.
+1. **Model bezpłatny.** Wszystkie funkcje są dostępne bez opłat, reklam i zakupów w
+   aplikacji. Usunięto limity planowe, system uprawnień i integrację Billing. Pozostały
+   techniczne limity formatu i rozmiaru danych VLT3.
 2. **Lint nie przechodzi.** Ostatni `lintDebug` zgłosił 5 błędów i 86 ostrzeżeń:
    atrybut `android:tint` zamiast `app:tint` oraz brak czterech tłumaczeń tekstów XLSX
    na niemiecki i francuski.
@@ -43,9 +41,9 @@ test penetracyjny ani certyfikacja bezpieczeństwa.
 Dokumentację repozytorium i wbudowane komunikaty polityki prywatności uzupełniono o
 wielostronicowe skany i ich limity, import chronionych hasłem
 arkuszy XLSX, pomijanie załączników 1Password, automatyczne kopie po zapisie, różnicę
-między zaszyfrowanym backupem a eksportami plaintext oraz przywrócony model Free/Pro.
-Reklamy i SDK AdMob/UMP zostały usunięte; przed wydaniem należy potwierdzić, że publiczna
-polityka prywatności i deklaracja Data Safety odpowiadają finalnemu AAB oraz pozostałym
-SDK.
+między zaszyfrowanym backupem a eksportami plaintext oraz całkowicie bezpłatny model
+bez zakupów. Reklamy, SDK AdMob/UMP i Google Play Billing zostały usunięte; przed
+wydaniem należy potwierdzić, że publiczna polityka prywatności i deklaracja Data Safety
+odpowiadają finalnemu AAB oraz pozostałym SDK.
 Stan walidacji i pozostałe bramki wydania zapisano w [statusie VLT3](VLT3_IMPLEMENTATION_PROGRESS.md)
 i [audycie bezpieczeństwa](SECURITY_AUDIT.md).

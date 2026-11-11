@@ -33,7 +33,8 @@ advertising, profiling or sale.
 
 The app does not display advertisements and does not include Google Mobile Ads or Google
 UMP SDKs. It does not collect advertising identifiers or use vault data for advertising
-or profiling.
+or profiling. The app has no subscriptions or in-app purchases and does not include
+Google Play Billing.
 
 ## Camera and OCR
 
@@ -68,16 +69,6 @@ The user can authenticate with strong biometrics or the device's secure screen c
 face image or the identity of the specific biometric used. It receives only authorization
 to use the device-bound key. A secure Android screen lock is required; biometric
 enrollment is optional.
-
-## Google Play purchases
-
-The optional Pro entitlement is sold as a one-time purchase through Google Play Billing.
-Google Play handles payment processing; the app does not receive payment card details.
-The app processes the purchased product ID, purchase state and purchase token on-device
-to acknowledge and restore the purchase. It stores only a device-local Pro entitlement
-flag for offline access; the token is not sent to a
-publisher-controlled server. When Settings is opened, the app queries Google Play to
-reconcile the cached entitlement.
 
 ## Android Autofill and Credential Manager
 

@@ -8,6 +8,7 @@ final class AppSettings {
     private static final String AUTOLOCK_MIN = "autolock_min";
     private static final String AUTOLOCK_ENABLED = "autolock_enabled";
     private static final String LOCK_BACKGROUND = "lock_background";
+    private static final String SYNC_BACKUP_ON_OPEN = "sync_backup_on_open";
     private static final int DEFAULT_AUTOLOCK_MIN = 5;
 
     private AppSettings() { }
@@ -41,6 +42,14 @@ final class AppSettings {
 
     static void setLockOnBackground(Context context, boolean enabled) {
         preferences(context).edit().putBoolean(LOCK_BACKGROUND, enabled).apply();
+    }
+
+    static boolean syncBackupOnOpen(Context context) {
+        return preferences(context).getBoolean(SYNC_BACKUP_ON_OPEN, false);
+    }
+
+    static void setSyncBackupOnOpen(Context context, boolean enabled) {
+        preferences(context).edit().putBoolean(SYNC_BACKUP_ON_OPEN, enabled).apply();
     }
 
     private static SharedPreferences preferences(Context context) {

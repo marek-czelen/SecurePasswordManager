@@ -15,8 +15,8 @@ opcjonalne.
 | Nazwa wyświetlana | SecureVault: Passwords & Docs | Użyć tej samej nazwy w głównej ofercie sklepu |
 | Android application ID | `com.cretorix.securepasswordmanager` | Potwierdzić, że to stały, unikalny identyfikator przed pierwszym przesłaniem AAB. Wartość znajduje się w `app/build.gradle.kts` w `defaultConfig.applicationId`; po publikacji zmiana oznacza osobną aplikację |
 | Wersja | `1.2` / kod wersji `3` | Zwiększać `versionCode` przy każdym kolejnym przesłaniu |
-| Produkt Billing | `pro_unlock` | Zachować ID; jednorazowy zakup SecureVault Pro |
-| Model płatności | Free z limitami ilościowymi i opcjonalny jednorazowy zakup Pro | Potwierdzić cenę i dostępność; poprzedni zakup usunięcia reklam daje Pro |
+| Produkt w aplikacji | Brak | Ustawić bezpłatną dystrybucję; wycofać dawny `pro_unlock` z aktywnej oferty |
+| Model płatności | Całkowicie bezpłatna aplikacja, bez reklam i zakupów | Wszystkie funkcje dostępne bez opłat |
 | Kategoria | Nieustawiona | Rekomendacja: Produktywność; potwierdzić właściwą kategorię dostępną w Play |
 | Kontakt pomocy | Niepotwierdzony | **TODO:** podać monitorowany adres e-mail pomocy |
 | Kontakt prywatności | `talk@cretorix.eu` | Potwierdzić, że jest monitorowany i aktualny |
@@ -27,31 +27,26 @@ opcjonalne.
 Nie przesyłaj wydania produkcyjnego, dopóki nie zostaną ustalone: stały application ID,
 tożsamość wydawcy, kontakty, publiczny URL polityki prywatności i treści oferty sklepu.
 
-## Model Free/Pro
+## Bezpłatny model aplikacji
 
-- Free: jeden plik, jeden skanowany dokument, do dwóch poprzednich haseł na wpis i do
-  pięciu wpisów na pojedynczą operację zaawansowanego importu/eksportu.
-- Pro: bez limitu planowego liczby plików i dokumentów oraz bez limitu pięciu wpisów na
-  operację; historia haseł pozostaje ograniczona technicznie do pięciu wpisów na login.
-- Twarde limity VLT3 nadal obowiązują oba plany. Pełny zaszyfrowany backup sejfu nie ma
-  limitu planowego.
-- Nie zmieniaj identyfikatora produktu `pro_unlock`. Dotychczasowi nabywcy usunięcia
-  reklam muszą zachować dostęp Pro.
+- Wszystkie dostępne funkcje są bezpłatne; nie ma limitów planowych, subskrypcji ani
+  zakupów w aplikacji.
+- Limity techniczne VLT3 nadal obowiązują, w tym limity liczby wpisów, rozmiaru sejfu,
+  załączników i stron skanów.
+- Aplikacja nie używa Google Play Billing. Wycofaj dawny produkt `pro_unlock` z aktywnej
+  oferty Play Console i potwierdź, że formularze sklepu nie opisują już zakupów.
 - Wersja aplikacji nie zawiera reklam ani SDK AdMob/UMP. W formularzu Play zadeklaruj
   brak reklam i sprawdź Data Safety dla finalnych zależności.
 
 ## Gdzie wpisać poszczególne elementy w Play Console
 
 1. **Create app / App setup:** wpisać nazwę aplikacji, język domyślny, typ aplikacji/gry
-   oraz bezpłatną dystrybucję z opcjonalnym zakupem Pro. Potwierdzić, że stała nazwa
+   oraz bezpłatną dystrybucję bez zakupów w aplikacji. Potwierdzić, że stała nazwa
    pakietu odpowiada `defaultConfig.applicationId`.
 2. **Testing → Internal testing:** przesłać podpisany Android App Bundle (`.aab`), dodać
-   testerów i opublikować wydanie testów wewnętrznych. Do realistycznych testów Billing
-   instalować aplikację ze sklepowego linku dołączenia do testu.
-3. **Monetize with Play → Products → One-time products:** zachować `pro_unlock` jako
-   jednorazowy zakup SecureVault Pro. Zaktualizować nazwę, opis, cenę i kraje dostępności
-   w Play Console bez zmiany identyfikatora produktu; sprawdzić zakup/przywracanie jako
-   licencjonowany tester.
+   testerów i opublikować wydanie testów wewnętrznych.
+3. **Monetize with Play → Products:** sprawdzić, czy dawny `pro_unlock` nie jest już
+   aktywnie oferowany. Nie dodawać nowych produktów ani przepływów zakupowych.
 4. **Grow users → Store presence → Main store listing:** skopiować tytuł, krótki i pełny
    opis z odpowiedniego pliku `store-listing-*.md`. Przesłać
    `assets/app-icon-512.png`, `assets/feature-graphic-1024x500.png` i zrzuty z
@@ -63,8 +58,8 @@ tożsamość wydawcy, kontakty, publiczny URL polityki prywatności i treści of
    Target audience i Data safety. Zadeklarować brak reklam. Aplikacja nie ma logowania do konta — wkleić
    `app-access-instructions.md`, która opisuje utworzenie lokalnego sejfu, wymagania
    hasła głównego i blokady ekranu oraz testowe dane syntetyczne. Sprawdzić
-   `data-safety-worksheet.md`, Google Play Billing i praktyki pozostałych SDK względem
-   finalnego AAB.
+   `data-safety-worksheet.md` i praktyki SDK względem finalnego AAB; aplikacja nie
+   zawiera Google Play Billing.
 7. **Policy and programs → Privacy policy:** wkleić
    `https://www.cretorix.eu/securevault-privacy.html`. Potwierdzić, że publiczna strona,
    zasoby aplikacji i odpowiedzi Data Safety opisują te same praktyki.
@@ -98,7 +93,7 @@ potwierdzeniem ochrony kryptograficznej.
 
 - Potwierdzić, że `com.cretorix.securepasswordmanager` jest docelowym identyfikatorem
   pakietu przed pierwszym przesłaniem.
-- Utworzyć i aktywować jednorazowy produkt Play Console `pro_unlock`.
+- Ustawić bezpłatną dystrybucję i wycofać dawny `pro_unlock` z aktywnej oferty.
 - Podać nazwę prawną wydawcy, e-mail pomocy, kontakt prywatności i publiczny HTTPS URL
   polityki.
 - Sprawdzić tekst oferty, politykę prywatności i Data Safety względem finalnego wydania.

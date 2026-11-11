@@ -10,13 +10,8 @@ on the exact release artifact and the current SDK privacy documentation.
 The current build has no publisher-controlled backend, analytics or telemetry service.
 It does not collect passwords, passphrases, QR secrets, TOTP seeds, notes or vault
 plaintext. The app does not display advertisements and does not include Google Mobile
-Ads or UMP SDKs.
-
-Google Play Billing handles an optional one-time Pro purchase. The app receives the
-product ID, purchase state and purchase token for acknowledgement/restore; it stores only
-a boolean Pro entitlement in private local preferences and does not send purchase tokens
-to a publisher backend. Payment card details are handled by Google Play, not the app.
-Review the current Play Billing SDK disclosures when completing the final Data Safety form.
+Ads or UMP SDKs. The app has no subscriptions or in-app purchases and does not include
+Google Play Billing.
 
 ### Local processing
 
@@ -65,8 +60,8 @@ no background camera access.
   separate media objects, and for exported `vault.vlt3` containers.
 - Can users request deletion? Provide the local delete-vault flow and explain that
   provider copies are deleted by the user at the provider.
-- Is data shared? Review Google Play Billing and each remaining SDK against the final
-  dependency versions. The app no longer includes Google Mobile Ads or UMP.
+- Is data shared? Review each remaining SDK against the final dependency versions. The
+  app includes no Google Play Billing, Google Mobile Ads or UMP SDK.
 
 ## SDK review required before submission
 

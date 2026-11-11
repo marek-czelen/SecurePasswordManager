@@ -3,7 +3,7 @@
 **Tytuł (29/30):** SecureVault: Passwords & Docs
 
 **Krótki opis (maks. 80 znaków):**  
-Szyfrowany sejf haseł. Limity Free; kup Pro dla większych możliwości.
+Szyfrowany sejf haseł. Wszystkie funkcje za darmo, bez reklam.
 
 **Pełny opis:**
 
@@ -28,13 +28,10 @@ własnej chmury.
   udanym zapisie; nie jest to harmonogram działający w tle.
 - Dodawaj obrazy, załączniki i wielostronicowe skany dokumentów jako zaszyfrowane dane.
 
-**Free i Pro**
-Free pozwala dodać jeden plik i jeden skan dokumentu, przechowuje do dwóch poprzednich
-haseł na wpis i pozwala importować lub eksportować do pięciu wpisów na operację.
-Jednorazowy zakup Pro usuwa limity planowe plików, dokumentów i liczby wpisów na
-operację importu/eksportu; historia Pro przechowuje do pięciu poprzednich haseł na wpis.
-Pełna zaszyfrowana kopia sejfu nie ma limitu planowego. Nadal obowiązują techniczne
-limity formatu VLT3.
+**Bezpłatna aplikacja**
+Wszystkie funkcje są dostępne bez opłat, subskrypcji, zakupów w aplikacji i reklam.
+Nie ma limitów planowych liczby plików, dokumentów ani wpisów na operację
+importu/eksportu. Obowiązują wyłącznie techniczne limity formatu i rozmiaru danych VLT3.
 
 SecureVault nie synchronizuje sejfu z serwerem wydawcy. Użytkownik sam wybiera miejsce
 kopii zapasowej. Eksport pojedynczego załącznika lub CSV może zapisać odszyfrowane dane

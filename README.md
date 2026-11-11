@@ -17,23 +17,21 @@ hybrid encrypted vault.
   authenticated object context.
 - Small bounded encrypted text block plus separately encrypted immutable image,
   thumbnail, document-page and file objects.
-- Password entries, named images, multi-page scanned documents and files appear in the
-  same searchable list. Media is loaded only when needed. Free includes one file, one
-  scanned document, two previous passwords per entry and five entries per advanced
-  import/export operation; the one-time Pro purchase lifts those plan quotas, subject to
-  VLT3 technical limits.
+- Password entries, files and images, and scanned documents are organized into separate
+  searchable categories. Media is loaded only when needed. All features are available
+  for free, with no plan quotas, ads or in-app purchases; VLT3 technical limits still
+  apply.
 - Copy-on-write saves with `manifest.current` as the commit point and
   `manifest.previous` for recovery.
 - Encrypted backup/export, passphrase+Recovery-QR import, and an optional
-  user-selected encrypted backup location refreshed after each successful save.
+  user-selected encrypted backup location refreshed after each successful save. Optional
+  on-open synchronization merges newer backup entries while retaining local-only entries.
 - Folders, tags, favorites, TOTP, local password-health checks and auto-lock.
 - On-device OCR review, document scanning, clipboard timeout and `FLAG_SECURE`.
 - Polish, English, German and French UI resources.
 
-The app does not show ads. The one-time Google Play Billing product `pro_unlock` grants
-Pro; its entitlement is cached locally for offline use. The product ID and `play_pro`
-entitlement key remain compatible with previous purchases. Debug builds expose a
-debug-only Free/Pro override.
+The app is completely free, has no ads or in-app purchases, and does not include Google
+Play Billing. No account or purchase entitlement is required to use any feature.
 
 VLT2 is not supported or migrated. If an old `vault.vlt` exists, use the previous app
 version to export its data before creating a VLT3 vault.

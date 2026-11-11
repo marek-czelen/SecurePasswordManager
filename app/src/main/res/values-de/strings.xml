@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SecureVault\nPasswords &amp; Docs</string>
+    <string name="app_name">Password manager</string>
     <string name="app_tagline">Verschlüsselter Tresor für Passwörter und Dokumente</string>
     <string name="first_run_title">Tresor erstellen</string>
     <string name="first_run_subtitle">Lege eine neue 12–24 Zeichen lange PIN oder Passphrase fest (nicht nur Ziffern). Speichere auch den unabhängigen QR-Code — beide werden zur Wiederherstellung benötigt.</string>
@@ -18,6 +18,9 @@
     <string name="err_recovery_passphrase_policy">Die Wiederherstellungs-Passphrase muss 12–24 Zeichen lang sein und darf nicht nur aus Ziffern bestehen.</string>
     <string name="err_recovery_decryption">Die Sicherung konnte nicht entschlüsselt werden. Prüfe, ob Passphrase, Recovery-QR und Sicherungsdatei zum selben Tresor gehören.</string>
     <string name="list_title">Passwörter</string>
+    <string name="category_passwords">Passwörter</string>
+    <string name="category_files_images">Dateien &amp; Bilder</string>
+    <string name="category_documents">Dokumente</string>
     <string name="hint_search">Suchen</string>
     <string name="action_add">Hinzufügen</string>
     <string name="menu_images">Bildcontainer</string>
@@ -34,6 +37,11 @@
     <string name="menu_advanced_import_export">Erweiterter Import/Export</string>
     <string name="advanced_import_export_title">Erweiterter Import/Export</string>
     <string name="advanced_import">Passwörter importieren</string>
+    <string name="progress_import_title">Import läuft</string>
+    <string name="progress_import_message">Datei wird gelesen und Einträge werden vorbereitet…</string>
+    <string name="progress_import_saving">Importierte Einträge werden gespeichert…</string>
+    <string name="progress_recovery_title">Sicherung wird wiederhergestellt</string>
+    <string name="progress_recovery_message">Daten aus der Sicherung werden wiederhergestellt…</string>
     <string name="advanced_export_csv">Als CSV exportieren</string>
     <string name="csv_plaintext_title">CSV-Export ist nicht verschlüsselt</string>
     <string name="csv_plaintext_warning">Die CSV-Datei enthält Passwörter und TOTP-Geheimnisse im Klartext und kann von anderen Apps gelesen werden. Tabellenkalkulationen können Werte, die mit =, +, - oder @ beginnen, als Formeln ausführen. Es werden nur Passworteinträge exportiert; Bilder und Anhänge entfallen. Fortfahren?</string>
@@ -175,6 +183,8 @@
     <string name="settings_sync">Backup</string>
     <string name="settings_link_remote">Automatisches Backup einrichten</string>
     <string name="settings_link_remote_desc">Google Drive, Dropbox, OneDrive, lokale Datei…</string>
+    <string name="settings_sync_backup">Backup beim Öffnen synchronisieren</string>
+    <string name="settings_sync_backup_desc">Neuere Sicherungseinträge zusammenführen und nur lokale Einträge behalten.</string>
     <string name="settings_sync_now">Backup jetzt erstellen</string>
     <string name="settings_backup">Einmalige Kopie an einen anderen Ort</string>
     <string name="settings_import_backup">Backup auf diesem Gerät importieren</string>
@@ -185,6 +195,9 @@
     <string name="msg_remote_linked">Automatisches Backup eingerichtet</string>
     <string name="msg_backup_done">Backup erstellt</string>
     <string name="msg_synced">Backup aktualisiert</string>
+    <string name="msg_remote_sync_merged">Änderungen aus einem neueren Backup zusammengeführt.</string>
+    <string name="progress_sync_title">Backup wird geprüft</string>
+    <string name="progress_sync_message">Neueren Backup-Stand prüfen und zusammenführen…</string>
     <string name="msg_saved_local_sync_failed">Lokal gespeichert; Backup fehlgeschlagen</string>
     <string name="err_remote_link">Automatisches Backup konnte nicht eingerichtet werden</string>
     <string name="err_backup">Backup konnte nicht erstellt werden</string>
@@ -292,25 +305,6 @@
     <string name="cd_copy">Kopieren</string>
     <string name="cd_qr">Wiederherstellungs-QR-Code</string>
     <string name="settings_tutorial">Hilfe und FAQ</string>
-    <string name="settings_premium_debug">Free-/Pro-Testmodus</string>
-    <string name="settings_premium_title">SecureVault Pro</string>
-    <string name="settings_premium_desc">Free: 1 Datei, 1 Dokument, 2 frühere Passwörter pro Eintrag und 5 Einträge pro erweitertem Import/Export-Vorgang. Pro hebt die Limits für Datei-/Dokumentanzahl und Einträge pro Vorgang auf und erhöht den Verlauf auf 5 frühere Passwörter. Ein Tarifwechsel löscht keine gespeicherten Daten. Einmalkauf; offline verfügbar. Technische VLT3-Limits gelten weiterhin.</string>
-    <string name="premium_action_buy">Pro kaufen</string>
-    <string name="premium_action_buy_price">Pro kaufen — %1$s</string>
-    <string name="premium_action_restore">Kauf wiederherstellen</string>
-    <string name="premium_status_free">Aktiver Tarif: Free</string>
-    <string name="premium_status_pro">Aktiver Tarif: Pro (offline verfügbar)</string>
-    <string name="premium_status_connecting">Google Play wird überprüft…</string>
-    <string name="premium_status_pending">Der Kauf wartet auf die Bestätigung durch Google Play.</string>
-    <string name="premium_status_restore_found">Pro-Kauf wiederhergestellt.</string>
-    <string name="premium_status_restore_not_found">Für dieses Google-Play-Konto wurde kein Pro-Kauf gefunden.</string>
-    <string name="premium_status_product_unavailable">Das Pro-Produkt ist derzeit bei Google Play nicht verfügbar.</string>
-    <string name="premium_status_billing_unavailable">Google Play Billing ist nicht verfügbar. Zuvor gespeicherter Pro-Zugriff bleibt offline verfügbar.</string>
-    <string name="msg_file_free_limit">Free enthält eine Datei. Weitere Dateien erfordern Pro.</string>
-    <string name="msg_document_free_limit">Free enthält ein Dokument. Weitere Dokumente erfordern Pro.</string>
-    <string name="csv_free_limit_warning">Free exportiert die ersten %1$d Passworteinträge pro Vorgang. Pro exportiert alle Einträge.</string>
-    <string name="import_free_limit">Mit Free können bis zu %1$d Einträge pro Vorgang importiert werden.</string>
-    <string name="import_free_limit_skipped">Free-Limit: Die ersten %1$d Einträge werden importiert; zusätzliche übersprungene Einträge: %2$d. Pro hebt das Free-Limit von fünf Einträgen pro Vorgang auf.</string>
     <string name="settings_autofill">Passwort-Autofill und Credential Manager</string>
     <string name="settings_autofill_desc">Android-Einstellungen öffnen, SecureVault als Anbieter aktivieren und als bevorzugten Dienst auswählen.</string>
     <string name="settings_autofill_enabled">Klassischer Autofill-Dienst ist aktiv</string>
@@ -344,14 +338,11 @@
     <string name="autofill_unnamed_credential">Login</string>
     <string name="autofill_request_failed">Autofill-Anfrage konnte nicht verarbeitet werden.</string>
     <string name="autofill_save_unavailable">Das Speichern neuer Passwörter aus Formularen ist noch nicht verfügbar.</string>
-    <string name="premium_debug_status">Aktiver Tarif: %1$s</string>
-    <string name="premium_free">Free</string>
-    <string name="premium_pro">Pro</string>
     <string name="tutorial_skip">Überspringen</string>
     <string name="tutorial_next">Weiter</string>
     <string name="tutorial_done">Fertig</string>
     <string name="tutorial_list_title">Deine Liste</string>
-    <string name="tutorial_list_text">Hier erscheinen Passwort- und Bildeinträge. Suche, Favoriten und Tags helfen beim schnellen Finden.</string>
+    <string name="tutorial_list_text">Die Einträge sind in die Bereiche Passwörter, Dateien &amp; Bilder und Dokumente unterteilt. Suche und Favoriten gelten für den ausgewählten Bereich.</string>
     <string name="tutorial_add_title">Einträge hinzufügen</string>
     <string name="tutorial_add_text">Über Hinzufügen kannst du ein Passwort manuell oder ein Bild hinzufügen. Bilder werden zugeschnitten und als verschlüsselte JPGs gespeichert.</string>
     <string name="tutorial_generator_title">Passwortgenerator</string>
@@ -363,8 +354,8 @@
     <string name="tutorial_end_title">Fertig</string>
     <string name="tutorial_end_text">Deine Daten bleiben verschlüsselt. Die Wiederherstellung benötigt Passphrase und unabhängigen QR-Code.</string>
     <string name="help_intro">Anleitung zur App und Antworten auf häufige Fragen. Die Schaltflächen öffnen passende Funktionen.</string>
-    <string name="help_list_title">1. Eine gemeinsame Liste</string>
-    <string name="help_list_text">Passwort- und Bildeinträge erscheinen in einer Liste. Die Suche berücksichtigt Namen, Logins, URLs, Ordner und Tags.</string>
+    <string name="help_list_title">1. Eintragskategorien</string>
+    <string name="help_list_text">Die Liste ist in Passwörter, Dateien &amp; Bilder und Dokumente unterteilt. Die Suche berücksichtigt Namen, Logins, URLs, Ordner und Tags im ausgewählten Bereich.</string>
     <string name="help_add_action">Hinzufügen öffnen</string>
     <string name="help_images_title">2. Bild hinzufügen</string>
     <string name="help_images_text">Kamera oder Galerie wählen, Foto mit Zoom zuschneiden, benennen und speichern. Nur das JPG wird verschlüsselt im Tresor gespeichert.</string>
@@ -382,8 +373,8 @@
     <string name="help_faq_chrome_answer">1. Lege SecureVault in den Android-Einstellungen als bevorzugten Dienst fest: Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern &gt; SecureVault. Falls angezeigt, aktiviere SecureVault zuerst unter „Zusätzliche Anbieter“.\n2. Öffne in Chrome 135 oder neuer ⋮ &gt; Einstellungen &gt; Autofill-Dienste und aktiviere „Mit einem anderen Dienst automatisch ausfüllen“.\n3. Starte Chrome neu, tippe in ein Anmeldefeld und wähle den SecureVault-Vorschlag. Fehlt die Einstellung, aktualisiere Chrome. Bezeichnungen und Pfade können je nach Gerät variieren.</string>
     <string name="help_faq_default_provider_question">Wie lege ich SecureVault als Android-Standard für Passwörter fest?</string>
     <string name="help_faq_default_provider_answer">Öffne unter Android 14 oder neuer Einstellungen &gt; Passwörter, Passkeys und Konten &gt; „Bevorzugter Dienst“ ändern und wähle SecureVault. Aktiviere es bei Bedarf zuerst unter „Zusätzliche Anbieter“. Bei älteren Android-Versionen suche in den Einstellungen nach „Autofill-Dienst“ oder öffne System &gt; Sprachen und Eingabe &gt; Autofill-Dienst und wähle SecureVault. Die Pfade unterscheiden sich je nach Hersteller.</string>
-    <string name="help_faq_pro_question">Was ist in Pro enthalten?</string>
-    <string name="help_faq_pro_answer">Alle Funktionen sind in Free eingeschränkt verfügbar: eine Datei, ein Dokument, bis zu 2 neue frühere Passwörter pro Eintrag und bis zu 5 Einträge pro erweitertem Import/Export-Vorgang. Bereits gespeicherte Passwortverläufe bleiben zugänglich. Pro hebt die Limits für Datei-/Dokumentanzahl und Einträge pro Vorgang auf und speichert bis zu 5 neue frühere Passwörter pro Eintrag. Vollständige verschlüsselte Tresor-Backups sind nicht begrenzt.</string>
+    <string name="help_faq_free_question">Ist die App vollständig kostenlos?</string>
+    <string name="help_faq_free_answer">Ja. Alle Funktionen sind kostenlos und ohne Abonnement, In-App-Käufe oder Werbung verfügbar. Es gelten nur technische Format- und Datengrößenlimits.</string>
     <string name="help_faq_vault_reader_question">Kann ich ein Tresor-Backup ohne die Handy-App lesen?</string>
     <string name="help_faq_vault_reader_answer">Ja. Web-Tresor-Leser: https://www.cretorix.eu/apps/securevault-web/index.html. Eigenständige Windows-Datei: https://www.cretorix.eu/downloads/windows.html.</string>
     <string name="help_autofill_settings_action">Autofill-Einstellungen öffnen</string>
