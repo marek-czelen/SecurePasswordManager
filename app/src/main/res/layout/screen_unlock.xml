@@ -115,6 +115,15 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/action_recovery"
                 app:icon="@drawable/ic_restore" />
+
+            <TextView
+                android:id="@+id/versionInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

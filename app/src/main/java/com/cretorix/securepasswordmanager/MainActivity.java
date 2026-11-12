@@ -71,6 +71,7 @@ import com.cretorix.securepasswordmanager.crypto.VaultObjectIds;
 import com.cretorix.securepasswordmanager.crypto.VaultObjectRef;
 import com.cretorix.securepasswordmanager.crypto.VaultSizeLimitException;
 import com.cretorix.securepasswordmanager.crypto.VaultTextDataCodec;
+import com.cretorix.securepasswordmanager.crypto.VaultV3Format;
 import com.cretorix.securepasswordmanager.repository.VaultV3Repository;
 import com.cretorix.securepasswordmanager.security.PinPolicy;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -701,6 +702,9 @@ public final class MainActivity extends AppCompatActivity {
     private void showUnlock() {
         unlocked = false;
         setScreen(R.layout.screen_unlock);
+        TextView versionInfo = findViewById(R.id.versionInfo);
+        versionInfo.setText(getString(R.string.version_info, BuildConfig.VERSION_NAME,
+                VaultV3Format.CONTAINER_FORMAT_VERSION));
         // Android presents strong biometrics first and the secure screen credential as fallback.
         findViewById(R.id.tilPin).setVisibility(View.GONE);
         findViewById(R.id.btnUnlock).setVisibility(View.GONE);

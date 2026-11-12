@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Password manager</string>
     <string name="app_tagline">Verschlüsselter Tresor für Passwörter und Dokumente</string>
+    <string name="version_info">App-Version %1$s • Unterstütztes Tresorformat VLT%2$d</string>
     <string name="first_run_title">Tresor erstellen</string>
     <string name="first_run_subtitle">Lege eine neue 8–24 Zeichen lange PIN oder Passphrase fest (nicht nur Ziffern). Speichere auch den unabhängigen QR-Code — beide werden zur Wiederherstellung benötigt.</string>
     <string name="hint_true_pin">PIN / Passphrase (8–24 Zeichen)</string>

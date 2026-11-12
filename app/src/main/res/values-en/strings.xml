@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Password manager</string>
     <string name="app_tagline">Encrypted vault for passwords and documents</string>
+    <string name="version_info">App version %1$s • Supported vault format VLT%2$d</string>
     <string name="first_run_title">Create vault</string>
     <string name="first_run_subtitle">Set a new 8–24 character PIN or passphrase (not digits only). Save the independent QR code too — both are required for recovery.</string>
     <string name="hint_true_pin">PIN / passphrase (8–24 characters)</string>

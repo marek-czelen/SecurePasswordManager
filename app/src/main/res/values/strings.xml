@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Password manager</string>
     <string name="app_tagline">Szyfrowany sejf na hasła i dokumenty</string>
+    <string name="version_info">Wersja aplikacji %1$s • Obsługiwany format VLT%2$d</string>
 
     <!-- First run -->
     <string name="first_run_title">Utwórz magazyn</string>

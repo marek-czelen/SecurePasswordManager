@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Password manager</string>
     <string name="app_tagline">Coffre chiffré pour mots de passe et documents</string>
+    <string name="version_info">Version de l’application %1$s • Format de coffre pris en charge : VLT%2$d</string>
     <string name="first_run_title">Créer le coffre-fort</string>
     <string name="first_run_subtitle">Définissez un PIN ou une phrase secrète de 8 à 24 caractères (pas uniquement des chiffres). Enregistrez aussi le QR indépendant : les deux sont nécessaires à la récupération.</string>
     <string name="hint_true_pin">PIN / phrase secrète (8–24 caractères)</string>
