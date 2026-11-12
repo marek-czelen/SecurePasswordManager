@@ -185,20 +185,40 @@ public final class OcrReviewActivity extends AppCompatActivity {
             return;
         }
         processing = true;
-        Toast.makeText(this, R.string.ocr_processing, Toast.LENGTH_SHORT).show();
-        executor.execute(() -> {
-            String name = recognizeRegion(nameRect, false);
-            String login = recognizeRegion(loginRect, true);
-            String password = recognizeRegion(passwordRect, true);
-            runOnUiThread(() -> {
-                Intent data = new Intent();
-                data.putExtra(EXTRA_NAME, name);
-                data.putExtra(EXTRA_LOGIN, login);
-                data.putExtra(EXTRA_PASSWORD, password);
-                setResult(RESULT_OK, data);
-                finish();
+        findViewById(R.id.ocrProgress).setVisibility(View.VISIBLE);
+        findViewById(R.id.btnConfirm).setEnabled(false);
+        try {
+            executor.execute(() -> {
+                try {
+                    String name = recognizeRegion(nameRect, false);
+                    String login = recognizeRegion(loginRect, true);
+                    String password = recognizeRegion(passwordRect, true);
+                    runOnUiThread(() -> {
+                        Intent data = new Intent();
+                        data.putExtra(EXTRA_NAME, name);
+                        data.putExtra(EXTRA_LOGIN, login);
+                        data.putExtra(EXTRA_PASSWORD, password);
+                        setResult(RESULT_OK, data);
+                        finish();
+                    });
+                } catch (RuntimeException exception) {
+                    android.util.Log.e("SPM_OCR", "OCR processing failed",
+                            exception);
+                    runOnUiThread(() -> {
+                        processing = false;
+                        findViewById(R.id.ocrProgress).setVisibility(View.GONE);
+                        findViewById(R.id.btnConfirm).setEnabled(true);
+                        Toast.makeText(this, R.string.err_ocr, Toast.LENGTH_SHORT).show();
+                    });
+                }
             });
-        });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            processing = false;
+            findViewById(R.id.ocrProgress).setVisibility(View.GONE);
+            findViewById(R.id.btnConfirm).setEnabled(true);
+            android.util.Log.e("SPM_OCR", "OCR processing could not be scheduled", exception);
+            Toast.makeText(this, R.string.err_ocr, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /** Crops the selected region (with a small margin) and OCRs it synchronously. */

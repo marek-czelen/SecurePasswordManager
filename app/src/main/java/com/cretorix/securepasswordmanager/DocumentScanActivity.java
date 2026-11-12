@@ -82,6 +82,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
     private DocumentReviewOverlay reviewOverlay;
     private TextView status;
     private TextView pageCount;
+    private View processingProgress;
     private AppCompatImageButton flashlightToggle;
     private AppCompatImageButton captureButton;
     private AppCompatImageButton finishButton;
@@ -134,6 +135,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
         reviewOverlay.setImageView(reviewImage);
         status = findViewById(R.id.documentScanStatus);
         pageCount = findViewById(R.id.documentPageCount);
+        processingProgress = findViewById(R.id.documentScanProgress);
         flashlightToggle = findViewById(R.id.documentFlashlight);
         captureButton = findViewById(R.id.documentCapture);
         finishButton = findViewById(R.id.documentFinish);
@@ -457,6 +459,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
     }
 
     private void updateReviewActions() {
+        updateProcessingProgress();
         boolean ready = !captureInProgress
                 && (showingRectifiedReview || reviewOverlay.isSelectionValid());
         acceptButton.setEnabled(ready);
@@ -854,6 +857,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
     }
 
     private void updateCameraActions() {
+        updateProcessingProgress();
         if (cameraControls == null || cameraControls.getVisibility() != View.VISIBLE) {
             return;
         }
@@ -863,6 +867,10 @@ public final class DocumentScanActivity extends AppCompatActivity {
         captureButton.setEnabled(ready && acceptedPages.size()
                 < VaultItem.MAX_DOCUMENT_PAGES);
         finishButton.setEnabled(ready && !acceptedPages.isEmpty());
+    }
+
+    private void updateProcessingProgress() {
+        processingProgress.setVisibility(captureInProgress ? View.VISIBLE : View.GONE);
     }
 
     private void showFlashlightError(Exception exception) {

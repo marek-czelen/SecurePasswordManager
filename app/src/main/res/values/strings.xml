@@ -4,8 +4,8 @@
 
     <!-- First run -->
     <string name="first_run_title">Utwórz magazyn</string>
-    <string name="first_run_subtitle">Ustaw nowy PIN lub hasło o długości 12–24 znaków (nie tylko cyfry). Zapisz także niezależny kod QR — oba są wymagane do odzyskiwania.</string>
-    <string name="hint_true_pin">PIN / hasło (12–24 znaki)</string>
+    <string name="first_run_subtitle">Ustaw nowy PIN lub hasło o długości 8–24 znaków (nie tylko cyfry). Zapisz także niezależny kod QR — oba są wymagane do odzyskiwania.</string>
+    <string name="hint_true_pin">PIN / hasło (8–24 znaki)</string>
     <string name="hint_confirm_pin">Potwierdź PIN / hasło</string>
     <string name="action_create_vault">Utwórz magazyn</string>
     <string name="first_run_note">Kod QR zawiera losowy sekret, nie klucz danych. Przechowuj go oddzielnie od pliku vault.vlt3 i PIN-u.</string>
@@ -19,7 +19,7 @@
     <string name="device_lock_required_title">Wymagana blokada ekranu Androida</string>
     <string name="device_lock_required_message">Aby chronić klucz sejfu, ustaw w Androidzie PIN, wzór lub hasło. Biometria jest opcjonalna.</string>
     <string name="action_open_security_settings">Otwórz ustawienia zabezpieczeń</string>
-    <string name="err_recovery_passphrase_policy">Hasło odzyskiwania musi mieć 12–24 znaki i nie może składać się wyłącznie z cyfr.</string>
+    <string name="err_recovery_passphrase_policy">PIN / hasło musi mieć 8–24 znaki i nie może składać się wyłącznie z cyfr.</string>
     <string name="err_recovery_decryption">Nie udało się odszyfrować kopii. Sprawdź, czy hasło, kod QR odzyskiwania i plik kopii należą do tego samego magazynu.</string>
 
     <!-- List -->
@@ -27,6 +27,9 @@
     <string name="category_passwords">Hasła</string>
     <string name="category_files_images">Pliki i obrazy</string>
     <string name="category_documents">Dokumenty</string>
+    <string name="category_passwords_count">Hasła (%1$d)</string>
+    <string name="category_files_images_count">Pliki i obrazy (%1$d)</string>
+    <string name="category_documents_count">Dokumenty (%1$d)</string>
     <string name="hint_search">Szukaj</string>
     <string name="action_add">Dodaj</string>
     <string name="menu_images">Kontener obrazów</string>
@@ -48,6 +51,34 @@
     <string name="progress_import_saving">Zapisywanie zaimportowanych wpisów…</string>
     <string name="progress_recovery_title">Odzyskiwanie kopii zapasowej</string>
     <string name="progress_recovery_message">Przywracanie danych z kopii zapasowej…</string>
+    <string name="progress_create_title">Tworzenie sejfu</string>
+    <string name="progress_create_message">Generowanie kluczy i szyfrowanie sejfu…</string>
+    <string name="progress_unlock_title">Otwieranie sejfu</string>
+    <string name="progress_unlock_message">Odszyfrowywanie danych sejfu…</string>
+    <string name="progress_save_title">Zapisywanie sejfu</string>
+    <string name="progress_save_message">Szyfrowanie i zapisywanie zmian…</string>
+    <string name="progress_backup_title">Zapisywanie kopii</string>
+    <string name="progress_backup_message">Tworzenie zaszyfrowanej kopii…</string>
+    <string name="progress_pin_title">Zmiana PIN-u</string>
+    <string name="progress_pin_message">Aktualizowanie zabezpieczeń sejfu…</string>
+    <string name="progress_qr_title">Generowanie kodu QR</string>
+    <string name="progress_qr_message">Sprawdzanie PIN-u i tworzenie kodu…</string>
+    <string name="progress_recovery_rotate_title">Zmiana kodu odzyskiwania</string>
+    <string name="progress_recovery_rotate_message">Generowanie nowego sekretu i aktualizacja sejfu…</string>
+    <string name="progress_file_title">Przetwarzanie pliku</string>
+    <string name="progress_file_message">Odczytywanie i szyfrowanie pliku…</string>
+    <string name="progress_document_title">Przetwarzanie dokumentu</string>
+    <string name="progress_document_message">Szyfrowanie stron dokumentu…</string>
+    <string name="progress_export_title">Eksportowanie</string>
+    <string name="progress_export_message">Odszyfrowywanie i zapisywanie pliku…</string>
+    <string name="progress_preview_title">Przygotowywanie podglądu</string>
+    <string name="progress_preview_message">Odszyfrowywanie pliku…</string>
+    <string name="progress_csv_title">Eksportowanie CSV</string>
+    <string name="progress_csv_message">Przygotowywanie pliku eksportu…</string>
+    <string name="progress_import_map_title">Przetwarzanie importu</string>
+    <string name="progress_import_map_message">Przypisywanie i sprawdzanie wpisów…</string>
+    <string name="progress_delete_title">Usuwanie sejfu</string>
+    <string name="progress_delete_message">Usuwanie zaszyfrowanych danych i kluczy…</string>
     <string name="advanced_export_csv">Eksportuj do CSV</string>
     <string name="csv_plaintext_title">Eksport CSV nie jest szyfrowany</string>
     <string name="csv_plaintext_warning">Plik CSV zawiera hasła i sekrety TOTP w postaci jawnej i może zostać odczytany przez inne aplikacje. Arkusze kalkulacyjne mogą potraktować wartości zaczynające się od =, +, - lub @ jako formuły. Eksport obejmuje tylko wpisy haseł; obrazy i załączniki nie zostaną wyeksportowane. Kontynuować?</string>
@@ -256,7 +287,8 @@
     <!-- Settings -->
     <string name="settings_title">Ustawienia</string>
     <string name="settings_security">Bezpieczeństwo</string>
-    <string name="settings_show_recovery">Pokaż kod odzyskiwania</string>
+    <string name="settings_show_recovery">Kod odzyskiwania</string>
+    <string name="settings_show_recovery_desc">Pokaż obecny kod lub wygeneruj nowy; poprzedni zostanie unieważniony.</string>
     <string name="settings_change_pin">Zmień PIN</string>
     <string name="settings_autolock">Auto-blokada</string>
     <string name="autolock_1">1 minuta</string>
@@ -290,16 +322,22 @@
 
     <!-- Recovery -->
     <string name="recovery_qr_title">Kod odzyskiwania</string>
+    <string name="recovery_qr_show_current">Pokaż obecny kod</string>
+    <string name="recovery_qr_rotate">Wygeneruj nowy kod</string>
+    <string name="recovery_qr_rotate_title">Wygeneruj nowy kod odzyskiwania</string>
+    <string name="recovery_qr_rotate_message">Poprzedni kod przestanie działać. Zapisz nowy kod bezpiecznie; jeśli jest ustawiona automatyczna kopia, zostanie zaktualizowana.</string>
+    <string name="hint_current_pin">Obecny PIN / hasło</string>
+    <string name="msg_recovery_rotated">Wygenerowano nowy kod odzyskiwania. Poprzedni kod jest już nieważny.</string>
     <string name="recovery_qr_note">To RQR2: losowy 256-bitowy sekret i uwierzytelnione metadane, nigdy klucz DEK. Przechowuj kod oddzielnie od vault.vlt3. Odzyskiwanie wymaga także PIN-u / hasła.</string>
     <string name="passphrase_qr_title">QR z PIN-em / hasłem</string>
     <string name="passphrase_qr_warning">Ten QR zawiera passphrase w formie możliwej do odczytania. Przechowuj go oddzielnie od kodu odzyskiwania. Do otwarcia vaultu nadal potrzebne są oba kody.</string>
     <string name="action_share_jpg">Udostępnij jako JPG</string>
     <string name="action_show_passphrase_qr">Pokaż QR PIN-u</string>
-    <string name="hint_passphrase">PIN / hasło (12–24 znaki)</string>
+    <string name="hint_passphrase">PIN / hasło (8–24 znaki)</string>
     <string name="action_scan_passphrase">Skanuj QR PIN-u</string>
     <string name="action_scan_recovery">Skanuj kod recovery</string>
     <string name="recovery_title">Odzyskiwanie</string>
-    <string name="recovery_subtitle">Na nowym urządzeniu wybierz vault.vlt3, zeskanuj RQR2 i wpisz ten sam 12–24-znakowy PIN / hasło.</string>
+    <string name="recovery_subtitle">Na nowym urządzeniu wybierz vault.vlt3, zeskanuj RQR2 i wpisz ten sam PIN / hasło o długości 8–24 znaków.</string>
     <string name="hint_recovery_payload">Kod odzyskiwania</string>
     <string name="action_scan">Skanuj kod</string>
     <string name="action_pick_file">Wybierz vault.vlt3</string>
@@ -315,7 +353,7 @@
     <!-- Errors / status -->
     <string name="err_init">Nie można zainicjalizować bezpiecznego magazynu.</string>
     <string name="err_legacy_vault">Wykryto sejf VLT2, którego ta wersja nie obsługuje. Otwórz go w poprzedniej wersji aplikacji lub utwórz nowy sejf.</string>
-    <string name="err_pin_mismatch">PIN / hasło musi mieć 12–24 znaków, nie może składać się wyłącznie z cyfr i musi być powtórzony poprawnie.</string>
+    <string name="err_pin_mismatch">PIN / hasło musi mieć 8–24 znaków, nie może składać się wyłącznie z cyfr i musi być powtórzony poprawnie.</string>
     <string name="err_create">Nie udało się utworzyć magazynu.</string>
     <string name="err_unlock">Odblokuj biometrią lub PIN-em, wzorem albo hasłem ekranu blokady Androida. Odzyskiwanie wymaga też kodu QR.</string>
     <string name="err_open">Nie udało się otworzyć magazynu.</string>

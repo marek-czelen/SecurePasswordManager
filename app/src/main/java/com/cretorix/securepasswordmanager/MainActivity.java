@@ -412,6 +412,7 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         awaitingResult = true;
+        showProgressDialog(R.string.progress_document_title, R.string.progress_document_message);
         try {
             ioExecutor.execute(() -> {
                 List<PendingVaultAsset> pending = new ArrayList<>(pages.size());
@@ -447,9 +448,13 @@ public final class MainActivity extends AppCompatActivity {
                     items.add(item);
                     List<PendingVaultAsset> savePending = pending;
                     pending = null;
-                    runOnUiThread(() -> saveData(new VaultData(items), savePending));
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        saveData(new VaultData(items), savePending);
+                    });
                 } catch (VaultSizeLimitException exception) {
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_document_page_size);
                     });
@@ -457,6 +462,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.e(IMAGE_LOG, "document import failed: "
                             + exception.getClass().getSimpleName());
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_image);
                     });
@@ -468,6 +474,7 @@ public final class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
             awaitingResult = false;
             deleteTemporaryDocumentPages(pages);
             toast(R.string.err_image);
@@ -591,6 +598,7 @@ public final class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         Log.d(IMAGE_LOG, "MainActivity.onDestroy finishing=" + isFinishing());
+        hideProgressDialog();
         super.onDestroy();
         ioExecutor.shutdownNow();
     }
@@ -651,18 +659,41 @@ public final class MainActivity extends AppCompatActivity {
                 clear(second);
                 return;
             }
+            awaitingResult = true;
+            showProgressDialog(R.string.progress_create_title,
+                    R.string.progress_create_message);
             try {
-                repository.create(first);
-                sessionTruePin = first.clone();
-                showInitialRecoveryQrDialog();
-                showUnlock();
-            } catch (GeneralSecurityException | java.io.IOException exception) {
-                Log.e(IMAGE_LOG, "vault creation failed: "
-                        + exception.getClass().getSimpleName());
-                toast(R.string.err_create);
-            } finally {
+                ioExecutor.execute(() -> {
+                    try {
+                        repository.create(first);
+                        char[] confirmedPin = first.clone();
+                        runOnUiThread(() -> {
+                            hideProgressDialog();
+                            awaitingResult = false;
+                            sessionTruePin = confirmedPin;
+                            showInitialRecoveryQrDialog();
+                            showUnlock();
+                        });
+                    } catch (GeneralSecurityException | java.io.IOException exception) {
+                        Log.e(IMAGE_LOG, "vault creation failed: "
+                                + exception.getClass().getSimpleName());
+                        runOnUiThread(() -> {
+                            hideProgressDialog();
+                            awaitingResult = false;
+                            toast(R.string.err_create);
+                        });
+                    } finally {
+                        clear(first);
+                        clear(second);
+                    }
+                });
+            } catch (java.util.concurrent.RejectedExecutionException exception) {
+                hideProgressDialog();
+                awaitingResult = false;
                 clear(first);
                 clear(second);
+                Log.e(IMAGE_LOG, "vault creation could not be scheduled", exception);
+                toast(R.string.err_create);
             }
         });
     }
@@ -708,18 +739,41 @@ public final class MainActivity extends AppCompatActivity {
                         @Override
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
+                            awaitingResult = true;
+                            showProgressDialog(R.string.progress_unlock_title,
+                                    R.string.progress_unlock_message);
                             try {
-                                VaultV3Repository.OpenResult opened =
-                                        repository.openWithDeviceAuth(
-                                                result.getCryptoObject().getCipher());
-                                clearSession();
-                                deviceAuthenticatedSession = true;
-                                currentData = opened.data;
-                                sessionDek = opened.copyDek();
-                                sessionRecoveredPrevious = opened.recoveredPrevious;
-                                showVault();
-                                opened.clear();
-                            } catch (GeneralSecurityException | java.io.IOException exception) {
+                                ioExecutor.execute(() -> {
+                                    try {
+                                        VaultV3Repository.OpenResult opened =
+                                                repository.openWithDeviceAuth(
+                                                        result.getCryptoObject().getCipher());
+                                        runOnUiThread(() -> {
+                                            hideProgressDialog();
+                                            awaitingResult = false;
+                                            clearSession();
+                                            deviceAuthenticatedSession = true;
+                                            currentData = opened.data;
+                                            sessionDek = opened.copyDek();
+                                            sessionRecoveredPrevious = opened.recoveredPrevious;
+                                            showVault();
+                                            opened.clear();
+                                        });
+                                    } catch (GeneralSecurityException
+                                             | java.io.IOException exception) {
+                                        Log.e(IMAGE_LOG, "vault unlock failed: "
+                                                + exception.getClass().getSimpleName());
+                                        runOnUiThread(() -> {
+                                            hideProgressDialog();
+                                            awaitingResult = false;
+                                            toast(R.string.err_open);
+                                        });
+                                    }
+                                });
+                            } catch (java.util.concurrent.RejectedExecutionException exception) {
+                                hideProgressDialog();
+                                awaitingResult = false;
+                                Log.e(IMAGE_LOG, "vault unlock could not be scheduled", exception);
                                 toast(R.string.err_open);
                             }
                         }
@@ -1298,23 +1352,28 @@ public final class MainActivity extends AppCompatActivity {
                         mapping[i] = spinners[i].getSelectedItemPosition() - 1;
                     }
                     awaitingResult = true;
+                    showProgressDialog(R.string.progress_import_map_title,
+                            R.string.progress_import_map_message);
                     try {
                         ioExecutor.execute(() -> {
                             try {
                                 AdvancedImportExport.MappingResult mapped =
                                         AdvancedImportExport.map(table, mapping);
                                 runOnUiThread(() -> {
+                                    hideProgressDialog();
                                     awaitingResult = false;
                                     showImportPreview(mapped.items, mapped.ignoredRows, warning);
                                 });
                             } catch (IOException exception) {
                                 runOnUiThread(() -> {
+                                    hideProgressDialog();
                                     awaitingResult = false;
                                     toast(R.string.err_advanced_import);
                                 });
                             }
                         });
                     } catch (java.util.concurrent.RejectedExecutionException exception) {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_advanced_import);
                     }
@@ -1393,6 +1452,7 @@ public final class MainActivity extends AppCompatActivity {
     private void exportCsv(Uri uri) {
         VaultData snapshot = currentData;
         awaitingResult = true;
+        showProgressDialog(R.string.progress_csv_title, R.string.progress_csv_message);
         try {
             ioExecutor.execute(() -> {
                 try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
@@ -1402,6 +1462,7 @@ public final class MainActivity extends AppCompatActivity {
                     AdvancedImportExport.writeCsv(output,
                             snapshot.items);
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.msg_csv_exported);
                     });
@@ -1409,18 +1470,21 @@ public final class MainActivity extends AppCompatActivity {
                     Log.e(IMAGE_LOG, "CSV export failed: "
                             + exception.getClass().getSimpleName());
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_csv_export);
                     });
                 }
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
             awaitingResult = false;
             toast(R.string.err_csv_export);
         }
     }
 
     private void renderList() {
+        updateCategoryCounts();
         List<VaultItem> filtered = new ArrayList<>();
         String query = searchQuery.trim().toLowerCase(Locale.getDefault());
         for (VaultItem item : currentData.items) {
@@ -1435,6 +1499,28 @@ public final class MainActivity extends AppCompatActivity {
         boolean isEmpty = filtered.isEmpty();
         empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         recycler.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+    }
+
+    private void updateCategoryCounts() {
+        TabLayout tabs = findViewById(R.id.categoryTabs);
+        int passwords = 0;
+        int filesAndImages = 0;
+        int documents = 0;
+        for (VaultItem item : currentData.items) {
+            if (VaultItem.TYPE_LOGIN.equals(item.type)) {
+                passwords++;
+            } else if (item.isFile() || item.isImage()) {
+                filesAndImages++;
+            } else if (item.isDocument()) {
+                documents++;
+            }
+        }
+        tabs.getTabAt(CATEGORY_PASSWORDS).setText(
+                getString(R.string.category_passwords_count, passwords));
+        tabs.getTabAt(CATEGORY_FILES_IMAGES).setText(
+                getString(R.string.category_files_images_count, filesAndImages));
+        tabs.getTabAt(CATEGORY_DOCUMENTS).setText(
+                getString(R.string.category_documents_count, documents));
     }
 
     private boolean matchesCategory(VaultItem item) {
@@ -1696,6 +1782,8 @@ public final class MainActivity extends AppCompatActivity {
         }
         byte[] key = sessionDek.clone();
         String pageId = item.documentPageIds.get(page);
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_preview_title, R.string.progress_preview_message);
         ioExecutor.execute(() -> {
             byte[] jpeg = null;
             Bitmap bitmap = null;
@@ -1707,6 +1795,9 @@ public final class MainActivity extends AppCompatActivity {
                         VaultImageProcessor.MAX_IMAGE_BYTES, 2048);
                 Bitmap decoded = bitmap;
                 runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
                     if (unlocked && dialog.isShowing() && selectedPage[0] == page) {
                         target.setImageBitmap(decoded);
                         if (resource.recoveredPrevious) {
@@ -1718,6 +1809,9 @@ public final class MainActivity extends AppCompatActivity {
                 });
             } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
                 runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
                     if (dialog.isShowing() && selectedPage[0] == page) {
                         toast(R.string.err_image);
                     }
@@ -1739,6 +1833,8 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_preview_title, R.string.progress_preview_message);
         ioExecutor.execute(() -> {
             byte[] jpeg = null;
             Bitmap bitmap = null;
@@ -1750,6 +1846,9 @@ public final class MainActivity extends AppCompatActivity {
                         VaultImageProcessor.MAX_IMAGE_BYTES, 2048);
                 Bitmap decoded = bitmap;
                 runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
                     if (unlocked && dialog.isShowing()) {
                         target.setImageBitmap(decoded);
                         if (resource.recoveredPrevious) {
@@ -1761,6 +1860,9 @@ public final class MainActivity extends AppCompatActivity {
                 });
             } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
                 runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
                     if (dialog.isShowing()) {
                         toast(R.string.err_image);
                     }
@@ -1844,6 +1946,7 @@ public final class MainActivity extends AppCompatActivity {
         }
         byte[] key = sessionDek.clone();
         awaitingResult = true;
+        showProgressDialog(R.string.progress_preview_title, R.string.progress_preview_message);
         ioExecutor.execute(() -> {
             byte[] plaintext = null;
             File previewFile = null;
@@ -1864,12 +1967,16 @@ public final class MainActivity extends AppCompatActivity {
                 }
                 File readyFile = previewFile;
                 previewFile = null;
-                runOnUiThread(() -> launchAttachmentPreview(item, readyFile,
-                        previewMimeType(item), resource.recoveredPrevious));
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    launchAttachmentPreview(item, readyFile,
+                            previewMimeType(item), resource.recoveredPrevious);
+                });
             } catch (IOException | GeneralSecurityException | IllegalArgumentException exception) {
                 Log.e(IMAGE_LOG, "file preview failed: "
                         + exception.getClass().getSimpleName());
                 runOnUiThread(() -> {
+                    hideProgressDialog();
                     awaitingResult = false;
                     toast(R.string.err_file);
                 });
@@ -1974,6 +2081,8 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_export_title, R.string.progress_export_message);
         ioExecutor.execute(() -> {
             byte[] plaintext = null;
             try {
@@ -1991,13 +2100,21 @@ public final class MainActivity extends AppCompatActivity {
                 int message = resource.recoveredPrevious
                         ? R.string.msg_recovered_previous_resource : R.string.msg_file_exported;
                 runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
                     toast(message);
                     if (resource.recoveredPrevious) {
                         notifyPreviousResourceRecovered();
                     }
                 });
             } catch (IOException | GeneralSecurityException exception) {
-                runOnUiThread(() -> toast(R.string.err_file));
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    awaitingResult = false;
+                    scheduleAutoLock();
+                    toast(R.string.err_file);
+                });
             } finally {
                 Crypto.wipe(plaintext);
                 Crypto.wipe(key);
@@ -2346,13 +2463,35 @@ public final class MainActivity extends AppCompatActivity {
                 .setMessage(R.string.delete_vault_message)
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_delete, (dialog, which) -> {
+                    awaitingResult = true;
+                    showProgressDialog(R.string.progress_delete_title,
+                            R.string.progress_delete_message);
                     try {
-                        repository.deleteLocalVault();
-                        CredentialProviderSession.clearAll();
-                        clearSession();
-                        deleteCacheContents();
-                        showFirstRun();
-                    } catch (IOException | GeneralSecurityException exception) {
+                        ioExecutor.execute(() -> {
+                            try {
+                                repository.deleteLocalVault();
+                                deleteCacheContents();
+                                runOnUiThread(() -> {
+                                    hideProgressDialog();
+                                    awaitingResult = false;
+                                    CredentialProviderSession.clearAll();
+                                    clearSession();
+                                    showFirstRun();
+                                });
+                            } catch (IOException | GeneralSecurityException exception) {
+                                Log.e(RECOVERY_LOG, "local vault deletion failed", exception);
+                                runOnUiThread(() -> {
+                                    hideProgressDialog();
+                                    awaitingResult = false;
+                                    toast(R.string.err_save);
+                                });
+                            }
+                        });
+                    } catch (java.util.concurrent.RejectedExecutionException exception) {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        Log.e(RECOVERY_LOG, "local vault deletion could not be scheduled",
+                                exception);
                         toast(R.string.err_save);
                     }
                 })
@@ -2384,6 +2523,7 @@ public final class MainActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_change_pin, null);
         TextInputEditText oldPin = view.findViewById(R.id.editOldPin);
         TextInputEditText newPin = view.findViewById(R.id.editNewPin);
+        TextInputEditText confirmNewPin = view.findViewById(R.id.editConfirmNewPin);
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.change_pin_title)
                 .setView(view)
@@ -2391,12 +2531,17 @@ public final class MainActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.action_change, (d, w) -> {
                     char[] oldValue = text(oldPin);
                     char[] newValue = text(newPin);
-                    if (!PinPolicy.isValid(oldValue) || !PinPolicy.isValid(newValue)) {
+                    char[] confirmValue = text(confirmNewPin);
+                    if (!PinPolicy.isValid(oldValue) || !PinPolicy.isValid(newValue)
+                            || !PinPolicy.isValid(confirmValue)
+                            || !Arrays.equals(newValue, confirmValue)) {
                         clear(oldValue);
                         clear(newValue);
-                        toast(R.string.err_unlock);
+                        clear(confirmValue);
+                        toast(R.string.err_pin_mismatch);
                         return;
                     }
+                    clear(confirmValue);
                     if (repository.copyRecoverySecret() != null) {
                         performTruePinChange(oldValue, newValue);
                     } else {
@@ -2453,39 +2598,190 @@ public final class MainActivity extends AppCompatActivity {
         char[] sessionPin = newValue.clone();
         byte[] qrSecret = repository.copyRecoverySecret();
         awaitingResult = true;
-        ioExecutor.execute(() -> {
-            try {
-                repository.changeTruePin(oldValue, newValue);
-                char[] confirmedPin = sessionPin.clone();
-                byte[] confirmedQr = qrSecret == null ? null : qrSecret.clone();
-                runOnUiThread(() -> {
-                    clear(sessionTruePin);
-                    sessionTruePin = confirmedPin.clone();
-                    Session.set(sessionTruePin, currentData, deviceAuthenticatedSession, sessionDek);
-                    Session.setRecoverySecret(confirmedQr);
-                    Session.setRecoveredPrevious(sessionRecoveredPrevious);
-                    awaitingResult = false;
-                    autoBackupAfterSave();
-                    toast(R.string.msg_pin_changed);
-                    clear(confirmedPin);
-                    Crypto.wipe(confirmedQr);
-                });
-            } catch (GeneralSecurityException | IOException exception) {
-                runOnUiThread(() -> {
-                    awaitingResult = false;
-                    toast(R.string.err_change_pin);
-                });
-            } finally {
-                clear(oldValue);
-                clear(newValue);
-                clear(sessionPin);
-                Crypto.wipe(qrSecret);
-            }
-        });
+        showProgressDialog(R.string.progress_pin_title, R.string.progress_pin_message);
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    repository.changeTruePin(oldValue, newValue);
+                    char[] confirmedPin = sessionPin.clone();
+                    byte[] confirmedQr = qrSecret == null ? null : qrSecret.clone();
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        clear(sessionTruePin);
+                        sessionTruePin = confirmedPin.clone();
+                        Session.set(sessionTruePin, currentData, deviceAuthenticatedSession,
+                                sessionDek);
+                        Session.setRecoverySecret(confirmedQr);
+                        Session.setRecoveredPrevious(sessionRecoveredPrevious);
+                        awaitingResult = false;
+                        toast(R.string.msg_pin_changed);
+                        clear(confirmedPin);
+                        Crypto.wipe(confirmedQr);
+                        autoBackupAfterSave();
+                    });
+                } catch (GeneralSecurityException | IOException | IllegalArgumentException exception) {
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        toast(R.string.err_change_pin);
+                    });
+                } finally {
+                    clear(oldValue);
+                    clear(newValue);
+                    clear(sessionPin);
+                    Crypto.wipe(qrSecret);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
+            awaitingResult = false;
+            clear(oldValue);
+            clear(newValue);
+            clear(sessionPin);
+            Crypto.wipe(qrSecret);
+            Log.e(RECOVERY_LOG, "PIN change could not be scheduled", exception);
+            toast(R.string.err_change_pin);
+        }
     }
 
     private void showRecoveryQrDialog() {
-        authenticateForRecoveryQr();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.recovery_qr_title)
+                .setItems(new CharSequence[]{getString(R.string.recovery_qr_show_current),
+                                getString(R.string.recovery_qr_rotate)},
+                        (dialog, which) -> {
+                            if (which == 0) {
+                                authenticateForRecoveryQr();
+                            } else {
+                                requestRecoveryQrRotation();
+                            }
+                        })
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    private void requestRecoveryQrRotation() {
+        byte[] currentSecret = repository.copyRecoverySecret();
+        boolean available = currentSecret != null;
+        Crypto.wipe(currentSecret);
+        if (available) {
+            showRecoveryQrRotationDialog();
+        } else {
+            authenticateForRecoveryQrRotation();
+        }
+    }
+
+    private void authenticateForRecoveryQrRotation() {
+        try {
+            Cipher cipher = repository.prepareRecoveryQrCipher();
+            Executor executor = this::runOnUiThread;
+            awaitingResult = true;
+            DeviceAuthenticationPrompt.builder(this,
+                    getString(R.string.recovery_qr_rotate_title),
+                    getString(R.string.app_tagline))
+                    .build()
+                    .authenticate(new BiometricPrompt.CryptoObject(cipher),
+                            new CancellationSignal(), executor,
+                            new BiometricPrompt.AuthenticationCallback() {
+                                @Override
+                                public void onAuthenticationSucceeded(
+                                        BiometricPrompt.AuthenticationResult result) {
+                                    awaitingResult = false;
+                                    try {
+                                        RecoveryQrPayload payload = repository.openRecoveryQr(
+                                                result.getCryptoObject().getCipher());
+                                        Session.setRecoverySecret(payload.qrSecret);
+                                        Crypto.wipe(payload.qrSecret);
+                                        showRecoveryQrRotationDialog();
+                                    } catch (GeneralSecurityException | IOException exception) {
+                                        Log.e(RECOVERY_LOG,
+                                                "Could not authenticate for recovery-code rotation",
+                                                exception);
+                                        toast(R.string.err_recovery_create);
+                                    }
+                                }
+
+                                @Override
+                                public void onAuthenticationError(int errorCode,
+                                                                  CharSequence errString) {
+                                    awaitingResult = false;
+                                }
+                            });
+        } catch (GeneralSecurityException | IOException exception) {
+            Log.e(RECOVERY_LOG, "Could not prepare recovery-code rotation", exception);
+            toast(R.string.err_recovery_create);
+        }
+    }
+
+    private void showRecoveryQrRotationDialog() {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_recovery_qr_rotate, null);
+        TextInputEditText passphraseField = view.findViewById(R.id.editCurrentPin);
+        com.google.android.material.textfield.TextInputLayout passphraseLayout =
+                view.findViewById(R.id.tilCurrentPin);
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.recovery_qr_rotate_title)
+                .setView(view)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.recovery_qr_rotate, null)
+                .create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(
+                androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(button -> {
+            char[] passphrase = text(passphraseField);
+            if (!PinPolicy.isValid(passphrase)) {
+                clear(passphrase);
+                passphraseLayout.setError(getString(R.string.err_recovery_passphrase_policy));
+                passphraseField.requestFocus();
+                return;
+            }
+            passphraseField.setText(null);
+            dialog.dismiss();
+            rotateRecoveryQr(passphrase);
+        }));
+        dialog.show();
+    }
+
+    private void rotateRecoveryQr(char[] passphrase) {
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_recovery_rotate_title,
+                R.string.progress_recovery_rotate_message);
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    RecoveryQrPayload payload = repository.rotateRecoverySecret(passphrase);
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        Session.setRecoverySecret(payload.qrSecret);
+                        try {
+                            displayRecoveryQr(payload);
+                            toast(R.string.msg_recovery_rotated);
+                        } catch (IOException | com.google.zxing.WriterException exception) {
+                            Log.e(RECOVERY_LOG, "New recovery code could not be displayed",
+                                    exception);
+                            toast(R.string.err_recovery_create);
+                        } finally {
+                            Crypto.wipe(payload.qrSecret);
+                        }
+                        autoBackupAfterSave();
+                    });
+                } catch (GeneralSecurityException | IOException exception) {
+                    Log.e(RECOVERY_LOG, "Recovery-code rotation failed", exception);
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        toast(R.string.err_recovery_create);
+                    });
+                } finally {
+                    clear(passphrase);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            clear(passphrase);
+            hideProgressDialog();
+            awaitingResult = false;
+            Log.e(RECOVERY_LOG, "Recovery-code rotation could not be scheduled", exception);
+            toast(R.string.err_recovery_create);
+        }
     }
 
     private void showInitialRecoveryQrDialog() {
@@ -2643,6 +2939,7 @@ public final class MainActivity extends AppCompatActivity {
     private void showPassphraseQrDialog(char[] passphrase) {
         char[] candidate = passphrase.clone();
         awaitingResult = true;
+        showProgressDialog(R.string.progress_qr_title, R.string.progress_qr_message);
         try {
             ioExecutor.execute(() -> {
                 PassphraseQrPayload payload = null;
@@ -2650,6 +2947,7 @@ public final class MainActivity extends AppCompatActivity {
                     payload = repository.createPassphraseQrPayload(candidate);
                     String encoded = payload.toQrString();
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         displayPassphraseQr(encoded);
                     });
@@ -2657,6 +2955,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.w(RECOVERY_LOG,
                             "Passphrase QR refused because the supplied passphrase mismatched");
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_passphrase_qr_mismatch);
                     });
@@ -2664,6 +2963,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.w(RECOVERY_LOG, "Passphrase QR creation failed: "
                             + exception.getClass().getSimpleName());
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         awaitingResult = false;
                         toast(R.string.err_recovery_create);
                     });
@@ -2678,6 +2978,7 @@ public final class MainActivity extends AppCompatActivity {
             });
         } catch (java.util.concurrent.RejectedExecutionException exception) {
             clear(candidate);
+            hideProgressDialog();
             awaitingResult = false;
             toast(R.string.err_recovery_create);
         }
@@ -2941,10 +3242,7 @@ public final class MainActivity extends AppCompatActivity {
             toast(R.string.err_unlock);
             lock();
         } else {
-            if (importSavePending) {
-                showProgressDialog(R.string.progress_import_title,
-                        R.string.progress_import_saving);
-            }
+            showProgressDialog(R.string.progress_save_title, R.string.progress_save_message);
             char[] pin = sessionTruePin.clone();
             try {
                 ioExecutor.execute(() -> {
@@ -2979,9 +3277,7 @@ public final class MainActivity extends AppCompatActivity {
 
     private void finishSave(VaultData data, boolean imageAdded, boolean fileAdded,
                             boolean documentAdded) {
-        if (importSavePending) {
-            hideProgressDialog();
-        }
+        hideProgressDialog();
         currentData = data;
         Session.updateData(currentData);
         renderList();
@@ -3002,9 +3298,7 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private void failSave(@StringRes int message) {
-        if (importSavePending) {
-            hideProgressDialog();
-        }
+        hideProgressDialog();
         saveInProgress = false;
         awaitingResult = false;
         importSavePending = false;
@@ -3026,10 +3320,8 @@ public final class MainActivity extends AppCompatActivity {
                         @Override
                         public void onAuthenticationSucceeded(
                                 BiometricPrompt.AuthenticationResult result) {
-                            if (importSavePending) {
-                                showProgressDialog(R.string.progress_import_title,
-                                        R.string.progress_import_saving);
-                            }
+                            showProgressDialog(R.string.progress_save_title,
+                                    R.string.progress_save_message);
                             try {
                                 ioExecutor.execute(() -> {
                                     try {
@@ -3116,18 +3408,39 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
-        ioExecutor.execute(() -> {
-            try {
-                repository.pushRemote(key);
-                runOnUiThread(() -> toast(R.string.msg_synced));
-            } catch (Exception exception) {
-                String reason = exception.getMessage();
-                runOnUiThread(() -> showBackupError(
-                        getString(R.string.msg_saved_local_sync_failed), reason));
-            } finally {
-                Crypto.wipe(key);
-            }
-        });
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_backup_title, R.string.progress_backup_message);
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    repository.pushRemote(key);
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        toast(R.string.msg_synced);
+                    });
+                } catch (IOException | GeneralSecurityException | RuntimeException exception) {
+                    String reason = exception.getMessage();
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        showBackupError(getString(R.string.msg_saved_local_sync_failed), reason);
+                    });
+                } finally {
+                    Crypto.wipe(key);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            Crypto.wipe(key);
+            hideProgressDialog();
+            awaitingResult = false;
+            scheduleAutoLock();
+            Log.e(RECOVERY_LOG, "automatic backup could not be scheduled", exception);
+            showBackupError(getString(R.string.msg_saved_local_sync_failed),
+                    exception.getMessage());
+        }
     }
 
     private void checkRemoteBackupOnOpen() {
@@ -3319,39 +3632,53 @@ public final class MainActivity extends AppCompatActivity {
     private void addCroppedImage(Uri uri) {
         Log.d(IMAGE_LOG, "addCroppedImage started, uriPresent=" + (uri != null));
         awaitingResult = true;
-        ioExecutor.execute(() -> {
-            byte[] bytes = null;
-            byte[] thumbnail = null;
-            try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
-                if (input == null) {
-                    throw new IOException("Image is unavailable");
-                }
-                bytes = readLimited(input, VaultImageProcessor.MAX_IMAGE_BYTES);
-                Log.d(IMAGE_LOG, "cropped JPG read bytes=" + bytes.length);
-                thumbnail = VaultImageProcessor.createThumbnail(bytes);
-                byte[] acceptedJpeg = bytes;
-                byte[] acceptedThumbnail = thumbnail;
-                runOnUiThread(() -> requestImageName(acceptedJpeg, acceptedThumbnail));
-                bytes = null;
-                thumbnail = null;
-            } catch (IOException | IllegalArgumentException exception) {
-                Log.e(IMAGE_LOG, "cropped image read failed: "
-                        + exception.getClass().getSimpleName());
-                runOnUiThread(() -> toast(R.string.err_image));
-                runOnUiThread(() -> awaitingResult = false);
-            } finally {
-                Crypto.wipe(bytes);
-                Crypto.wipe(thumbnail);
-                try {
-                    if (uri != null && getPackageName().concat(".fileprovider")
-                            .equals(uri.getAuthority())) {
-                        getContentResolver().delete(uri, null, null);
+        showProgressDialog(R.string.progress_file_title, R.string.progress_file_message);
+        try {
+            ioExecutor.execute(() -> {
+                byte[] bytes = null;
+                byte[] thumbnail = null;
+                try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
+                    if (input == null) {
+                        throw new IOException("Image is unavailable");
                     }
-                } catch (RuntimeException ignored) {
-                    // The FileProvider owns the temporary file; cleanup is best effort.
+                    bytes = readLimited(input, VaultImageProcessor.MAX_IMAGE_BYTES);
+                    Log.d(IMAGE_LOG, "cropped JPG read bytes=" + bytes.length);
+                    thumbnail = VaultImageProcessor.createThumbnail(bytes);
+                    byte[] acceptedJpeg = bytes;
+                    byte[] acceptedThumbnail = thumbnail;
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        requestImageName(acceptedJpeg, acceptedThumbnail);
+                    });
+                    bytes = null;
+                    thumbnail = null;
+                } catch (IOException | IllegalArgumentException exception) {
+                    Log.e(IMAGE_LOG, "cropped image read failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        toast(R.string.err_image);
+                        awaitingResult = false;
+                    });
+                } finally {
+                    Crypto.wipe(bytes);
+                    Crypto.wipe(thumbnail);
+                    try {
+                        if (uri != null && getPackageName().concat(".fileprovider")
+                                .equals(uri.getAuthority())) {
+                            getContentResolver().delete(uri, null, null);
+                        }
+                    } catch (RuntimeException ignored) {
+                        // The FileProvider owns the temporary file; cleanup is best effort.
+                    }
                 }
-            }
-        });
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
+            awaitingResult = false;
+            Log.e(IMAGE_LOG, "cropped image processing could not be scheduled", exception);
+            toast(R.string.err_image);
+        }
     }
 
     private void requestImageName(byte[] jpeg, byte[] thumbnail) {
@@ -3390,9 +3717,11 @@ public final class MainActivity extends AppCompatActivity {
 
     private void addSelectedFile(Uri uri) {
         awaitingResult = true;
-        ioExecutor.execute(() -> {
-            byte[] contents = null;
-            try {
+        showProgressDialog(R.string.progress_file_title, R.string.progress_file_message);
+        try {
+            ioExecutor.execute(() -> {
+                byte[] contents = null;
+                try {
                 long declaredSize = declaredFileSize(uri);
                 if (declaredSize > MAX_FILE_ATTACHMENT_BYTES) {
                     throw new VaultSizeLimitException("File exceeds attachment limit");
@@ -3417,23 +3746,35 @@ public final class MainActivity extends AppCompatActivity {
                 items.add(item);
                 Crypto.wipe(contents);
                 contents = null;
-                runOnUiThread(() -> saveData(new VaultData(items),
-                        Collections.singletonList(pending)));
-            } catch (VaultSizeLimitException exception) {
-                Log.e(IMAGE_LOG, "file exceeds VLT3 attachment limit");
-                runOnUiThread(() -> {
-                    awaitingResult = false;
-                    toast(R.string.err_file_size);
-                });
-            } catch (IOException | IllegalArgumentException exception) {
-                Log.e(IMAGE_LOG, "file attachment failed: "
-                        + exception.getClass().getSimpleName());
-                runOnUiThread(() -> toast(R.string.err_file));
-                runOnUiThread(() -> awaitingResult = false);
-            } finally {
-                Crypto.wipe(contents);
-            }
-        });
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        saveData(new VaultData(items), Collections.singletonList(pending));
+                    });
+                } catch (VaultSizeLimitException exception) {
+                    Log.e(IMAGE_LOG, "file exceeds VLT3 attachment limit");
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        toast(R.string.err_file_size);
+                    });
+                } catch (IOException | IllegalArgumentException exception) {
+                    Log.e(IMAGE_LOG, "file attachment failed: "
+                            + exception.getClass().getSimpleName());
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        toast(R.string.err_file);
+                        awaitingResult = false;
+                    });
+                } finally {
+                    Crypto.wipe(contents);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            hideProgressDialog();
+            awaitingResult = false;
+            Log.e(IMAGE_LOG, "file attachment could not be scheduled", exception);
+            toast(R.string.err_file);
+        }
     }
 
     private long declaredFileSize(Uri uri) {
@@ -3488,6 +3829,7 @@ public final class MainActivity extends AppCompatActivity {
     // region External backup copy
 
     private void finishBackupWrite() {
+        hideProgressDialog();
         awaitingResult = false;
         scheduleAutoLock();
     }
@@ -3501,11 +3843,13 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
+        showProgressDialog(R.string.progress_backup_title, R.string.progress_backup_message);
         try {
             ioExecutor.execute(() -> {
                 try {
                     repository.linkRemote(uri, key);
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         finishBackupWrite();
                         toast(R.string.msg_remote_linked);
                     });
@@ -3513,6 +3857,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.e(RECOVERY_LOG, "backup link failed", exception);
                     String reason = exception.getMessage();
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         finishBackupWrite();
                         showBackupError(getString(R.string.err_remote_link), reason);
                     });
@@ -3523,6 +3868,7 @@ public final class MainActivity extends AppCompatActivity {
         } catch (java.util.concurrent.RejectedExecutionException exception) {
             Crypto.wipe(key);
             Log.e(RECOVERY_LOG, "backup link could not be scheduled", exception);
+            hideProgressDialog();
             finishBackupWrite();
             showBackupError(getString(R.string.err_remote_link), exception.getMessage());
         }
@@ -3537,11 +3883,13 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
+        showProgressDialog(R.string.progress_backup_title, R.string.progress_backup_message);
         try {
             ioExecutor.execute(() -> {
                 try {
                     repository.exportCopy(uri, key);
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         finishBackupWrite();
                         toast(R.string.msg_backup_done);
                     });
@@ -3549,6 +3897,7 @@ public final class MainActivity extends AppCompatActivity {
                     Log.e(RECOVERY_LOG, "backup export failed", exception);
                     String reason = exception.getMessage();
                     runOnUiThread(() -> {
+                        hideProgressDialog();
                         finishBackupWrite();
                         showBackupError(getString(R.string.err_backup), reason);
                     });
@@ -3559,6 +3908,7 @@ public final class MainActivity extends AppCompatActivity {
         } catch (java.util.concurrent.RejectedExecutionException exception) {
             Crypto.wipe(key);
             Log.e(RECOVERY_LOG, "backup export could not be scheduled", exception);
+            hideProgressDialog();
             finishBackupWrite();
             showBackupError(getString(R.string.err_backup), exception.getMessage());
         }
@@ -3571,17 +3921,38 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
         byte[] key = sessionDek.clone();
-        ioExecutor.execute(() -> {
-            try {
-                repository.pushRemote(key);
-                runOnUiThread(() -> toast(R.string.msg_synced));
-            } catch (java.io.IOException | GeneralSecurityException exception) {
-                String reason = exception.getMessage();
-                runOnUiThread(() -> showBackupError(getString(R.string.err_sync), reason));
-            } finally {
-                Crypto.wipe(key);
-            }
-        });
+        awaitingResult = true;
+        showProgressDialog(R.string.progress_backup_title, R.string.progress_backup_message);
+        try {
+            ioExecutor.execute(() -> {
+                try {
+                    repository.pushRemote(key);
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        toast(R.string.msg_synced);
+                    });
+                } catch (IOException | GeneralSecurityException exception) {
+                    String reason = exception.getMessage();
+                    runOnUiThread(() -> {
+                        hideProgressDialog();
+                        awaitingResult = false;
+                        scheduleAutoLock();
+                        showBackupError(getString(R.string.err_sync), reason);
+                    });
+                } finally {
+                    Crypto.wipe(key);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException exception) {
+            Crypto.wipe(key);
+            hideProgressDialog();
+            awaitingResult = false;
+            scheduleAutoLock();
+            Log.e(RECOVERY_LOG, "manual backup sync could not be scheduled", exception);
+            showBackupError(getString(R.string.err_sync), exception.getMessage());
+        }
     }
 
     private void showBackupError(String title, String reason) {

@@ -10,7 +10,7 @@ Nie ma gotowych danych logowania ani zdalnego konta demonstracyjnego.
    Jeśli blokada nie jest ustawiona, skonfiguruj ją w Ustawieniach Androida, a następnie
    wróć do aplikacji.
 2. Przy pierwszym uruchomieniu wybierz **Utwórz magazyn** i wpisz nowe hasło główne dwa
-   razy. Musi ono mieć 12–24 drukowalne znaki ASCII i nie może składać się wyłącznie z
+   razy. Musi ono mieć 8–24 drukowalne znaki ASCII i nie może składać się wyłącznie z
    cyfr. Przykładowe hasło testowe: `ReviewVault-2026!`. Jest ono przeznaczone wyłącznie
    do świeżego sejfu testowego.
 3. Aplikacja wyświetli kod QR odzyskiwania. Zamknij okno, aby kontynuować. Kod QR jest

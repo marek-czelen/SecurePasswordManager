@@ -39,4 +39,21 @@
             android:inputType="textPassword"
             android:maxLength="24" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Spm.TextInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="@string/hint_confirm_pin"
+        app:startIconDrawable="@drawable/ic_lock"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editConfirmNewPin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLength="24" />
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

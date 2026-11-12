@@ -3,9 +3,7 @@ package com.cretorix.securepasswordmanager.repository;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.DocumentsContract;
 import com.cretorix.securepasswordmanager.crypto.Crypto;
 import com.cretorix.securepasswordmanager.crypto.KdfParameters;
 import com.cretorix.securepasswordmanager.crypto.PassphraseQrPayload;
@@ -36,6 +34,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -75,7 +74,7 @@ public final class VaultV3Repository {
     private static final String PREF_LOCKED_UNTIL = "locked_until";
     private static final String PREF_QR_WRAPPED_PREFIX = "qr_wrapped_";
     private static final String PREF_REMOTE_URI = "remote_uri";
-    private static final String PREF_REMOTE_SYNC_BASELINE = "remote_sync_baseline";
+    private static final String PREF_REMOTE_SYNC_BASELINE = "remote_sync_fingerprint";
     private static final int MAX_FAILURES_BEFORE_DELAY = 5;
     private final Context context;
     private final File root;
@@ -243,6 +242,49 @@ public final class VaultV3Repository {
         }
         return new RecoveryQrPayload(header.vaultId, lastQrSecret,
                 header.kdfParameters, header.wrapSalt);
+    }
+
+    public synchronized RecoveryQrPayload rotateRecoverySecret(char[] passphrase)
+            throws IOException, GeneralSecurityException {
+        requirePassphrase(passphrase);
+        if (lastQrSecret == null) {
+            throw new GeneralSecurityException("Recovery QR secret is unavailable");
+        }
+        VaultHeaderV3 old = headerStore.read();
+        byte[] oldSecret = lastQrSecret.clone();
+        byte[] dek = null;
+        byte[] newSecret = Crypto.randomBytes(Crypto.KEY_SIZE);
+        byte[] newQrId = null;
+        byte[] generation = VaultObjectIds.randomId();
+        byte[] wrappedQr = null;
+        String oldQrPreference = qrPreferenceKey(old);
+        try {
+            dek = VaultV3KeyDerivation.unwrapDek(old, passphrase, oldSecret);
+            newQrId = Crypto.sha256(newSecret);
+            Crypto.SealedBox pinWrapper = VaultV3KeyDerivation.wrapDek(dek, passphrase,
+                    newSecret, old.vaultId, old.kdfParameters, old.wrapSalt, newQrId,
+                    old.hardwareKeyId, generation);
+            VaultHeaderV3 updated = new VaultHeaderV3(old.vaultId, old.kdfParameters,
+                    old.wrapSalt, newQrId, old.hardwareKeyId, generation, pinWrapper,
+                    old.hardwareWrappedDek);
+            wrappedQr = keyManager.wrap(deviceAlias(old.vaultId, old.hardwareKeyId), newSecret);
+            String encodedQr = java.util.Base64.getEncoder().encodeToString(wrappedQr);
+            if (!state.edit().putString(qrPreferenceKey(updated), encodedQr).commit()) {
+                throw new IOException("Could not save the new recovery code");
+            }
+            headerStore.write(updated);
+            state.edit().remove(oldQrPreference).apply();
+            replaceLastQrSecret(newSecret);
+            return new RecoveryQrPayload(updated.vaultId, newSecret,
+                    updated.kdfParameters, updated.wrapSalt);
+        } finally {
+            Crypto.wipe(oldSecret);
+            Crypto.wipe(dek);
+            Crypto.wipe(newSecret);
+            Crypto.wipe(newQrId);
+            Crypto.wipe(generation);
+            Crypto.wipe(wrappedQr);
+        }
     }
 
     public void rememberRecoverySecret(byte[] secret) throws IOException, GeneralSecurityException {
@@ -504,7 +546,7 @@ public final class VaultV3Repository {
                 .remove(PREF_REMOTE_SYNC_BASELINE).commit()) {
             throw new IOException("Could not save the backup location");
         }
-        recordRemoteWrite(uri);
+        recordRemoteWrite(dek);
     }
 
     public boolean hasRemote() {
@@ -533,7 +575,7 @@ public final class VaultV3Repository {
         if (value != null) {
             Uri uri = Uri.parse(value);
             exportCopy(uri, dek);
-            recordRemoteWrite(uri);
+            recordRemoteWrite(dek);
         }
     }
 
@@ -547,22 +589,17 @@ public final class VaultV3Repository {
             return new RemoteSyncResult(localData, false, null);
         }
         Uri uri = Uri.parse(remoteValue);
-        long remoteModified = remoteLastModified(uri);
-        long baseline = state.getLong(PREF_REMOTE_SYNC_BASELINE, 0);
-        if (baseline <= 0) {
-            long localModified = new File(root, "manifest.current").lastModified();
-            if (localModified <= 0 || remoteModified <= localModified) {
-                storeRemoteSyncBaseline(remoteModified);
-                return new RemoteSyncResult(localData, false, null);
-            }
-            baseline = localModified;
+        VaultHeaderV3 localHeader = headerStore.read();
+        String remoteFingerprint = remoteBackupFingerprint(uri, dek, localHeader.vaultId);
+        String baseline = state.getString(PREF_REMOTE_SYNC_BASELINE, null);
+        if (baseline == null) {
+            baseline = localBackupFingerprint(localHeader, dek);
             storeRemoteSyncBaseline(baseline);
         }
-        if (remoteModified <= baseline) {
+        if (remoteFingerprint.equals(baseline)) {
             return new RemoteSyncResult(localData, false, null);
         }
 
-        VaultHeaderV3 localHeader = headerStore.read();
         VaultManifest localManifest = readManifest(localHeader, dek, false);
         Map<String, VaultObjectRef> localResources = new HashMap<>();
         for (VaultObjectRef ref : localManifest.resources) {
@@ -599,7 +636,8 @@ public final class VaultV3Repository {
                 encodedText = stagingObjects.read(remoteManifest.textBlock, dek);
                 remoteData = VaultTextDataCodec.decode(encodedText);
                 validateResourceLinks(remoteData, remoteManifest.resources);
-                if (remoteLastModified(uri) != remoteModified) {
+                if (!remoteFingerprint.equals(remoteBackupFingerprint(
+                        uri, dek, localHeader.vaultId))) {
                     throw new IOException("Automatic backup changed during synchronization");
                 }
                 mergeResult = mergeRemoteItems(localData, remoteData);
@@ -646,13 +684,14 @@ public final class VaultV3Repository {
         Exception remoteWriteFailure = null;
         try {
             if (sameVaultData(mergeResult.data, remoteData)) {
-                storeRemoteSyncBaseline(remoteModified);
+                storeRemoteSyncBaseline(remoteFingerprint);
             } else {
-                if (remoteLastModified(uri) != remoteModified) {
+                if (!remoteFingerprint.equals(remoteBackupFingerprint(
+                        uri, dek, localHeader.vaultId))) {
                     throw new IOException("Automatic backup changed during synchronization");
                 }
                 exportCopy(uri, dek);
-                storeRemoteSyncBaseline(remoteLastModified(uri));
+                storeRemoteSyncBaseline(localBackupFingerprint(headerStore.read(), dek));
             }
         } catch (IOException | GeneralSecurityException | RuntimeException exception) {
             remoteWriteFailure = exception;
@@ -731,42 +770,69 @@ public final class VaultV3Repository {
                 && first.contentType.equals(second.contentType);
     }
 
-    private long remoteLastModified(Uri uri) throws IOException {
-        try (Cursor cursor = context.getContentResolver().query(uri,
-                new String[]{DocumentsContract.Document.COLUMN_LAST_MODIFIED},
-                null, null, null)) {
-            if (cursor == null || !cursor.moveToFirst()) {
-                throw new IOException("Automatic backup modification time is unavailable");
+    private String remoteBackupFingerprint(Uri uri, byte[] dek, byte[] expectedVaultId)
+            throws IOException, GeneralSecurityException {
+        byte[] encodedHeader = null;
+        byte[] encodedManifest = null;
+        try (InputStream input = context.getContentResolver().openInputStream(uri)) {
+            if (input == null) {
+                throw new IOException("Automatic backup stream is unavailable");
             }
-            int column = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
-            if (column < 0 || cursor.isNull(column)) {
-                throw new IOException("Automatic backup provider does not expose modification time");
+            VaultBackupV3.BackupReader reader = VaultBackupV3.open(input);
+            encodedHeader = reader.encodedHeader();
+            encodedManifest = reader.encodedManifest();
+            VaultHeaderV3 header = VaultHeaderV3.decode(encodedHeader);
+            if (!Crypto.constantTimeEquals(expectedVaultId, header.vaultId)) {
+                throw new GeneralSecurityException(
+                        "Automatic backup belongs to a different vault");
             }
-            long modified = cursor.getLong(column);
-            if (modified <= 0) {
-                throw new IOException("Automatic backup modification time is invalid");
-            }
-            return modified;
-        } catch (IllegalArgumentException | SecurityException
-                 | UnsupportedOperationException exception) {
-            throw new IOException("Could not read automatic backup modification time",
-                    exception);
+            VaultManifestCodec.open(encodedManifest, dek, header.vaultId);
+            return backupFingerprint(encodedHeader, encodedManifest);
+        } catch (SecurityException | IllegalArgumentException exception) {
+            throw new IOException("Could not read automatic backup manifest", exception);
+        } finally {
+            Crypto.wipe(encodedHeader);
+            Crypto.wipe(encodedManifest);
         }
     }
 
-    private void storeRemoteSyncBaseline(long modified) throws IOException {
-        if (modified <= 0 || !state.edit().putLong(PREF_REMOTE_SYNC_BASELINE, modified).commit()) {
+    private String localBackupFingerprint(VaultHeaderV3 header, byte[] dek)
+            throws IOException, GeneralSecurityException {
+        byte[] encodedHeader = header.encode();
+        byte[] encodedManifest = manifestStore.readCurrent();
+        try {
+            VaultManifestCodec.open(encodedManifest, dek, header.vaultId);
+            return backupFingerprint(encodedHeader, encodedManifest);
+        } finally {
+            Crypto.wipe(encodedHeader);
+            Crypto.wipe(encodedManifest);
+        }
+    }
+
+    private static String backupFingerprint(byte[] encodedHeader, byte[] encodedManifest)
+            throws GeneralSecurityException {
+        int length = Math.addExact(8, Math.addExact(encodedHeader.length, encodedManifest.length));
+        ByteBuffer input = ByteBuffer.allocate(length);
+        input.putInt(encodedHeader.length).put(encodedHeader)
+                .putInt(encodedManifest.length).put(encodedManifest);
+        byte[] digest = Crypto.sha256(input.array());
+        try {
+            return VaultObjectIds.toHex(digest);
+        } finally {
+            Crypto.wipe(digest);
+        }
+    }
+
+    private void storeRemoteSyncBaseline(String generation) throws IOException {
+        if (!VaultObjectIds.isValidHex(generation, 32)
+                || !state.edit().putString(PREF_REMOTE_SYNC_BASELINE, generation).commit()) {
             throw new IOException("Could not store automatic backup synchronization state");
         }
     }
 
-    private void recordRemoteWrite(Uri uri) {
-        try {
-            storeRemoteSyncBaseline(remoteLastModified(uri));
-        } catch (IOException exception) {
-            android.util.Log.w("SPM_SYNC", "Could not record automatic backup modification time",
-                    exception);
-        }
+    private void recordRemoteWrite(byte[] dek)
+            throws IOException, GeneralSecurityException {
+        storeRemoteSyncBaseline(localBackupFingerprint(headerStore.read(), dek));
     }
 
     private static void cleanupRemoteSyncStaging(File stagingRoot) throws IOException {
@@ -1446,7 +1512,7 @@ public final class VaultV3Repository {
     private static void requirePassphrase(char[] value) {
         if (!PinPolicy.isValid(value)) {
             throw new IllegalArgumentException(
-                    "Passphrase must be 12-24 printable non-numeric characters");
+                    "Passphrase must be 8-24 printable non-numeric characters");
         }
     }
 

@@ -2,6 +2,7 @@ package com.cretorix.securepasswordmanager.crypto;
 
 import java.security.GeneralSecurityException;
 import java.nio.charset.StandardCharsets;
+import com.cretorix.securepasswordmanager.security.PinPolicy;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 
@@ -15,9 +16,10 @@ public final class PinKdf {
     }
 
     public static byte[] derive(char[] pin, KdfParameters parameters) throws GeneralSecurityException {
-        if (pin == null || pin.length < 12 || pin.length > 24 || parameters == null
+        if (pin == null || pin.length < PinPolicy.MIN_LENGTH
+                || pin.length > PinPolicy.MAX_LENGTH || parameters == null
                 || !KdfParameters.ALGORITHM.equals(parameters.algorithm)) {
-            throw new IllegalArgumentException("Passphrase must contain 12 to 24 characters");
+            throw new IllegalArgumentException("Passphrase must contain 8 to 24 characters");
         }
         byte[] password = new String(pin).getBytes(StandardCharsets.UTF_8);
         byte[] result = new byte[Crypto.KEY_SIZE];

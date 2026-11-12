@@ -83,7 +83,7 @@ public final class PassphraseQrPayload {
         byte[] vaultId = new byte[16];
         input.readFully(vaultId);
         int length = input.readUnsignedShort();
-        if (length < 12 || length > 128) {
+        if (length < PinPolicy.MIN_LENGTH || length > 128) {
             throw new IOException("Invalid passphrase QR length");
         }
         byte[] passphraseBytes = new byte[length];

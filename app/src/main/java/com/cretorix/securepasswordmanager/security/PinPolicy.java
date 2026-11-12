@@ -1,12 +1,15 @@
 package com.cretorix.securepasswordmanager.security;
 
-/** User-secret policy for vault recovery; numeric-only short PINs are intentionally rejected. */
+/** User-secret policy for vault recovery; numeric-only PINs are intentionally rejected. */
 public final class PinPolicy {
+    public static final int MIN_LENGTH = 8;
+    public static final int MAX_LENGTH = 24;
+
     private PinPolicy() {
     }
 
     public static boolean isValid(char[] pin) {
-        if (pin == null || pin.length < 12 || pin.length > 24) {
+        if (pin == null || pin.length < MIN_LENGTH || pin.length > MAX_LENGTH) {
             return false;
         }
         boolean numericOnly = true;
