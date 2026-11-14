@@ -35,10 +35,12 @@ public final class VaultTextDataCodecTest {
                 "application/pdf", 0);
         VaultItem document = VaultItem.documentReference("Passport",
                 Arrays.asList(repeat("12", 32), repeat("34", 32)));
+        VaultItem emergencyPasswords = VaultItem.emergencyPasswordGroup("Recovery",
+                Arrays.asList("first-secret", "second-secret"));
         VaultData decoded = VaultTextDataCodec.decode(VaultTextDataCodec.encode(
-                new VaultData(Arrays.asList(login, image, file, document))));
+                new VaultData(Arrays.asList(login, image, file, document, emergencyPasswords))));
 
-        assertEquals(4, decoded.items.size());
+        assertEquals(5, decoded.items.size());
         assertEquals(entryId, decoded.items.get(0).entryId);
         assertEquals("secret", decoded.items.get(0).password);
         assertEquals("Work", decoded.items.get(0).folder);
@@ -53,6 +55,11 @@ public final class VaultTextDataCodecTest {
         assertEquals(VaultItem.TYPE_DOCUMENT, decoded.items.get(3).type);
         assertEquals(Arrays.asList(repeat("12", 32), repeat("34", 32)),
                 decoded.items.get(3).documentPageIds);
+        assertEquals(VaultItem.TYPE_EMERGENCY_PASSWORDS, decoded.items.get(4).type);
+        assertEquals(Arrays.asList("first-secret", "second-secret"),
+                decoded.items.get(4).emergencyPasswords);
+        assertEquals(decoded.items.get(4).emergencyPasswords,
+                decoded.items.get(4).withFavorite(true).emergencyPasswords);
     }
 
     @Test

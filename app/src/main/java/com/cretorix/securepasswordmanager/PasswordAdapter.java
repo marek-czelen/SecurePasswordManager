@@ -72,11 +72,16 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
                 item.documentPageIds.size(), item.documentPageIds.size())
                 : item.isFile()
                 ? holder.itemView.getContext().getString(R.string.item_file_kind)
+                : item.isEmergencyPasswordGroup()
+                ? holder.itemView.getContext().getResources().getQuantityString(
+                R.plurals.item_emergency_password_count,
+                item.emergencyPasswords.size(), item.emergencyPasswords.size())
                 : (item.username.isEmpty() ? item.url : item.username));
         boolean attachment = item.isImage() || item.isFile() || item.isDocument();
-        holder.copy.setVisibility(attachment ? View.GONE : View.VISIBLE);
-        holder.avatar.setVisibility(attachment ? View.GONE : View.VISIBLE);
-        holder.typeIcon.setVisibility(attachment ? View.VISIBLE : View.GONE);
+        boolean specialEntry = attachment || item.isEmergencyPasswordGroup();
+        holder.copy.setVisibility(specialEntry ? View.GONE : View.VISIBLE);
+        holder.avatar.setVisibility(specialEntry ? View.GONE : View.VISIBLE);
+        holder.typeIcon.setVisibility(specialEntry ? View.VISIBLE : View.GONE);
         holder.typeIcon.setTag(item.entryId);
         resetTypeIconStyle(holder.typeIcon);
         if (item.isImage()) {
@@ -88,6 +93,8 @@ public final class PasswordAdapter extends RecyclerView.Adapter<PasswordAdapter.
             holder.typeIcon.setImageResource(R.drawable.ic_note);
         } else if (item.isDocument()) {
             holder.typeIcon.setImageResource(R.drawable.ic_note);
+        } else if (item.isEmergencyPasswordGroup()) {
+            holder.typeIcon.setImageResource(R.drawable.ic_shield);
         }
         holder.avatar.setText(initial(title));
         holder.favorite.setIconTint(ColorStateList.valueOf(item.favorite

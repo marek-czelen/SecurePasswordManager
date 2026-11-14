@@ -47,6 +47,7 @@ import android.text.util.Linkify;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.StringRes;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -126,6 +127,7 @@ public final class MainActivity extends AppCompatActivity {
     private static final int CATEGORY_PASSWORDS = 0;
     private static final int CATEGORY_FILES_IMAGES = 1;
     private static final int CATEGORY_DOCUMENTS = 2;
+    private static final int CATEGORY_EMERGENCY_PASSWORDS = 3;
     private static boolean sImageFlowActive;
     // Survives Activity recreation so background time is measured across the OCR/camera flow.
     private static long sBackgroundedElapsed;
@@ -837,6 +839,8 @@ public final class MainActivity extends AppCompatActivity {
         categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_passwords), false);
         categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_files_images), false);
         categoryTabs.addTab(categoryTabs.newTab().setText(R.string.category_documents), false);
+        categoryTabs.addTab(categoryTabs.newTab().setText(
+                R.string.category_emergency_passwords), false);
         categoryTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -861,7 +865,7 @@ public final class MainActivity extends AppCompatActivity {
             renderList();
         }));
 
-        findViewById(R.id.fabAdd).setOnClickListener(view -> showAddChooser());
+        findViewById(R.id.fabAdd).setOnClickListener(view -> addToSelectedCategory());
         renderList();
         Session.set(sessionTruePin, currentData, deviceAuthenticatedSession, sessionDek);
         Session.setRecoveredPrevious(sessionRecoveredPrevious);
@@ -1510,6 +1514,7 @@ public final class MainActivity extends AppCompatActivity {
         int passwords = 0;
         int filesAndImages = 0;
         int documents = 0;
+        int emergencyPasswordGroups = 0;
         for (VaultItem item : currentData.items) {
             if (VaultItem.TYPE_LOGIN.equals(item.type)) {
                 passwords++;
@@ -1517,6 +1522,8 @@ public final class MainActivity extends AppCompatActivity {
                 filesAndImages++;
             } else if (item.isDocument()) {
                 documents++;
+            } else if (item.isEmergencyPasswordGroup()) {
+                emergencyPasswordGroups++;
             }
         }
         tabs.getTabAt(CATEGORY_PASSWORDS).setText(
@@ -1525,6 +1532,9 @@ public final class MainActivity extends AppCompatActivity {
                 getString(R.string.category_files_images_count, filesAndImages));
         tabs.getTabAt(CATEGORY_DOCUMENTS).setText(
                 getString(R.string.category_documents_count, documents));
+        tabs.getTabAt(CATEGORY_EMERGENCY_PASSWORDS).setText(
+                getString(R.string.category_emergency_passwords_count,
+                        emergencyPasswordGroups));
     }
 
     private boolean matchesCategory(VaultItem item) {
@@ -1535,6 +1545,8 @@ public final class MainActivity extends AppCompatActivity {
                 return item.isFile() || item.isImage();
             case CATEGORY_DOCUMENTS:
                 return item.isDocument();
+            case CATEGORY_EMERGENCY_PASSWORDS:
+                return item.isEmergencyPasswordGroup();
             default:
                 return false;
         }
@@ -1574,6 +1586,10 @@ public final class MainActivity extends AppCompatActivity {
     // region Entry / details
 
     private void showDetails(VaultItem item) {
+        if (item.isEmergencyPasswordGroup()) {
+            showEmergencyPasswordDetails(item);
+            return;
+        }
         if (item.isDocument()) {
             showDocumentDetails(item);
             return;
@@ -1639,6 +1655,92 @@ public final class MainActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.action_delete, (d, w) -> confirmDelete(item))
                 .setPositiveButton(R.string.action_close, null)
                 .show();
+    }
+
+    private void showEmergencyPasswordDetails(VaultItem item) {
+        View view = LayoutInflater.from(this)
+                .inflate(R.layout.dialog_emergency_passwords, null);
+        LinearLayout passwordList = view.findViewById(R.id.emergencyPasswordList);
+        TextView emptyState = view.findViewById(R.id.emergencyPasswordEmpty);
+        TextInputEditText newPassword = view.findViewById(R.id.editEmergencyPassword);
+        com.google.android.material.textfield.TextInputLayout passwordLayout =
+                view.findViewById(R.id.inputEmergencyPassword);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        emptyState.setVisibility(item.emergencyPasswords.isEmpty() ? View.VISIBLE : View.GONE);
+
+        final AlertDialog[] detailsDialog = {null};
+        for (int index = 0; index < item.emergencyPasswords.size(); index++) {
+            final int passwordIndex = index;
+            String emergencyPassword = item.emergencyPasswords.get(index);
+            View row = inflater.inflate(R.layout.item_emergency_password, passwordList, false);
+            TextView value = row.findViewById(R.id.emergencyPasswordValue);
+            MaterialButton toggle = row.findViewById(R.id.toggleEmergencyPassword);
+            MaterialButton copy = row.findViewById(R.id.copyEmergencyPassword);
+            MaterialButton delete = row.findViewById(R.id.deleteEmergencyPassword);
+            final boolean[] shown = {false};
+            value.setText(mask(emergencyPassword));
+            toggle.setOnClickListener(button -> {
+                shown[0] = !shown[0];
+                value.setText(shown[0] ? emergencyPassword : mask(emergencyPassword));
+                toggle.setIconResource(shown[0]
+                        ? R.drawable.ic_visibility_off : R.drawable.ic_visibility);
+                toggle.setContentDescription(getString(shown[0]
+                        ? R.string.action_hide : R.string.action_show));
+            });
+            copy.setOnClickListener(button ->
+                    copyToClipboard(item.title, emergencyPassword));
+            delete.setOnClickListener(button -> new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.emergency_password_delete_title)
+                    .setMessage(getString(R.string.emergency_password_delete_message,
+                            passwordIndex + 1))
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .setPositiveButton(R.string.action_delete, (dialog, which) -> {
+                        List<String> passwords = new ArrayList<>(item.emergencyPasswords);
+                        passwords.remove(passwordIndex);
+                        detailsDialog[0].dismiss();
+                        saveEmergencyPasswords(item, passwords);
+                    })
+                    .show());
+            passwordList.addView(row);
+        }
+
+        View addButton = view.findViewById(R.id.btnAddEmergencyPassword);
+        addButton.setOnClickListener(button -> {
+            String password = str(newPassword);
+            if (password.isEmpty()) {
+                passwordLayout.setError(getString(R.string.err_emergency_password_empty));
+                return;
+            }
+            passwordLayout.setError(null);
+            if (item.emergencyPasswords.size() >= VaultItem.MAX_EMERGENCY_PASSWORDS) {
+                toast(R.string.err_emergency_password_limit);
+                return;
+            }
+            List<String> passwords = new ArrayList<>(item.emergencyPasswords);
+            passwords.add(password);
+            detailsDialog[0].dismiss();
+            saveEmergencyPasswords(item, passwords);
+        });
+
+        detailsDialog[0] = new MaterialAlertDialogBuilder(this)
+                .setTitle(item.title.isEmpty() ? "—" : item.title)
+                .setView(view)
+                .setNeutralButton(R.string.action_delete, (dialog, which) -> confirmDelete(item))
+                .setPositiveButton(R.string.action_close, null)
+                .show();
+    }
+
+    private void saveEmergencyPasswords(VaultItem group, List<String> passwords) {
+        List<VaultItem> items = new ArrayList<>(currentData.items);
+        for (int index = 0; index < items.size(); index++) {
+            VaultItem currentGroup = items.get(index);
+            if (currentGroup.entryId.equals(group.entryId)) {
+                items.set(index, currentGroup.withEmergencyPasswords(passwords));
+                saveData(new VaultData(items));
+                return;
+            }
+        }
+        toast(R.string.err_save);
     }
 
     private void showPasswordHistory(VaultItem item) {
@@ -3534,6 +3636,52 @@ public final class MainActivity extends AppCompatActivity {
 
     // region Image container
 
+    private void addToSelectedCategory() {
+        switch (selectedCategory) {
+            case CATEGORY_PASSWORDS:
+                showEntryDialog(null, null);
+                break;
+            case CATEGORY_FILES_IMAGES:
+                pickVaultFile();
+                break;
+            case CATEGORY_DOCUMENTS:
+                requestDocumentScan();
+                break;
+            case CATEGORY_EMERGENCY_PASSWORDS:
+                showEmergencyPasswordGroupDialog();
+                break;
+            default:
+                showAddChooser();
+        }
+    }
+
+    private void pickVaultFile() {
+        if (awaitingResult || saveInProgress) {
+            toast(R.string.err_save);
+            return;
+        }
+        awaitingResult = true;
+        pickFileLauncher.launch(new String[]{"*/*"});
+    }
+
+    private void showEmergencyPasswordGroupDialog() {
+        View view = LayoutInflater.from(this)
+                .inflate(R.layout.dialog_emergency_group, null);
+        TextInputEditText title = view.findViewById(R.id.editEmergencyGroupTitle);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.emergency_group_new)
+                .setView(view)
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_save, (dialog, which) -> {
+                    VaultItem group = VaultItem.emergencyPasswordGroup(
+                            str(title).trim(), Collections.emptyList());
+                    List<VaultItem> items = new ArrayList<>(currentData.items);
+                    items.add(group);
+                    saveData(new VaultData(items));
+                })
+                .show();
+    }
+
     private void showAddChooser() {
         View content = LayoutInflater.from(this).inflate(R.layout.dialog_add_chooser, null);
         LinearLayout actions = content.findViewById(R.id.addChooserActions);
@@ -3546,13 +3694,15 @@ public final class MainActivity extends AppCompatActivity {
                 R.string.add_manual,
                 R.string.add_image_container,
                 R.string.add_file,
-                R.string.add_document
+                R.string.add_document,
+                R.string.add_emergency_password_group
         };
         int[] icons = {
                 R.drawable.ic_key,
                 R.drawable.ic_image,
                 R.drawable.ic_folder,
-                R.drawable.ic_note
+                R.drawable.ic_note,
+                R.drawable.ic_shield
         };
         for (int index = 0; index < titles.length; index++) {
             View row = LayoutInflater.from(this)
@@ -3567,10 +3717,11 @@ public final class MainActivity extends AppCompatActivity {
                 } else if (option == 1) {
                     showImageSourceChooser();
                 } else if (option == 2) {
-                    awaitingResult = true;
-                    pickFileLauncher.launch(new String[]{"*/*"});
-                } else {
+                    pickVaultFile();
+                } else if (option == 3) {
                     requestDocumentScan();
+                } else {
+                    showEmergencyPasswordGroupDialog();
                 }
             });
             actions.addView(row);

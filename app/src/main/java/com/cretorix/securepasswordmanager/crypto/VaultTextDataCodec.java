@@ -27,6 +27,7 @@ public final class VaultTextDataCodec {
     private static final int PASSWORD_HISTORY_SCHEMA_VERSION = 2;
     private static final int DOCUMENT_SCHEMA_VERSION = 3;
     private static final int APP_PACKAGE_SCHEMA_VERSION = 4;
+    private static final int EMERGENCY_PASSWORDS_SCHEMA_VERSION = 5;
     private static final int PADDING_BLOCK_SIZE = 4096;
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -80,6 +81,12 @@ public final class VaultTextDataCodec {
             raw.writeInt(item.passwordHistory.size());
             for (String previousPassword : item.passwordHistory) {
                 writeString(raw, previousPassword);
+            }
+            if (item.isEmergencyPasswordGroup()) {
+                raw.writeInt(item.emergencyPasswords.size());
+                for (String emergencyPassword : item.emergencyPasswords) {
+                    writeString(raw, emergencyPassword);
+                }
             }
         }
         raw.flush();
@@ -139,6 +146,10 @@ public final class VaultTextDataCodec {
         for (int i = 0; i < count; i++) {
             String entryId = readHex(raw, 16);
             String type = typeName(raw.readUnsignedByte());
+            if (VaultItem.TYPE_EMERGENCY_PASSWORDS.equals(type)
+                    && schemaVersion < EMERGENCY_PASSWORDS_SCHEMA_VERSION) {
+                throw new IOException("Emergency password groups require VLT3 text schema 5");
+            }
             String title = readString(raw);
             String username = readString(raw);
             String password = readString(raw);
@@ -185,12 +196,25 @@ public final class VaultTextDataCodec {
                     passwordHistory.add(readString(raw));
                 }
             }
+            List<String> emergencyPasswords = new ArrayList<>();
+            if (schemaVersion >= EMERGENCY_PASSWORDS_SCHEMA_VERSION
+                    && VaultItem.TYPE_EMERGENCY_PASSWORDS.equals(type)) {
+                int emergencyPasswordCount = raw.readInt();
+                if (emergencyPasswordCount < 0
+                        || emergencyPasswordCount > VaultItem.MAX_EMERGENCY_PASSWORDS) {
+                    throw new IOException("Invalid emergency password count");
+                }
+                for (int passwordIndex = 0;
+                     passwordIndex < emergencyPasswordCount; passwordIndex++) {
+                    emergencyPasswords.add(readString(raw));
+                }
+            }
             VaultItem item;
             try {
                 item = new VaultItem(entryId, title, username, password, url, notes, tags,
                         folder, totp, favorite, type, attachmentId, thumbnailId,
                         contentType, attachmentSize, documentPageIds, passwordHistory,
-                        appPackageName);
+                        appPackageName, emergencyPasswords);
                 validateItem(item, entryIds, resourceIds);
             } catch (IllegalArgumentException exception) {
                 throw new IOException("Invalid VLT3 entry", exception);
@@ -252,6 +276,16 @@ public final class VaultTextDataCodec {
                 }
                 addResourceId(resourceIds, pageId);
             }
+        } else if (VaultItem.TYPE_EMERGENCY_PASSWORDS.equals(item.type)) {
+            if (item.attachmentId != null || item.thumbnailId != null
+                    || item.attachmentSize != 0 || !item.contentType.isEmpty()
+                    || !item.password.isEmpty() || !item.username.isEmpty()
+                    || !item.url.isEmpty() || !item.notes.isEmpty() || !item.tags.isEmpty()
+                    || !item.folder.isEmpty() || !item.totpSecret.isEmpty()
+                    || !item.appPackageName.isEmpty() || !item.documentPageIds.isEmpty()
+                    || !item.passwordHistory.isEmpty()) {
+                throw new IOException("Invalid VLT3 emergency password group");
+            }
         } else {
             throw new IOException("Unknown VLT3 entry type");
         }
@@ -274,6 +308,16 @@ public final class VaultTextDataCodec {
             }
             writeStringLengthCheck(previousPassword);
         }
+        if (item.emergencyPasswords.size() > VaultItem.MAX_EMERGENCY_PASSWORDS) {
+            throw new IOException("Invalid VLT3 emergency password count");
+        }
+        for (String emergencyPassword : item.emergencyPasswords) {
+            if (!VaultItem.TYPE_EMERGENCY_PASSWORDS.equals(item.type)
+                    || emergencyPassword.isEmpty()) {
+                throw new IOException("Invalid VLT3 emergency password");
+            }
+            writeStringLengthCheck(emergencyPassword);
+        }
     }
 
     private static void addResourceId(Set<String> ids, String id) throws IOException {
@@ -295,6 +339,9 @@ public final class VaultTextDataCodec {
         if (VaultItem.TYPE_DOCUMENT.equals(type)) {
             return 4;
         }
+        if (VaultItem.TYPE_EMERGENCY_PASSWORDS.equals(type)) {
+            return 5;
+        }
         throw new IOException("Unknown VLT3 entry type");
     }
 
@@ -308,6 +355,8 @@ public final class VaultTextDataCodec {
                 return VaultItem.TYPE_FILE;
             case 4:
                 return VaultItem.TYPE_DOCUMENT;
+            case 5:
+                return VaultItem.TYPE_EMERGENCY_PASSWORDS;
             default:
                 throw new IOException("Unknown VLT3 entry type");
         }

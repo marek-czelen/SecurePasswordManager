@@ -12,8 +12,10 @@ public final class VaultItem {
     public static final String TYPE_IMAGE = "image";
     public static final String TYPE_FILE = "file";
     public static final String TYPE_DOCUMENT = "document";
+    public static final String TYPE_EMERGENCY_PASSWORDS = "emergency_passwords";
     public static final int MAX_DOCUMENT_PAGES = 20;
     public static final int MAX_PASSWORD_HISTORY_ENTRIES = 5;
+    public static final int MAX_EMERGENCY_PASSWORDS = 100;
 
     public final String entryId;
     public final String title;
@@ -33,6 +35,7 @@ public final class VaultItem {
     public final long attachmentSize;
     public final List<String> documentPageIds;
     public final List<String> passwordHistory;
+    public final List<String> emergencyPasswords;
 
     public VaultItem(String title, String username, String password, String url,
                      String notes, String tags) {
@@ -90,20 +93,41 @@ public final class VaultItem {
                      String thumbnailId, String contentType, long attachmentSize,
                      List<String> documentPageIds, List<String> passwordHistory,
                      String appPackageName) {
+        this(entryId, title, username, password, url, notes, tags, folder, totpSecret,
+                favorite, type, attachmentId, thumbnailId, contentType, attachmentSize,
+                documentPageIds, passwordHistory, appPackageName, Collections.emptyList());
+    }
+
+    public VaultItem(String entryId, String title, String username, String password, String url,
+                     String notes, String tags, String folder, String totpSecret,
+                     boolean favorite, String type, String attachmentId,
+                     String thumbnailId, String contentType, long attachmentSize,
+                     List<String> documentPageIds, List<String> passwordHistory,
+                     String appPackageName, List<String> emergencyPasswords) {
         if (!isHexId(entryId, 16)
                 || (!TYPE_LOGIN.equals(type) && !TYPE_IMAGE.equals(type)
-                && !TYPE_FILE.equals(type) && !TYPE_DOCUMENT.equals(type))
+                && !TYPE_FILE.equals(type) && !TYPE_DOCUMENT.equals(type)
+                && !TYPE_EMERGENCY_PASSWORDS.equals(type))
                 || attachmentSize < 0 || passwordHistory == null
-                || documentPageIds == null
+                || documentPageIds == null || emergencyPasswords == null
                 || (appPackageName != null && !appPackageName.isEmpty()
                 && (!TYPE_LOGIN.equals(type) || !isValidPackageName(appPackageName)))
                 || passwordHistory.size() > MAX_PASSWORD_HISTORY_ENTRIES
                 || (!TYPE_LOGIN.equals(type) && !passwordHistory.isEmpty())
+                || (!TYPE_EMERGENCY_PASSWORDS.equals(type) && !emergencyPasswords.isEmpty())
                 || (TYPE_DOCUMENT.equals(type)
                 ? documentPageIds.isEmpty() || documentPageIds.size() > MAX_DOCUMENT_PAGES
                 || attachmentId != null || thumbnailId != null || attachmentSize != 0
                 || (contentType != null && !contentType.isEmpty())
-                : !documentPageIds.isEmpty())) {
+                : !documentPageIds.isEmpty())
+                || (TYPE_EMERGENCY_PASSWORDS.equals(type)
+                && (attachmentId != null || thumbnailId != null || attachmentSize != 0
+                || (contentType != null && !contentType.isEmpty())
+                || !value(password).isEmpty() || !value(username).isEmpty()
+                || !value(url).isEmpty() || !value(notes).isEmpty()
+                || !value(tags).isEmpty() || !value(folder).isEmpty()
+                || !value(totpSecret).isEmpty() || !value(appPackageName).isEmpty()))
+                || emergencyPasswords.size() > MAX_EMERGENCY_PASSWORDS) {
             throw new IllegalArgumentException("Invalid vault entry");
         }
         this.entryId = entryId.toLowerCase(java.util.Locale.ROOT);
@@ -139,6 +163,13 @@ public final class VaultItem {
             }
         }
         this.passwordHistory = Collections.unmodifiableList(history);
+        List<String> savedEmergencyPasswords = new ArrayList<>(emergencyPasswords);
+        for (String emergencyPassword : savedEmergencyPasswords) {
+            if (emergencyPassword == null || emergencyPassword.isEmpty()) {
+                throw new IllegalArgumentException("Invalid emergency password");
+            }
+        }
+        this.emergencyPasswords = Collections.unmodifiableList(savedEmergencyPasswords);
     }
 
     public static VaultItem imageReference(String title, String imageId,
@@ -158,6 +189,12 @@ public final class VaultItem {
                 false, TYPE_DOCUMENT, null, null, "", 0, pageIds, Collections.emptyList());
     }
 
+    public static VaultItem emergencyPasswordGroup(String title, List<String> passwords) {
+        return new VaultItem(randomEntryId(), title, "", "", "", "", "", "", "",
+                false, TYPE_EMERGENCY_PASSWORDS, null, null, "", 0,
+                Collections.emptyList(), Collections.emptyList(), "", passwords);
+    }
+
     public boolean isImage() {
         return TYPE_IMAGE.equals(type);
     }
@@ -170,16 +207,27 @@ public final class VaultItem {
         return TYPE_DOCUMENT.equals(type);
     }
 
+    public boolean isEmergencyPasswordGroup() {
+        return TYPE_EMERGENCY_PASSWORDS.equals(type);
+    }
+
     public VaultItem withFavorite(boolean value) {
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, value, type, attachmentId, thumbnailId, contentType, attachmentSize,
-                documentPageIds, passwordHistory, appPackageName);
+                documentPageIds, passwordHistory, appPackageName, emergencyPasswords);
     }
 
     public VaultItem withAppPackageName(String packageName) {
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
-                attachmentSize, documentPageIds, passwordHistory, packageName);
+                attachmentSize, documentPageIds, passwordHistory, packageName,
+                emergencyPasswords);
+    }
+
+    public VaultItem withEmergencyPasswords(List<String> passwords) {
+        return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
+                totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
+                attachmentSize, documentPageIds, passwordHistory, appPackageName, passwords);
     }
 
     /** Returns a copy with the immediately previous password at the front of its history. */
@@ -197,7 +245,7 @@ public final class VaultItem {
         }
         return new VaultItem(entryId, title, username, password, url, notes, tags, folder,
                 totpSecret, favorite, type, attachmentId, thumbnailId, contentType,
-                attachmentSize, documentPageIds, history, appPackageName);
+                attachmentSize, documentPageIds, history, appPackageName, emergencyPasswords);
     }
 
     /** Computes the retained history for an edit, optionally recording this item's password. */
