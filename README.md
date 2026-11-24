@@ -27,8 +27,9 @@ hybrid encrypted vault.
   user-selected encrypted backup location refreshed after each successful save. Optional
   on-open synchronization merges newer backup entries while retaining local-only entries.
 - Folders, tags, favorites, TOTP, local password-health checks and auto-lock.
-- On-device OCR review and DocAligner-based document scanning; detected corners remain
-  adjustable after capture. Clipboard timeout and `FLAG_SECURE`.
+- On-device OCR review and DocAligner-based document scanning with preset or automatic
+  proportions; detected corners remain adjustable after capture. Clipboard timeout and
+  `FLAG_SECURE`.
 - Polish, English, German and French UI resources.
 
 The app is completely free, has no ads or in-app purchases, and does not include Google

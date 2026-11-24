@@ -81,6 +81,26 @@ final class DocumentGeometry {
         return firstPair >= secondPair ? absoluteAspect : 1d / absoluteAspect;
     }
 
+    static double estimateAspectRatio(Point[] corners) {
+        if (corners == null || corners.length != 4) {
+            throw new IllegalArgumentException("Invalid document corners");
+        }
+        for (Point corner : corners) {
+            if (corner == null || !Double.isFinite(corner.x) || !Double.isFinite(corner.y)) {
+                throw new IllegalArgumentException("Invalid document corner");
+            }
+        }
+        double horizontalEdge = (distance(corners[0], corners[1])
+                + distance(corners[3], corners[2])) / 2d;
+        double verticalEdge = (distance(corners[0], corners[3])
+                + distance(corners[1], corners[2])) / 2d;
+        double aspectRatio = horizontalEdge / verticalEdge;
+        if (!Double.isFinite(aspectRatio) || aspectRatio <= 0) {
+            throw new IllegalArgumentException("Invalid estimated document aspect");
+        }
+        return aspectRatio;
+    }
+
     static int[] outputDimensions(double horizontalEdge, double verticalEdge,
                                   double aspectRatio) {
         if (!Double.isFinite(horizontalEdge) || !Double.isFinite(verticalEdge)

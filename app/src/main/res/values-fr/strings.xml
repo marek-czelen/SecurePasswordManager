@@ -176,12 +176,13 @@
     <string name="document_review_page">Aperçu, page %1$d</string>
     <string name="fullscreen_image_description">Aperçu de l’image en plein écran</string>
     <string name="document_aspect_title">Proportions de la page</string>
-    <string name="document_aspect_prompt">Choisissez le type de document. Ces proportions seront utilisées pour chaque page de cette entrée.</string>
+    <string name="document_aspect_prompt">Choisissez un type de document. Les proportions choisies s’appliquent à toutes les pages de cette entrée ; les proportions automatiques sont estimées séparément pour chaque page.</string>
     <string-array name="document_aspect_options">
         <item>Carte ID-1 / pièce d’identité / permis (85,60 × 53,98 mm)</item>
         <item>Page de passeport (125 × 88 mm)</item>
         <item>Page A4 (210 × 297 mm)</item>
         <item>Proportions personnalisées</item>
+        <item>Proportions automatiques</item>
     </string-array>
     <string name="document_aspect_custom_title">Proportions personnalisées</string>
     <string name="document_aspect_width">Largeur</string>

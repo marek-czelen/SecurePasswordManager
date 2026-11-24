@@ -214,7 +214,8 @@ public final class DocumentScanActivity extends AppCompatActivity {
                 R.drawable.ic_person,
                 R.drawable.ic_note,
                 R.drawable.ic_note,
-                R.drawable.ic_settings
+                R.drawable.ic_settings,
+                R.drawable.ic_document_add_page
         };
         for (int index = 0; index < options.length; index++) {
             View row = getLayoutInflater()
@@ -240,9 +241,13 @@ public final class DocumentScanActivity extends AppCompatActivity {
         if (choice == 3) {
             showCustomAspectDialog();
         } else {
-            requestedAspect = choice == 0
-                    ? ID1_CARD_ASPECT
-                    : choice == 1 ? 125d / 88d : 210d / 297d;
+            if (choice == 4) {
+                requestedAspect = null;
+            } else {
+                requestedAspect = choice == 0
+                        ? ID1_CARD_ASPECT
+                        : choice == 1 ? 125d / 88d : 210d / 297d;
+            }
             startCameraAfterAspectSelection();
         }
     }

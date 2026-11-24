@@ -40,6 +40,23 @@ public final class DocumentEdgeDetectorTest {
     }
 
     @Test
+    public void automaticAspectUsesAverageOppositeEdgesAndKeepsLongestEdge() {
+        Point[] perspective = {
+                new Point(0, 0), new Point(120, 0),
+                new Point(100, 60), new Point(0, 60)
+        };
+        double horizontal = (120 + 100) / 2d;
+        double vertical = (60 + Math.hypot(20, 60)) / 2d;
+
+        double aspect = DocumentGeometry.estimateAspectRatio(perspective);
+        int[] dimensions = DocumentGeometry.outputDimensions(horizontal, vertical, aspect);
+
+        assertEquals(horizontal / vertical, aspect, 1e-9);
+        assertEquals(110, dimensions[0]);
+        assertEquals(62, dimensions[1]);
+    }
+
+    @Test
     public void outputSizingPreservesRatioWhenCappedAndAfterQualityScaling() {
         int[] dimensions = DocumentGeometry.outputDimensions(6000, 4000, 1.5);
 

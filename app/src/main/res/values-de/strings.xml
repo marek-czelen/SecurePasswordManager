@@ -176,12 +176,13 @@
     <string name="document_review_page">Vorschau, Seite %1$d</string>
     <string name="fullscreen_image_description">Bildvorschau im Vollbild</string>
     <string name="document_aspect_title">Seitenverhältnis</string>
-    <string name="document_aspect_prompt">Wähle den Dokumenttyp. Dieses Verhältnis gilt für alle Seiten dieses Eintrags.</string>
+    <string name="document_aspect_prompt">Wähle einen Dokumenttyp. Das ausgewählte Seitenverhältnis gilt für alle Seiten dieses Eintrags; automatische Proportionen werden für jede Seite einzeln geschätzt.</string>
     <string-array name="document_aspect_options">
         <item>ID-1-Karte / Ausweis / Führerschein (85,60 × 53,98 mm)</item>
         <item>Passseite (125 × 88 mm)</item>
         <item>A4-Seite (210 × 297 mm)</item>
         <item>Eigenes Verhältnis</item>
+        <item>Automatische Proportionen</item>
     </string-array>
     <string name="document_aspect_custom_title">Eigenes Seitenverhältnis</string>
     <string name="document_aspect_width">Breite</string>

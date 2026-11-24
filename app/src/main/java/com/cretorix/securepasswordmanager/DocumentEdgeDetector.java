@@ -113,7 +113,7 @@ final class DocumentEdgeDetector {
         }
     }
 
-    static byte[] rectify(Context context, File sourceFile, double requestedAspect,
+    static byte[] rectify(Context context, File sourceFile, Double requestedAspect,
                           float[] normalizedCorners) throws IOException {
         Bitmap source = decodeCapture(context, sourceFile);
         if (source == null) {
@@ -143,7 +143,9 @@ final class DocumentEdgeDetector {
                     + distance(paddedCorners[3], paddedCorners[2])) / 2d;
             double paddedVerticalEdge = (distance(paddedCorners[0], paddedCorners[3])
                     + distance(paddedCorners[1], paddedCorners[2])) / 2d;
-            double aspectRatio = DocumentGeometry.orientAspectRatio(requestedAspect, corners);
+            double aspectRatio = requestedAspect == null
+                    ? DocumentGeometry.estimateAspectRatio(corners)
+                    : DocumentGeometry.orientAspectRatio(requestedAspect, corners);
 
             int[] dimensions = DocumentGeometry.outputDimensions(
                     paddedHorizontalEdge, paddedVerticalEdge, aspectRatio);
