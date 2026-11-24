@@ -15,8 +15,8 @@ android {
         applicationId = "com.cretorix.securepasswordmanager"
         minSdk = 29
         targetSdk = 37
-        versionCode = 16
-        versionName = "1.16"
+        versionCode = 17
+        versionName = "1.17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
