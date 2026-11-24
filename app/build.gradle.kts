@@ -15,14 +15,18 @@ android {
         applicationId = "com.cretorix.securepasswordmanager"
         minSdk = 29
         targetSdk = 37
-        versionCode = 17
-        versionName = "1.17"
+        versionCode = 18
+        versionName = "1.18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         debug {
+            optimization {
+                enable = true
+            }
+            proguardFiles("proguard-rules.pro")
         }
         release {
             optimization {
