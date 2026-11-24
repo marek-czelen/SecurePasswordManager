@@ -15,8 +15,8 @@ android {
         applicationId = "com.cretorix.securepasswordmanager"
         minSdk = 29
         targetSdk = 37
-        versionCode = 15
-        versionName = "1.15"
+        versionCode = 16
+        versionName = "1.16"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation(libs.opencv)
+    implementation(libs.onnxruntime.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)

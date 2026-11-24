@@ -7,29 +7,48 @@ import android.net.Uri;
 
 import com.cretorix.securepasswordmanager.crypto.VaultImageProcessor;
 
+import ai.onnxruntime.OnnxTensor;
+import ai.onnxruntime.OnnxValue;
+import ai.onnxruntime.OrtEnvironment;
+import ai.onnxruntime.OrtException;
+import ai.onnxruntime.OrtSession;
+import ai.onnxruntime.TensorInfo;
+
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /** Detects a document quadrilateral and rectifies approved captures into encrypted-ready JPGs. */
 final class DocumentEdgeDetector {
     private static final int MAX_DETECTION_DIMENSION = 1600;
+    private static final int MODEL_INPUT_DIMENSION = 256;
+    private static final int MODEL_CHANNELS = 3;
+    private static final double HEATMAP_THRESHOLD = 0.3d;
+    private static final String MODEL_ASSET =
+            "docaligner/lcnet100_h_e_bifpn_256_fp32.onnx";
+    private static final String MODEL_INPUT_NAME = "img";
+    private static final String MODEL_OUTPUT_NAME = "heatmap";
     private static final int MAX_RECTIFIED_EDGE = DocumentGeometry.MAX_RECTIFIED_EDGE;
     private static final double DOCUMENT_EDGE_PADDING_RATIO = 0.02;
+    private static volatile OrtSession detectorSession;
 
     static final class Quad {
         final float[] points;
@@ -69,27 +88,28 @@ final class DocumentEdgeDetector {
             throw new IOException("Could not decode captured document");
         }
         Mat rgba = new Mat();
-        Mat gray = new Mat();
-        Mat detectionGray = new Mat();
+        Mat bgr = new Mat();
+        Mat detectionBgr = new Mat();
         try {
             Utils.bitmapToMat(source, rgba);
-            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
-            resizeForDetection(gray, detectionGray);
-            Point[] detected = findCorners(detectionGray);
+            Imgproc.cvtColor(rgba, bgr, Imgproc.COLOR_RGBA2BGR);
+            resizeForDetection(bgr, detectionBgr);
+            Point[] detected = findCorners(context, bgr,
+                    detectionBgr.cols(), detectionBgr.rows());
             if (detected == null) {
                 throw new EdgesNotFoundException();
             }
             return new CaptureCorners(scaleCorners(detected,
-                    gray.cols() / (double) detectionGray.cols(),
-                    gray.rows() / (double) detectionGray.rows()),
-                    gray.cols(), gray.rows());
+                    bgr.cols() / (double) detectionBgr.cols(),
+                    bgr.rows() / (double) detectionBgr.rows()),
+                    bgr.cols(), bgr.rows());
         } catch (org.opencv.core.CvException | OutOfMemoryError exception) {
             throw new IOException("Could not detect document corners", exception);
         } finally {
             source.recycle();
             rgba.release();
-            gray.release();
-            detectionGray.release();
+            bgr.release();
+            detectionBgr.release();
         }
     }
 
@@ -224,84 +244,211 @@ final class DocumentEdgeDetector {
         }
     }
 
-    private static Point[] findCorners(Mat gray) {
-        Mat blurred = new Mat();
-        Mat edges = new Mat();
-        Mat dilated = new Mat();
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
-        Mat hierarchy = new Mat();
-        Mat input = null;
-        List<MatOfPoint> contours = new ArrayList<>();
-        MatOfInt hullIndices = new MatOfInt();
+    private static Point[] findCorners(Context context, Mat bgr, int targetWidth,
+                                       int targetHeight) throws IOException {
+        Mat modelInput = new Mat();
+        OnnxTensor inputTensor = null;
+        float[] inputValues = null;
         try {
-            Imgproc.GaussianBlur(gray, blurred, new Size(7, 7), 0);
-            Imgproc.Canny(blurred, edges, 40, 150);
-            Imgproc.dilate(edges, dilated, kernel, new Point(-1, -1), 2);
-            input = dilated.clone();
-            Imgproc.findContours(input, contours, hierarchy,
-                    Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-            if (contours.isEmpty()) {
-                return null;
-            }
-            contours.sort((first, second) -> Double.compare(
-                    Imgproc.contourArea(second), Imgproc.contourArea(first)));
-
-            MatOfPoint largestContour = contours.get(0);
-            Imgproc.convexHull(largestContour, hullIndices);
-            Point[] contourPoints = largestContour.toArray();
-            int[] hullPointIndices = hullIndices.toArray();
-            if (hullPointIndices.length == 0) {
-                return null;
-            }
-
-            Point topLeft = null;
-            Point topRight = null;
-            Point bottomRight = null;
-            Point bottomLeft = null;
-            double minSum = Double.POSITIVE_INFINITY;
-            double maxSum = Double.NEGATIVE_INFINITY;
-            double minDifference = Double.POSITIVE_INFINITY;
-            double maxDifference = Double.NEGATIVE_INFINITY;
-            for (int pointIndex : hullPointIndices) {
-                Point point = contourPoints[pointIndex];
-                double sum = point.x + point.y;
-                double difference = point.y - point.x;
-                if (sum < minSum) {
-                    minSum = sum;
-                    topLeft = point;
+            Imgproc.resize(bgr, modelInput,
+                    new Size(MODEL_INPUT_DIMENSION, MODEL_INPUT_DIMENSION));
+            inputValues = toNchwBgr(modelInput);
+            inputTensor = OnnxTensor.createTensor(OrtEnvironment.getEnvironment(),
+                    FloatBuffer.wrap(inputValues),
+                    new long[]{1, MODEL_CHANNELS, MODEL_INPUT_DIMENSION, MODEL_INPUT_DIMENSION});
+            OrtSession session = getDetectorSession(context);
+            try (OrtSession.Result result = session.run(
+                    Collections.singletonMap(MODEL_INPUT_NAME, inputTensor))) {
+                OnnxValue value = result.get(MODEL_OUTPUT_NAME).orElse(null);
+                if (!(value instanceof OnnxTensor)) {
+                    throw new IOException("DocAligner did not return document heatmaps");
                 }
-                if (sum > maxSum) {
-                    maxSum = sum;
-                    bottomRight = point;
+                OnnxTensor heatmapTensor = (OnnxTensor) value;
+                TensorInfo info = heatmapTensor.getInfo();
+                long[] shape = info.getShape();
+                if (shape.length != 4 || shape[0] != 1 || shape[1] != 4
+                        || shape[2] <= 0 || shape[3] <= 0
+                        || shape[2] > Integer.MAX_VALUE || shape[3] > Integer.MAX_VALUE) {
+                    throw new IOException("DocAligner returned an unsupported heatmap shape");
                 }
-                if (difference < minDifference) {
-                    minDifference = difference;
-                    topRight = point;
+                int heatmapHeight = (int) shape[2];
+                int heatmapWidth = (int) shape[3];
+                long heatmapSize = (long) shape[1] * heatmapHeight * heatmapWidth;
+                FloatBuffer output = heatmapTensor.getFloatBuffer();
+                if (heatmapSize > Integer.MAX_VALUE || output.remaining() != heatmapSize) {
+                    throw new IOException("DocAligner returned invalid heatmap data");
                 }
-                if (difference > maxDifference) {
-                    maxDifference = difference;
-                    bottomLeft = point;
+                float[] heatmaps = new float[(int) heatmapSize];
+                output.get(heatmaps);
+                try {
+                    return postprocessHeatmaps(heatmaps, heatmapWidth, heatmapHeight,
+                            targetWidth, targetHeight);
+                } finally {
+                    Arrays.fill(heatmaps, 0f);
                 }
             }
-            if (topLeft == null || topRight == null
-                    || bottomRight == null || bottomLeft == null) {
-                return null;
-            }
-            return new Point[]{topLeft, topRight, bottomRight, bottomLeft};
+        } catch (OrtException | org.opencv.core.CvException | OutOfMemoryError exception) {
+            throw new IOException("Could not run DocAligner document detection", exception);
         } finally {
-            blurred.release();
-            edges.release();
-            dilated.release();
-            kernel.release();
-            hierarchy.release();
-            if (input != null) {
-                input.release();
+            if (inputTensor != null) {
+                inputTensor.close();
             }
-            for (MatOfPoint contour : contours) {
-                contour.release();
+            if (inputValues != null) {
+                Arrays.fill(inputValues, 0f);
             }
-            hullIndices.release();
+            modelInput.release();
         }
+    }
+
+    private static OrtSession getDetectorSession(Context context) throws IOException {
+        OrtSession current = detectorSession;
+        if (current != null) {
+            return current;
+        }
+        synchronized (DocumentEdgeDetector.class) {
+            if (detectorSession != null) {
+                return detectorSession;
+            }
+            byte[] model = null;
+            try (OrtSession.SessionOptions options = new OrtSession.SessionOptions()) {
+                model = readModelAsset(context);
+                detectorSession = OrtEnvironment.getEnvironment()
+                        .createSession(model, options);
+                return detectorSession;
+            } catch (IOException | OrtException | OutOfMemoryError exception) {
+                throw new IOException("Could not load DocAligner document model", exception);
+            } finally {
+                if (model != null) {
+                    Arrays.fill(model, (byte) 0);
+                }
+            }
+        }
+    }
+
+    private static byte[] readModelAsset(Context context) throws IOException {
+        try (InputStream input = context.getAssets().open(MODEL_ASSET);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int length;
+            while ((length = input.read(buffer)) != -1) {
+                output.write(buffer, 0, length);
+            }
+            return output.toByteArray();
+        }
+    }
+
+    private static float[] toNchwBgr(Mat bgr) throws IOException {
+        int pixelCount = bgr.rows() * bgr.cols();
+        byte[] pixels = new byte[pixelCount * MODEL_CHANNELS];
+        float[] values = null;
+        try {
+            values = new float[pixelCount * MODEL_CHANNELS];
+            int bytesRead = bgr.get(0, 0, pixels);
+            if (bytesRead != pixels.length) {
+                throw new IOException("Could not prepare DocAligner input image");
+            }
+            int greenOffset = pixelCount;
+            int blueOffset = pixelCount * 2;
+            for (int index = 0; index < pixelCount; index++) {
+                int pixelOffset = index * MODEL_CHANNELS;
+                values[index] = (pixels[pixelOffset] & 0xff) / 255f;
+                values[greenOffset + index] = (pixels[pixelOffset + 1] & 0xff) / 255f;
+                values[blueOffset + index] = (pixels[pixelOffset + 2] & 0xff) / 255f;
+            }
+            return values;
+        } finally {
+            Arrays.fill(pixels, (byte) 0);
+        }
+    }
+
+    private static Point[] postprocessHeatmaps(float[] heatmaps, int heatmapWidth,
+                                               int heatmapHeight, int targetWidth,
+                                               int targetHeight) throws IOException {
+        Point[] corners = new Point[4];
+        int heatmapSize = heatmapWidth * heatmapHeight;
+        for (int channel = 0; channel < corners.length; channel++) {
+            float[] channelHeatmap = new float[heatmapSize];
+            System.arraycopy(heatmaps, channel * heatmapSize,
+                    channelHeatmap, 0, heatmapSize);
+            int targetSize = targetWidth * targetHeight;
+            float[] resizedValues = new float[targetSize];
+            byte[] binaryInput = new byte[targetSize];
+            Mat heatmap = null;
+            Mat resized = null;
+            Mat mask = null;
+            Mat binary = null;
+            Mat hierarchy = null;
+            List<MatOfPoint> contours = new ArrayList<>();
+            try {
+                heatmap = new Mat(heatmapHeight, heatmapWidth, CvType.CV_32FC1);
+                resized = new Mat();
+                mask = new Mat();
+                binary = new Mat();
+                hierarchy = new Mat();
+                heatmap.put(0, 0, channelHeatmap);
+                Imgproc.resize(heatmap, resized, new Size(targetWidth, targetHeight));
+                resized.get(0, 0, resizedValues);
+                for (int index = 0; index < targetSize; index++) {
+                    float value = resizedValues[index];
+                    if (value < HEATMAP_THRESHOLD) {
+                        value = 0f;
+                    }
+                    binaryInput[index] = (byte) (int) (value * 255f);
+                }
+                mask.create(targetHeight, targetWidth, CvType.CV_8UC1);
+                mask.put(0, 0, binaryInput);
+                Imgproc.threshold(mask, binary, 0d, 255d,
+                        Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+                Imgproc.findContours(binary, contours, hierarchy,
+                        Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+                MatOfPoint largestContour = null;
+                double largestArea = 0d;
+                int largestContourCount = 0;
+                for (MatOfPoint contour : contours) {
+                    double area = Imgproc.contourArea(contour);
+                    if (area > largestArea) {
+                        largestArea = area;
+                        largestContour = contour;
+                        largestContourCount = 1;
+                    } else if (area > 0d && area == largestArea) {
+                        largestContourCount++;
+                    }
+                }
+                if (largestContour == null || largestContourCount != 1) {
+                    return null;
+                }
+                Moments moments = Imgproc.moments(largestContour);
+                if (moments.get_m00() <= 0d) {
+                    return null;
+                }
+                corners[channel] = new Point(moments.get_m10() / (moments.get_m00() + 1e-5d),
+                        moments.get_m01() / (moments.get_m00() + 1e-5d));
+            } finally {
+                if (heatmap != null) {
+                    heatmap.release();
+                }
+                if (resized != null) {
+                    resized.release();
+                }
+                if (mask != null) {
+                    mask.release();
+                }
+                if (binary != null) {
+                    binary.release();
+                }
+                if (hierarchy != null) {
+                    hierarchy.release();
+                }
+                for (MatOfPoint contour : contours) {
+                    contour.release();
+                }
+                Arrays.fill(resizedValues, 0f);
+                Arrays.fill(binaryInput, (byte) 0);
+                Arrays.fill(channelHeatmap, 0f);
+            }
+        }
+        return corners;
     }
 
     private static Point[] pointsFromNormalizedCorners(float[] normalizedCorners,

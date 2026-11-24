@@ -407,6 +407,10 @@ public final class DocumentScanActivity extends AppCompatActivity {
                         detected = DocumentEdgeDetector.detectCaptureCorners(this, captured);
                     } catch (DocumentEdgeDetector.EdgesNotFoundException ignored) {
                         // The review screen will let the user mark the document corners.
+                    } catch (IOException | RuntimeException exception) {
+                        android.util.Log.w("SPM_DOCUMENT_SCAN",
+                                "document detection failed: " + exception.getMessage(),
+                                exception);
                     }
                     Bitmap preview = decodeReview(captured);
                     DocumentEdgeDetector.CaptureCorners detectedCorners = detected;
@@ -431,7 +435,7 @@ public final class DocumentScanActivity extends AppCompatActivity {
                     });
                 } catch (IOException | RuntimeException exception) {
                     android.util.Log.w("SPM_DOCUMENT_SCAN", "page processing failed: "
-                            + exception.getClass().getSimpleName());
+                            + exception.getMessage(), exception);
                     runOnUiThread(() -> {
                         deleteFile(captured);
                         if (isFinishing() || isDestroyed()) {
