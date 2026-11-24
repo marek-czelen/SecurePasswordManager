@@ -13,10 +13,10 @@ android {
 
     defaultConfig {
         applicationId = "com.cretorix.securepasswordmanager"
-        minSdk = 31
+        minSdk = 29
         targetSdk = 37
-        versionCode = 10
-        versionName = "1.10"
+        versionCode = 15
+        versionName = "1.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,7 +26,11 @@ android {
         }
         release {
             optimization {
-                enable = false
+                enable = true
+            }
+            proguardFiles("proguard-rules.pro")
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
             }
         }
     }

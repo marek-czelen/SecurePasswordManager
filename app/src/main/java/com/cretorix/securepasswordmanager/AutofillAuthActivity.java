@@ -42,6 +42,7 @@ public final class AutofillAuthActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE);
         setContentView(R.layout.activity_autofill_auth);
+        EdgeToEdgeInsets.apply(this, findViewById(android.R.id.content));
         form = AutofillForm.fromIntent(getIntent());
         if (form == null) {
             finishCanceled();

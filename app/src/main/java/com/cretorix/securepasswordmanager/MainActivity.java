@@ -1661,12 +1661,15 @@ public final class MainActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_emergency_passwords, null);
         LinearLayout passwordList = view.findViewById(R.id.emergencyPasswordList);
+        View passwordScroll = view.findViewById(R.id.emergencyPasswordScroll);
         TextView emptyState = view.findViewById(R.id.emergencyPasswordEmpty);
         TextInputEditText newPassword = view.findViewById(R.id.editEmergencyPassword);
         com.google.android.material.textfield.TextInputLayout passwordLayout =
                 view.findViewById(R.id.inputEmergencyPassword);
         LayoutInflater inflater = LayoutInflater.from(this);
-        emptyState.setVisibility(item.emergencyPasswords.isEmpty() ? View.VISIBLE : View.GONE);
+        boolean hasPasswords = !item.emergencyPasswords.isEmpty();
+        emptyState.setVisibility(hasPasswords ? View.GONE : View.VISIBLE);
+        passwordScroll.setVisibility(hasPasswords ? View.VISIBLE : View.GONE);
 
         final AlertDialog[] detailsDialog = {null};
         for (int index = 0; index < item.emergencyPasswords.size(); index++) {
@@ -1702,6 +1705,11 @@ public final class MainActivity extends AppCompatActivity {
                     })
                     .show());
             passwordList.addView(row);
+        }
+        if (item.emergencyPasswords.size() >= 4) {
+            android.view.ViewGroup.LayoutParams scrollParams = passwordScroll.getLayoutParams();
+            scrollParams.height = Math.round(240 * getResources().getDisplayMetrics().density);
+            passwordScroll.setLayoutParams(scrollParams);
         }
 
         View addButton = view.findViewById(R.id.btnAddEmergencyPassword);

@@ -56,6 +56,7 @@ public final class CredentialProviderActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE);
         setContentView(R.layout.activity_autofill_auth);
+        EdgeToEdgeInsets.apply(this, findViewById(android.R.id.content));
 
         String mode = getIntent().getStringExtra(CredentialProviderResponseFactory.EXTRA_MODE);
         if (CredentialProviderResponseFactory.MODE_UNLOCK.equals(mode)) {
